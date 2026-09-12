@@ -17,7 +17,7 @@
  * Only the layout is undone. The colour and border the block supports may have
  * put on the wrapper are left in place, so the placeholder still previews them.
  */
-.wp-block-neura-blocks-icon.is-placeholder {
+.wp-block-zealblocks-icon.is-placeholder {
 	// `display` is already block by default, but is-inline may be set — the
 	// placeholder must not be inline-block whatever the icon setting says.
 	display: block;
@@ -33,11 +33,11 @@
  * The preview span mirrors what render.php emits on the front end, so the SVG
  * needs the same sizing rules the wrapper's svg selector gives it.
  *
- * Written flat rather than nested inside .wp-block-neura-blocks-icon: the
+ * Written flat rather than nested inside .wp-block-zealblocks-icon: the
  * class is already unique, so nesting only raised the specificity — which then
  * had to outrank the picker's own `svg` rule below purely by source order.
  */
-.wp-block-neura-blocks-icon__svg {
+.wp-block-zealblocks-icon__svg {
 	display: block;
 	line-height: 0;
 
@@ -54,7 +54,7 @@
  * Editor-only: none of this reaches the front end, so it lives here rather
  * than in style.scss.
  */
-.neura-blocks-icon-picker {
+.zealblocks-icon-picker {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;

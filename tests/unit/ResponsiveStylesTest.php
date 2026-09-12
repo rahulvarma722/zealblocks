@@ -2,17 +2,17 @@
 /**
  * Unit tests for per-viewport CSS generation.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks\Tests\Unit;
+namespace Zealblocks\Tests\Unit;
 
-use NeuraBlocks\Helper;
-use NeuraBlocks\Responsive_Styles;
+use Zealblocks\Helper;
+use Zealblocks\Responsive_Styles;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \NeuraBlocks\Responsive_Styles
+ * @covers \Zealblocks\Responsive_Styles
  */
 final class ResponsiveStylesTest extends TestCase {
 
@@ -23,9 +23,9 @@ final class ResponsiveStylesTest extends TestCase {
 	 */
 	private function style() {
 		return array(
-			'neura-blocks' => array( 'width' => '200px' ),
-			'@tablet'  => array( 'neura-blocks' => array( 'width' => '150px' ) ),
-			'@mobile'  => array( 'neura-blocks' => array( 'width' => '100%' ) ),
+			'zealblocks' => array( 'width' => '200px' ),
+			'@tablet'  => array( 'zealblocks' => array( 'width' => '150px' ) ),
+			'@mobile'  => array( 'zealblocks' => array( 'width' => '100%' ) ),
 		);
 	}
 
@@ -37,9 +37,9 @@ final class ResponsiveStylesTest extends TestCase {
 	public function test_get_state_value_reads_each_layer() {
 		$style = $this->style();
 
-		$this->assertSame( '200px', Responsive_Styles::get_state_value( $style, null, 'neura-blocks', 'width' ) );
-		$this->assertSame( '150px', Responsive_Styles::get_state_value( $style, '@tablet', 'neura-blocks', 'width' ) );
-		$this->assertSame( '100%', Responsive_Styles::get_state_value( $style, '@mobile', 'neura-blocks', 'width' ) );
+		$this->assertSame( '200px', Responsive_Styles::get_state_value( $style, null, 'zealblocks', 'width' ) );
+		$this->assertSame( '150px', Responsive_Styles::get_state_value( $style, '@tablet', 'zealblocks', 'width' ) );
+		$this->assertSame( '100%', Responsive_Styles::get_state_value( $style, '@mobile', 'zealblocks', 'width' ) );
 	}
 
 	/**
@@ -48,17 +48,17 @@ final class ResponsiveStylesTest extends TestCase {
 	 * @return void
 	 */
 	public function test_get_state_value_is_total() {
-		$this->assertSame( '', Responsive_Styles::get_state_value( array(), null, 'neura-blocks', 'width' ) );
-		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), '@print', 'neura-blocks', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( array(), null, 'zealblocks', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), '@print', 'zealblocks', 'width' ) );
 		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), null, 'other', 'width' ) );
-		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), null, 'neura-blocks', 'height' ) );
-		$this->assertSame( '', Responsive_Styles::get_state_value( 'not-an-array', null, 'neura-blocks', 'width' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( $this->style(), null, 'zealblocks', 'height' ) );
+		$this->assertSame( '', Responsive_Styles::get_state_value( 'not-an-array', null, 'zealblocks', 'width' ) );
 		$this->assertSame(
 			'',
 			Responsive_Styles::get_state_value(
-				array( 'neura-blocks' => array( 'width' => array( 'nested' ) ) ),
+				array( 'zealblocks' => array( 'width' => array( 'nested' ) ) ),
 				null,
-				'neura-blocks',
+				'zealblocks',
 				'width'
 			),
 			'a non-scalar value is not emitted'
@@ -114,9 +114,9 @@ final class ResponsiveStylesTest extends TestCase {
 	 */
 	public function test_build_rules_emits_base_without_a_group() {
 		$rules = Responsive_Styles::build_rules(
-			array( 'neura-blocks' => array( 'width' => '200px' ) ),
+			array( 'zealblocks' => array( 'width' => '200px' ) ),
 			'.t',
-			'neura-blocks',
+			'zealblocks',
 			'width',
 			'width'
 		);
@@ -141,11 +141,11 @@ final class ResponsiveStylesTest extends TestCase {
 	public function test_build_rules_drops_unsafe_values_only() {
 		$rules = Responsive_Styles::build_rules(
 			array(
-				'neura-blocks' => array( 'width' => 'expression(alert(1))' ),
-				'@mobile'      => array( 'neura-blocks' => array( 'width' => '100%' ) ),
+				'zealblocks' => array( 'width' => 'expression(alert(1))' ),
+				'@mobile'      => array( 'zealblocks' => array( 'width' => '100%' ) ),
 			),
 			'.t',
-			'neura-blocks',
+			'zealblocks',
 			'width',
 			'width'
 		);
@@ -161,8 +161,8 @@ final class ResponsiveStylesTest extends TestCase {
 	 * @return void
 	 */
 	public function test_build_rules_emits_nothing_when_unset() {
-		$this->assertSame( array(), Responsive_Styles::build_rules( array(), '.t', 'neura-blocks', 'width', 'width' ) );
-		$this->assertSame( array(), Responsive_Styles::build_rules( 'nope', '.t', 'neura-blocks', 'width', 'width' ) );
+		$this->assertSame( array(), Responsive_Styles::build_rules( array(), '.t', 'zealblocks', 'width', 'width' ) );
+		$this->assertSame( array(), Responsive_Styles::build_rules( 'nope', '.t', 'zealblocks', 'width', 'width' ) );
 	}
 
 	/**
@@ -173,18 +173,18 @@ final class ResponsiveStylesTest extends TestCase {
 	 */
 	public function test_build_rules_emits_custom_properties() {
 		$rules = Responsive_Styles::build_rules(
-			array( 'neura-blocks' => array( 'iconSize' => '1.5em' ) ),
+			array( 'zealblocks' => array( 'iconSize' => '1.5em' ) ),
 			'.t',
-			'neura-blocks',
+			'zealblocks',
 			'iconSize',
-			'--neura-blocks-button-icon-size'
+			'--zealblocks-button-icon-size'
 		);
 
 		$this->assertSame(
 			array(
 				array(
 					'selector'     => '.t',
-					'declarations' => array( '--neura-blocks-button-icon-size' => '1.5em' ),
+					'declarations' => array( '--zealblocks-button-icon-size' => '1.5em' ),
 				),
 			),
 			$rules
@@ -206,11 +206,11 @@ final class ResponsiveStylesTest extends TestCase {
 
 		$rules = Responsive_Styles::build_rules(
 			array(
-				'@tablet' => array( 'neura-blocks' => array( 'width' => '150px' ) ),
-				'@mobile' => array( 'neura-blocks' => array( 'width' => '100%' ) ),
+				'@tablet' => array( 'zealblocks' => array( 'width' => '150px' ) ),
+				'@mobile' => array( 'zealblocks' => array( 'width' => '100%' ) ),
 			),
 			'.t',
-			'neura-blocks',
+			'zealblocks',
 			'width',
 			'width'
 		);

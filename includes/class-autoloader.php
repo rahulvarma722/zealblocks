@@ -2,15 +2,15 @@
 /**
  * Class autoloading.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks;
+namespace Zealblocks;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Maps `NeuraBlocks\*` class names onto files under includes/.
+ * Maps `Zealblocks\*` class names onto files under includes/.
  *
  * WHY A HAND-WRITTEN AUTOLOADER RATHER THAN COMPOSER'S.
  *
@@ -30,9 +30,9 @@ defined( 'ABSPATH' ) || exit;
  * The namespace is stripped, then the remaining class name is lowercased and
  * underscores become hyphens, prefixed with `class-`:
  *
- *   NeuraBlocks\Helper               -> includes/class-helper.php
- *   NeuraBlocks\Responsive_Styles    -> includes/class-responsive-styles.php
- *   NeuraBlocks\Block\Registrar      -> includes/block/class-registrar.php
+ *   Zealblocks\Helper               -> includes/class-helper.php
+ *   Zealblocks\Responsive_Styles    -> includes/class-responsive-styles.php
+ *   Zealblocks\Block\Registrar      -> includes/block/class-registrar.php
  *
  * That is the WordPress file-naming convention, so the layout stays legible to
  * anyone who has read another WordPress plugin, and sub-namespaces map onto
@@ -41,8 +41,8 @@ defined( 'ABSPATH' ) || exit;
  * INTERFACES AND TRAITS get their own prefixes, which WordPress convention also
  * specifies:
  *
- *   NeuraBlocks\Module               -> includes/interface-module.php
- *   NeuraBlocks\Block\Caches_Values  -> includes/block/trait-caches-values.php
+ *   Zealblocks\Module               -> includes/interface-module.php
+ *   Zealblocks\Block\Caches_Values  -> includes/block/trait-caches-values.php
  *
  * PHP gives an autoloader no way to know which of the three it has been asked
  * for — `class_exists()`, `interface_exists()` and `trait_exists()` all route
@@ -128,7 +128,7 @@ final class Autoloader {
 		$segments = explode( '\\', $relative );
 		$type     = array_pop( $segments );
 
-		$directory = NEURA_BLOCKS_PATH . 'includes/';
+		$directory = ZEALBLOCKS_PATH . 'includes/';
 
 		foreach ( $segments as $segment ) {
 			$directory .= self::to_filename( $segment ) . '/';

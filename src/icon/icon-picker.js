@@ -49,7 +49,7 @@ function IconButton( { icon, isSelected, onSelect } ) {
 	return (
 		<button
 			type="button"
-			className={ `neura-blocks-icon-picker__item${
+			className={ `zealblocks-icon-picker__item${
 				isSelected ? ' is-selected' : ''
 			}` }
 			// aria-pressed rather than aria-selected: this is a toggle button,
@@ -67,7 +67,7 @@ function IconButton( { icon, isSelected, onSelect } ) {
 			 * is the same markup wp_get_icon() prints on the front end.
 			 */ }
 			<span
-				className="neura-blocks-icon-picker__glyph"
+				className="zealblocks-icon-picker__glyph"
 				// eslint-disable-next-line react/no-danger
 				dangerouslySetInnerHTML={ { __html: icon.content } }
 			/>
@@ -102,20 +102,20 @@ export default function IconPicker( { value, onSelect } ) {
 
 	if ( isLoading ) {
 		return (
-			<div className="neura-blocks-icon-picker is-loading">
+			<div className="zealblocks-icon-picker is-loading">
 				<Spinner />
-				<p>{ __( 'Loading the icon library…', 'neura-blocks' ) }</p>
+				<p>{ __( 'Loading the icon library…', 'zealblocks' ) }</p>
 			</div>
 		);
 	}
 
 	if ( ! icons.length ) {
 		return (
-			<div className="neura-blocks-icon-picker">
+			<div className="zealblocks-icon-picker">
 				<p>
 					{ __(
 						'No icons are registered. The icon library needs WordPress 7.1 or later.',
-						'neura-blocks'
+						'zealblocks'
 					) }
 				</p>
 			</div>
@@ -123,13 +123,13 @@ export default function IconPicker( { value, onSelect } ) {
 	}
 
 	return (
-		<div className="neura-blocks-icon-picker">
+		<div className="zealblocks-icon-picker">
 			<SearchControl
 				__nextHasNoMarginBottom
 				value={ search }
 				onChange={ setSearch }
-				label={ __( 'Search icons', 'neura-blocks' ) }
-				placeholder={ __( 'Search icons', 'neura-blocks' ) }
+				label={ __( 'Search icons', 'zealblocks' ) }
+				placeholder={ __( 'Search icons', 'zealblocks' ) }
 			/>
 
 			{ /*
@@ -142,13 +142,13 @@ export default function IconPicker( { value, onSelect } ) {
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
 					isBlock
-					label={ __( 'Collection', 'neura-blocks' ) }
+					label={ __( 'Collection', 'zealblocks' ) }
 					value={ collection }
 					onChange={ ( next ) => setCollection( next ?? '' ) }
 				>
 					<ToggleGroupOption
 						value=""
-						label={ __( 'All', 'neura-blocks' ) }
+						label={ __( 'All', 'zealblocks' ) }
 					/>
 					{ collections.map( ( item ) => (
 						<ToggleGroupOption
@@ -161,20 +161,20 @@ export default function IconPicker( { value, onSelect } ) {
 			) }
 
 			<p
-				className="neura-blocks-icon-picker__count"
+				className="zealblocks-icon-picker__count"
 				// Announced politely so a screen-reader user learns the result
 				// count changed without the grid stealing focus mid-typing.
 				aria-live="polite"
 			>
 				{ sprintf(
 					/* translators: %d: number of matching icons. */
-					_n( '%d icon', '%d icons', results.length, 'neura-blocks' ),
+					_n( '%d icon', '%d icons', results.length, 'zealblocks' ),
 					results.length
 				) }
 			</p>
 
 			{ results.length > 0 ? (
-				<div className="neura-blocks-icon-picker__grid">
+				<div className="zealblocks-icon-picker__grid">
 					{ results.map( ( icon ) => (
 						<IconButton
 							key={ icon.name }
@@ -185,10 +185,10 @@ export default function IconPicker( { value, onSelect } ) {
 					) ) }
 				</div>
 			) : (
-				<p className="neura-blocks-icon-picker__empty">
+				<p className="zealblocks-icon-picker__empty">
 					{ sprintf(
 						/* translators: %s: the search term. */
-						__( 'No icons match “%s”.', 'neura-blocks' ),
+						__( 'No icons match “%s”.', 'zealblocks' ),
 						search
 					) }
 				</p>
@@ -201,7 +201,7 @@ export default function IconPicker( { value, onSelect } ) {
 					isDestructive
 					onClick={ () => onSelect( '' ) }
 				>
-					{ __( 'Clear icon', 'neura-blocks' ) }
+					{ __( 'Clear icon', 'zealblocks' ) }
 				</Button>
 			) }
 		</div>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Front-end markup for neura-blocks/buttons.
+ * Front-end markup for zealblocks/buttons.
  *
  * A container: the only job is to emit the wrapper and print whatever
  * the inner blocks rendered. Layout classes (the flex container and its
@@ -8,7 +8,7 @@
  * render_block filter, after this file runs — there is nothing to do
  * here for them.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  *
  * @var array    $attributes Block attributes.
  * @var string   $content    Rendered inner blocks.

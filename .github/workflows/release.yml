@@ -64,7 +64,7 @@ jobs:
         id: version
         run: |
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          PLUGIN_VERSION=$( grep -m1 '^\s*\*\s*Version:' neura-blocks.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]' )
+          PLUGIN_VERSION=$( grep -m1 '^\s*\*\s*Version:' zealblocks.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]' )
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
@@ -86,14 +86,14 @@ jobs:
       - name: Add a stable-named copy
         # The versioned name is the archive; the stable name is what a
         # /releases/latest/download/ link can point at forever.
-        run: cp "dist/neura-blocks-${{ steps.version.outputs.version }}.zip" dist/neura-blocks.zip
+        run: cp "dist/zealblocks-${{ steps.version.outputs.version }}.zip" dist/zealblocks.zip
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: Neura Blocks ${{ steps.version.outputs.version }}
+          name: Zealblocks ${{ steps.version.outputs.version }}
           generate_release_notes: true
           files: |
-            dist/neura-blocks-${{ steps.version.outputs.version }}.zip
-            dist/neura-blocks.zip
+            dist/zealblocks-${{ steps.version.outputs.version }}.zip
+            dist/zealblocks.zip

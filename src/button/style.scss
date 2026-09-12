@@ -7,7 +7,7 @@
  * !important, so anything stronger here would defeat them.
  */
 
-.wp-block-neura-blocks-button {
+.wp-block-zealblocks-button {
 	display: inline-block;
 	box-sizing: border-box;
 	max-width: 100%;
@@ -65,7 +65,7 @@
 
 	// Only becomes a flex container when it actually has an icon, so a plain
 	// text button keeps its natural inline-block behaviour.
-	&:has(.wp-block-neura-blocks-button__icon) {
+	&:has(.wp-block-zealblocks-button__icon) {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5em;
@@ -73,13 +73,13 @@
 
 	&__icon {
 		flex: none;
-		width: var(--neura-blocks-button-icon-size, 1em);
-		height: var(--neura-blocks-button-icon-size, 1em);
+		width: var(--zealblocks-button-icon-size, 1em);
+		height: var(--zealblocks-button-icon-size, 1em);
 	}
 
 	// `row-reverse` rather than `order`, so the DOM keeps text-then-icon and the
 	// accessible name is unaffected by the visual position.
-	&.has-icon-left:has(.wp-block-neura-blocks-button__icon) {
+	&.has-icon-left:has(.wp-block-zealblocks-button__icon) {
 		flex-direction: row-reverse;
 	}
 }

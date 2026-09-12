@@ -66,7 +66,7 @@ export function getResolvedValue( style, device, key = WIDTH_KEY ) {
  * Remove keys that have become empty objects.
  *
  * Without this, clearing the last value in a state leaves
- * `{ '@tablet': { 'neura-blocks': {} } }` behind, which serializes into the post
+ * `{ '@tablet': { 'zealblocks': {} } }` behind, which serializes into the post
  * content as noise and makes `hasValue()` checks read as true. Core does the
  * same thing through its own `cleanEmptyObject`.
  *

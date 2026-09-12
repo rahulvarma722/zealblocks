@@ -20,10 +20,10 @@
  * analysis, which is why it belongs in the fast suite and runs on every block
  * automatically, including ones that do not exist yet.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks\Tests\Unit;
+namespace Zealblocks\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 
@@ -43,7 +43,7 @@ final class BlockContractTest extends TestCase {
 	 */
 	public static function blocks() {
 		$blocks = array();
-		$root   = NEURA_BLOCKS_PATH . 'src/';
+		$root   = ZEALBLOCKS_PATH . 'src/';
 
 		foreach ( (array) glob( $root . '*', GLOB_ONLYDIR ) as $dir ) {
 			$json = $dir . '/block.json';
@@ -125,7 +125,7 @@ final class BlockContractTest extends TestCase {
 	 * A block with inner blocks must not return null from save().
 	 *
 	 * THE SIBLING BUG. With no save output, core serialises the block as a
-	 * self-closing comment — `<!-- wp:neura-blocks/buttons /-->` — and every inner
+	 * self-closing comment — `<!-- wp:zealblocks/buttons /-->` — and every inner
 	 * block is discarded at save time. The children vanish along with their
 	 * text, URLs and styles, and nothing warns the user.
 	 *
@@ -196,19 +196,19 @@ final class BlockContractTest extends TestCase {
 			$json = $block['json'];
 
 			$this->assertStringStartsWith(
-				NEURA_BLOCKS_SLUG . '/',
+				ZEALBLOCKS_SLUG . '/',
 				(string) ( $json['name'] ?? '' ),
 				$slug . ' block name must be namespaced with the plugin slug'
 			);
 
 			$this->assertSame(
-				NEURA_BLOCKS_SLUG,
+				ZEALBLOCKS_SLUG,
 				$json['category'] ?? null,
 				$slug . ' category must match the registered category, or it lands in Uncategorized'
 			);
 
 			$this->assertSame(
-				NEURA_BLOCKS_SLUG,
+				ZEALBLOCKS_SLUG,
 				$json['textdomain'] ?? null,
 				$slug . ' textdomain must match the plugin slug or translate.wordpress.org delivers nothing'
 			);
@@ -256,13 +256,13 @@ final class BlockContractTest extends TestCase {
 	/**
 	 * The version from the main plugin file's header.
 	 *
-	 * Read from the file rather than NEURA_BLOCKS_VERSION, so this test still
+	 * Read from the file rather than ZEALBLOCKS_VERSION, so this test still
 	 * catches a constant that has drifted from the header.
 	 *
 	 * @return string
 	 */
 	private static function plugin_version() {
-		$main = (string) file_get_contents( NEURA_BLOCKS_PATH . NEURA_BLOCKS_SLUG . '.php' );
+		$main = (string) file_get_contents( ZEALBLOCKS_PATH . ZEALBLOCKS_SLUG . '.php' );
 
 		return 1 === preg_match( '/^\s*\*\s*Version:\s*(.+)$/m', $main, $matches )
 			? trim( $matches[1] )

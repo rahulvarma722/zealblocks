@@ -2,12 +2,12 @@
 /**
  * Shared helpers for block render templates.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks\Block;
+namespace Zealblocks\Block;
 
-use NeuraBlocks\Responsive_Styles;
+use Zealblocks\Responsive_Styles;
 
 defined( 'ABSPATH' ) || exit;
 

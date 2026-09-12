@@ -2,10 +2,10 @@
 /**
  * Shared getters used across the plugin.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks;
+namespace Zealblocks;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -156,7 +156,7 @@ final class Helper {
 	 * @return string
 	 */
 	public static function version() {
-		return defined( 'NEURA_BLOCKS_VERSION' ) ? NEURA_BLOCKS_VERSION : '';
+		return defined( 'ZEALBLOCKS_VERSION' ) ? ZEALBLOCKS_VERSION : '';
 	}
 
 	/**
@@ -165,7 +165,7 @@ final class Helper {
 	 * @return string
 	 */
 	public static function slug() {
-		return defined( 'NEURA_BLOCKS_SLUG' ) ? NEURA_BLOCKS_SLUG : '';
+		return defined( 'ZEALBLOCKS_SLUG' ) ? ZEALBLOCKS_SLUG : '';
 	}
 
 	/**
@@ -175,7 +175,7 @@ final class Helper {
 	 * @return string
 	 */
 	public static function path( $relative = '' ) {
-		return ( defined( 'NEURA_BLOCKS_PATH' ) ? NEURA_BLOCKS_PATH : '' ) . ltrim( $relative, '/' );
+		return ( defined( 'ZEALBLOCKS_PATH' ) ? ZEALBLOCKS_PATH : '' ) . ltrim( $relative, '/' );
 	}
 
 	/**

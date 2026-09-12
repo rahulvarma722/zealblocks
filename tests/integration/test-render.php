@@ -17,7 +17,7 @@
  *
  * Exits non-zero on the first failure, so it is usable as a gate.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
 // Every notice, warning and deprecation counts as a failure — but only ours.
@@ -28,7 +28,7 @@ $GLOBALS['plugin_notices'] = array();
 
 set_error_handler(
 	static function ( $errno, $message, $file, $line ) {
-		if ( false !== strpos( $file, 'plugins/neura-blocks' ) ) {
+		if ( false !== strpos( $file, 'plugins/zealblocks' ) ) {
 			$GLOBALS['plugin_notices'][] = sprintf( '%s in %s:%d', $message, basename( $file ), $line );
 		}
 		return false;
@@ -68,55 +68,55 @@ echo "\nRegistration\n";
 // ---------------------------------------------------------------------
 $registry = WP_Block_Type_Registry::get_instance();
 
-$check( 'neura-blocks/buttons registered', $registry->is_registered( 'neura-blocks/buttons' ) );
-$check( 'neura-blocks/button registered', $registry->is_registered( 'neura-blocks/button' ) );
+$check( 'zealblocks/buttons registered', $registry->is_registered( 'zealblocks/buttons' ) );
+$check( 'zealblocks/button registered', $registry->is_registered( 'zealblocks/button' ) );
 
-$button = $registry->get_registered( 'neura-blocks/button' );
+$button = $registry->get_registered( 'zealblocks/button' );
 
 $check( 'button render callback is callable', $button && is_callable( $button->render_callback ) );
 $check(
 	'editor script handle resolved (script translations wired)',
 	$button && ! empty( $button->editor_script_handles )
 );
-$check( 'button declares buttons as parent', $button && in_array( 'neura-blocks/buttons', (array) $button->parent, true ) );
+$check( 'button declares buttons as parent', $button && in_array( 'zealblocks/buttons', (array) $button->parent, true ) );
 
 // ---------------------------------------------------------------------
 echo "\nAutoloading and module registry\n";
 // ---------------------------------------------------------------------
-$check( 'interface NeuraBlocks\\Module autoloads', interface_exists( 'NeuraBlocks\\Module' ) );
-$check( 'NeuraBlocks\\Block\\Registrar implements Module', in_array( 'NeuraBlocks\\Module', (array) class_implements( 'NeuraBlocks\\Block\\Registrar' ), true ) );
-$check( 'module reachable after boot', NeuraBlocks\Plugin::module( NeuraBlocks\Block\Registrar::class ) instanceof NeuraBlocks\Block\Registrar );
-$check( 'no legacy global class names remain', ! class_exists( 'NeuraBlocks_Blocks' ) && ! class_exists( 'NeuraBlocks_Block_Render' ) );
-$check( 'pre-move class names are gone too', ! class_exists( 'NeuraBlocks\\Blocks' ) && ! class_exists( 'NeuraBlocks\\Block_Render' ) );
-$check( 'sub-namespace classes autoload from includes/block/', class_exists( 'NeuraBlocks\\Block\\Render' ) );
+$check( 'interface Zealblocks\\Module autoloads', interface_exists( 'Zealblocks\\Module' ) );
+$check( 'Zealblocks\\Block\\Registrar implements Module', in_array( 'Zealblocks\\Module', (array) class_implements( 'Zealblocks\\Block\\Registrar' ), true ) );
+$check( 'module reachable after boot', Zealblocks\Plugin::module( Zealblocks\Block\Registrar::class ) instanceof Zealblocks\Block\Registrar );
+$check( 'no legacy global class names remain', ! class_exists( 'Zealblocks_Blocks' ) && ! class_exists( 'Zealblocks_Block_Render' ) );
+$check( 'pre-move class names are gone too', ! class_exists( 'Zealblocks\\Blocks' ) && ! class_exists( 'Zealblocks\\Block_Render' ) );
+$check( 'sub-namespace classes autoload from includes/block/', class_exists( 'Zealblocks\\Block\\Render' ) );
 
 // ---------------------------------------------------------------------
 echo "\nRendering — the happy path\n";
 // ---------------------------------------------------------------------
-$good = '<!-- wp:neura-blocks/buttons -->'
-	. '<!-- wp:neura-blocks/button {"text":"Click me","url":"https://example.org/?a=1&b=2","icon":"arrow",'
-	. '"iconPosition":"left","linkTarget":"_blank","style":{"neura-blocks":{"width":"200px","iconSize":"1.5em"},'
-	. '"@tablet":{"neura-blocks":{"width":"150px"}},"@mobile":{"neura-blocks":{"width":"100%","iconSize":"2em"}}}} /-->'
-	. '<!-- /wp:neura-blocks/buttons -->';
+$good = '<!-- wp:zealblocks/buttons -->'
+	. '<!-- wp:zealblocks/button {"text":"Click me","url":"https://example.org/?a=1&b=2","icon":"arrow",'
+	. '"iconPosition":"left","linkTarget":"_blank","style":{"zealblocks":{"width":"200px","iconSize":"1.5em"},'
+	. '"@tablet":{"zealblocks":{"width":"150px"}},"@mobile":{"zealblocks":{"width":"100%","iconSize":"2em"}}}} /-->'
+	. '<!-- /wp:zealblocks/buttons -->';
 
 $out = do_blocks( $good );
 
 /*
  * The per-viewport CSS is no longer in the block's own output. render.php hands
- * the rules to the style engine under the 'neura-blocks' context, and core
+ * the rules to the style engine under the 'zealblocks' context, and core
  * prints that store through wp_add_inline_style(). So the block markup is
  * checked for the ABSENCE of a <style> element, and the CSS is read back from
  * the store — which is where a reviewer running Plugin Check will expect it.
  */
-$css = wp_style_engine_get_stylesheet_from_context( 'neura-blocks' );
+$css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
 
 $check( 'no <style> element in the block output (Plugin Review: use enqueue APIs)', false === stripos( $out, '<style' ) );
-$check( 'block carries the scoping class the rules target', 1 === preg_match( '/class="[^"]*\bneura-blocks-btn-[0-9a-f]{8}\b/', $out ) );
+$check( 'block carries the scoping class the rules target', 1 === preg_match( '/class="[^"]*\bzealblocks-btn-[0-9a-f]{8}\b/', $out ) );
 $check( 'rules reached the style-engine store', '' !== $css );
 $check( 'base width emitted unwrapped', false !== strpos( $css, 'width:200px' ) );
 $check( 'tablet band emitted', false !== strpos( $css, '150px' ) );
 $check( 'mobile band emitted', false !== strpos( $css, '100%' ) );
-$check( 'icon size emitted as a custom property', false !== strpos( $css, '--neura-blocks-button-icon-size' ) );
+$check( 'icon size emitted as a custom property', false !== strpos( $css, '--zealblocks-button-icon-size' ) );
 $check(
 	"core's mutually exclusive ranges, not stacked max-width",
 	false !== strpos( $css, 'width <= 480px' ) && false !== strpos( $css, '480px < width' )
@@ -129,7 +129,7 @@ ob_start();
 wp_print_styles();
 $printed = (string) ob_get_clean();
 
-$check( 'store flushed through wp_add_inline_style() as one tag', false !== strpos( $printed, 'id="wp-style-engine-neura-blocks-inline-css"' ) );
+$check( 'store flushed through wp_add_inline_style() as one tag', false !== strpos( $printed, 'id="wp-style-engine-zealblocks-inline-css"' ) );
 $check( 'flushed tag carries the base width', false !== strpos( $printed, 'width:200px' ) );
 $check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
 $check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
@@ -143,10 +143,10 @@ $check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' )
  * reverse-tabnabbing case the code claims to prevent. Both tokens must survive.
  */
 $union = do_blocks(
-	'<!-- wp:neura-blocks/buttons -->'
-	. '<!-- wp:neura-blocks/button {"text":"U","url":"https://ex.org",'
+	'<!-- wp:zealblocks/buttons -->'
+	. '<!-- wp:zealblocks/button {"text":"U","url":"https://ex.org",'
 	. '"linkTarget":"_blank","rel":"nofollow"} /-->'
-	. '<!-- /wp:neura-blocks/buttons -->'
+	. '<!-- /wp:zealblocks/buttons -->'
 );
 
 $check( "author's own rel token survives", false !== strpos( $union, 'nofollow' ) );
@@ -159,15 +159,15 @@ $check( 'no diagnostics readout in output', false === strpos( $out, 'stylesProbe
 // ---------------------------------------------------------------------
 echo "\nRendering — hostile input\n";
 // ---------------------------------------------------------------------
-$hostile = '<!-- wp:neura-blocks/buttons -->'
-	. '<!-- wp:neura-blocks/button {"text":"Hi <script>alert(1)</script><img src=x onerror=alert(1)><strong>bold</strong>",'
+$hostile = '<!-- wp:zealblocks/buttons -->'
+	. '<!-- wp:zealblocks/button {"text":"Hi <script>alert(1)</script><img src=x onerror=alert(1)><strong>bold</strong>",'
 	. '"url":"https://ex.org","icon":"arrow","linkTarget":"evil\" onmouseover=\"alert(1)",'
 	. '"rel":"noopener\"><script>alert(1)</script>","title":"<script>alert(1)</script>tip",'
-	. '"style":{"neura-blocks":{"width":"expression(alert(1))"},"@mobile":{"neura-blocks":{"width":"-50px"}}}} /-->'
-	. '<!-- wp:neura-blocks/button {"text":"T2","url":"javascript:alert(1)"} /-->'
-	. '<!-- wp:neura-blocks/button {"text":"T3","url":"data:text/html,<script>alert(1)</script>"} /-->'
-	. '<!-- wp:neura-blocks/button {"text":"T4","url":"https://ex.org","icon":"../../etc/passwd"} /-->'
-	. '<!-- /wp:neura-blocks/buttons -->';
+	. '"style":{"zealblocks":{"width":"expression(alert(1))"},"@mobile":{"zealblocks":{"width":"-50px"}}}} /-->'
+	. '<!-- wp:zealblocks/button {"text":"T2","url":"javascript:alert(1)"} /-->'
+	. '<!-- wp:zealblocks/button {"text":"T3","url":"data:text/html,<script>alert(1)</script>"} /-->'
+	. '<!-- wp:zealblocks/button {"text":"T4","url":"https://ex.org","icon":"../../etc/passwd"} /-->'
+	. '<!-- /wp:zealblocks/buttons -->';
 
 $out = do_blocks( $hostile );
 
@@ -179,7 +179,7 @@ $check( '<strong> kept — the allow-list is not a blanket strip', false !== str
 $check( 'unrecognised target dropped', false === strpos( $out, 'evil' ) );
 $check( 'garbage rel token dropped whole', false === strpos( $out, 'noopenerscript' ) );
 $check( 'title tags stripped, text kept', false !== strpos( $out, 'title="tip"' ) );
-$css = wp_style_engine_get_stylesheet_from_context( 'neura-blocks' );
+$css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
 
 $check( 'expression() rejected — not in markup', false === stripos( $out, 'expression(' ) );
 $check( 'expression() rejected — not in the store either', false === stripos( $css, 'expression(' ) );
@@ -192,13 +192,13 @@ $check( 'hostile block emitted no <style> element at all', false === stripos( $o
 // ---------------------------------------------------------------------
 echo "\nIcon — core's icon registry\n";
 // ---------------------------------------------------------------------
-$check( 'neura-blocks/icon registered', $registry->is_registered( 'neura-blocks/icon' ) );
+$check( 'zealblocks/icon registered', $registry->is_registered( 'zealblocks/icon' ) );
 $check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
 
-$out = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled"} /-->' );
+$out = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled"} /-->' );
 
 $check( 'renders an SVG from the registry', false !== strpos( $out, '<svg' ) );
-$check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-neura-blocks-icon' ) );
+$check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-zealblocks-icon' ) );
 
 /*
  * The accessibility branch is core's, and it is the reason for using
@@ -211,7 +211,7 @@ $check(
     false !== strpos( $out, 'aria-hidden="true"' ) && false !== strpos( $out, 'focusable="false"' )
 );
 
-$labelled = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","label":"Rating"} /-->' );
+$labelled = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","label":"Rating"} /-->' );
 
 $check(
     'label -> role=img + aria-label',
@@ -221,18 +221,18 @@ $check( 'a labelled icon is NOT aria-hidden', false === strpos( $labelled, 'aria
 
 // Flip and rotation belong on the SVG, not the wrapper: a transform on the
 // wrapper would rotate any background, border and padding with it.
-$flipped = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
+$flipped = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
 
 $check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-horizontal is-flip-vertical/', $flipped ) );
 $check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
 
-$rotated = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","rotation":90} /-->' );
+$rotated = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","rotation":90} /-->' );
 $check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
 
 // Normalisation: a stored value outside 0-359 must not emit a meaningless
 // declaration, and a negative must resolve to its positive equivalent.
-$check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
-$check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
+$check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
+$check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
 
 // ---------------------------------------------------------------------
 echo "\nIcon — block by default, inline on request\n";
@@ -242,18 +242,18 @@ echo "\nIcon — block by default, inline on request\n";
  * is opt-in. Asserted because the class is what the CSS keys off — a silent
  * change here would alter every icon's layout on every site.
  */
-$block_level = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled"} /-->' );
-$inline      = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","isInline":true} /-->' );
+$block_level = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled"} /-->' );
+$inline      = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","isInline":true} /-->' );
 
 $check( 'default emits no is-inline class', false === strpos( $block_level, 'is-inline' ) );
 $check( 'isInline true emits is-inline', false !== strpos( $inline, 'is-inline' ) );
 $check(
     'isInline false is the same as omitting it',
-    ( false === strpos( do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","isInline":false} /-->' ), 'is-inline' ) )
+    ( false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","isInline":false} /-->' ), 'is-inline' ) )
 );
 $check(
     'is-inline composes with rotation and a width',
-    1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
+    1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
 );
 
 // ---------------------------------------------------------------------
@@ -276,7 +276,7 @@ $hostile = array(
 $all_empty = true;
 
 foreach ( $hostile as $why => $name ) {
-    $result = trim( do_blocks( '<!-- wp:neura-blocks/icon ' . wp_json_encode( array( 'icon' => $name ) ) . ' /-->' ) );
+    $result = trim( do_blocks( '<!-- wp:zealblocks/icon ' . wp_json_encode( array( 'icon' => $name ) ) . ' /-->' ) );
 
     if ( '' !== $result ) {
         $all_empty = false;
@@ -286,15 +286,15 @@ foreach ( $hostile as $why => $name ) {
 
 $check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
 
-$escaped = do_blocks( '<!-- wp:neura-blocks/icon {"icon":"core/star-filled","label":"\"><script>alert(1)</script>"} /-->' );
+$escaped = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","label":"\"><script>alert(1)</script>"} /-->' );
 $check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
 
 // ---------------------------------------------------------------------
 echo "\nText — visual presets\n";
 // ---------------------------------------------------------------------
-$check( 'neura-blocks/text registered', $registry->is_registered( 'neura-blocks/text' ) );
+$check( 'zealblocks/text registered', $registry->is_registered( 'zealblocks/text' ) );
 
-$out = do_blocks( '<!-- wp:neura-blocks/text {"styleAs":"caption","content":"Title"} /-->' );
+$out = do_blocks( '<!-- wp:zealblocks/text {"styleAs":"caption","content":"Title"} /-->' );
 
 $check( 'renders a paragraph', false !== strpos( $out, '<p' ) );
 $check( 'visual preset applied as a class', false !== strpos( $out, 'has-style-caption' ) );
@@ -302,11 +302,11 @@ $check( 'preset is a CLASS, not an inline font-size', false === strpos( $out, 'f
 
 $check(
 	'an unknown preset is dropped rather than emitted',
-	false === strpos( do_blocks( '<!-- wp:neura-blocks/text {"styleAs":"evil\" onmouseover=\"x","content":"X"} /-->' ), 'onmouseover' )
+	false === strpos( do_blocks( '<!-- wp:zealblocks/text {"styleAs":"evil\" onmouseover=\"x","content":"X"} /-->' ), 'onmouseover' )
 );
 $check(
 	'and leaves no orphan class behind',
-	false === strpos( do_blocks( '<!-- wp:neura-blocks/text {"styleAs":"nonsense","content":"X"} /-->' ), 'has-style-' )
+	false === strpos( do_blocks( '<!-- wp:zealblocks/text {"styleAs":"nonsense","content":"X"} /-->' ), 'has-style-' )
 );
 
 /*
@@ -315,7 +315,7 @@ $check(
  * lands in an ELEMENT POSITION and becomes an XSS boundary, and this check
  * failing is the reminder to validate it against an allow-list.
  */
-$out = do_blocks( '<!-- wp:neura-blocks/text {"tagName":"script","content":"X"} /-->' );
+$out = do_blocks( '<!-- wp:zealblocks/text {"tagName":"script","content":"X"} /-->' );
 
 $check( 'a stray tagName attribute is ignored entirely', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
 
@@ -339,7 +339,7 @@ echo "\nText — content survives a save/load round trip\n";
 $round_trip = serialize_blocks(
 	array(
 		array(
-			'blockName'    => 'neura-blocks/text',
+			'blockName'    => 'zealblocks/text',
 			'attrs'        => array(
 				'content' => 'Round trip text',
 				'styleAs' => 'eyebrow',
@@ -367,7 +367,7 @@ $check( 'styleAs survives the round trip', false !== strpos( $out, 'has-style-ey
  */
 $probe_id = wp_insert_post(
 	array(
-		'post_title'   => 'Neura Blocks integration probe',
+		'post_title'   => 'Zealblocks integration probe',
 		'post_status'  => 'publish',
 		'post_type'    => 'post',
 		'post_content' => $round_trip,
@@ -390,15 +390,15 @@ echo "\nEdge cases\n";
 // ---------------------------------------------------------------------
 $check(
 	'empty label renders nothing at all',
-	'' === trim( do_blocks( '<!-- wp:neura-blocks/button {"text":"  "} /-->' ) )
+	'' === trim( do_blocks( '<!-- wp:zealblocks/button {"text":"  "} /-->' ) )
 );
 $check(
 	'empty container renders nothing at all',
-	'' === trim( do_blocks( '<!-- wp:neura-blocks/buttons --><!-- /wp:neura-blocks/buttons -->' ) )
+	'' === trim( do_blocks( '<!-- wp:zealblocks/buttons --><!-- /wp:zealblocks/buttons -->' ) )
 );
 $check(
 	'empty text renders nothing at all',
-	'' === trim( do_blocks( '<!-- wp:neura-blocks/text {"content":"  "} /-->' ) )
+	'' === trim( do_blocks( '<!-- wp:zealblocks/text {"content":"  "} /-->' ) )
 );
 
 // ---------------------------------------------------------------------

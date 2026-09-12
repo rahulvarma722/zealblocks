@@ -1,10 +1,10 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "neura-blocks/icon",
+	"name": "zealblocks/icon",
 	"version": "0.0.1",
 	"title": "Icon",
-	"category": "neura-blocks",
+	"category": "zealblocks",
 	"icon": "star-filled",
 	"description": "An SVG icon from the WordPress icon library, with flip and rotation controls.",
 	"keywords": [
@@ -12,7 +12,7 @@
 		"symbol",
 		"graphic"
 	],
-	"textdomain": "neura-blocks",
+	"textdomain": "zealblocks",
 	"attributes": {
 		"icon": {
 			"type": "string",

@@ -20,7 +20,7 @@ import { useSelect } from '@wordpress/data';
  * One child, so the block is never a blank container the user has to
  * figure out how to fill.
  */
-const TEMPLATE = [ [ 'neura-blocks/button' ] ];
+const TEMPLATE = [ [ 'zealblocks/button' ] ];
 
 export default function Edit( { clientId } ) {
 	const hasChildren = useSelect(

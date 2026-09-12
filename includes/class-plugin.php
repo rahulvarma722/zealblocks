@@ -2,12 +2,12 @@
 /**
  * Plugin bootstrap and module registry.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks;
+namespace Zealblocks;
 
-use NeuraBlocks\Block\Registrar;
+use Zealblocks\Block\Registrar;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -83,7 +83,7 @@ final class Plugin {
 		 *
 		 * @param string[] $modules Fully-qualified class names implementing Module.
 		 */
-		$modules = apply_filters( NEURA_BLOCKS_SLUG . '_modules', self::MODULES );
+		$modules = apply_filters( ZEALBLOCKS_SLUG . '_modules', self::MODULES );
 
 		return is_array( $modules ) ? $modules : self::MODULES;
 	}
@@ -129,8 +129,8 @@ final class Plugin {
 	 * just-in-time, keyed on the plugin slug, the first time a translation
 	 * function runs. Calling it by hand is redundant and Plugin Check flags it
 	 * (`DiscouragedFunctions.load_plugin_textdomainFound`). The text domain
-	 * still has to match the folder slug for that to work — see NEURA_BLOCKS_SLUG
-	 * in neura-blocks.php.
+	 * still has to match the folder slug for that to work — see ZEALBLOCKS_SLUG
+	 * in zealblocks.php.
 	 *
 	 * JavaScript strings are a separate mechanism and DO need wiring up:
 	 * see Blocks::set_script_translations().

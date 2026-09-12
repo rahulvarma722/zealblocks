@@ -4,7 +4,7 @@
  * style-engine rules.
  *
  * Core generates CSS only for style paths it owns, so a namespaced key such as
- * `style.neura-blocks.width` produces nothing on its own — the value round-trips
+ * `style.zealblocks.width` produces nothing on its own — the value round-trips
  * through save and parse untouched, and it is this class that builds the
  * rules for it.
  *
@@ -24,10 +24,10 @@
  * silently reintroduce a tablet-into-mobile cascade and disagree with every
  * core control on the same block.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks;
+namespace Zealblocks;
 
 defined( 'ABSPATH' ) || exit;
 

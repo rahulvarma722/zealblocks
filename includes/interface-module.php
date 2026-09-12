@@ -2,10 +2,10 @@
 /**
  * The contract every feature module implements.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks;
+namespace Zealblocks;
 
 defined( 'ABSPATH' ) || exit;
 

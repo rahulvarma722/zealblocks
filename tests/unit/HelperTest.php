@@ -2,16 +2,16 @@
 /**
  * Unit tests for the shared environment getters.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks\Tests\Unit;
+namespace Zealblocks\Tests\Unit;
 
-use NeuraBlocks\Helper;
+use Zealblocks\Helper;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \NeuraBlocks\Helper
+ * @covers \Zealblocks\Helper
  */
 final class HelperTest extends TestCase {
 
@@ -134,8 +134,8 @@ final class HelperTest extends TestCase {
 	 * @return void
 	 */
 	public function test_identity_getters() {
-		$this->assertSame( NEURA_BLOCKS_SLUG, Helper::slug() );
-		$this->assertSame( NEURA_BLOCKS_VERSION, Helper::version() );
+		$this->assertSame( ZEALBLOCKS_SLUG, Helper::slug() );
+		$this->assertSame( ZEALBLOCKS_VERSION, Helper::version() );
 	}
 
 	/**
@@ -144,10 +144,10 @@ final class HelperTest extends TestCase {
 	 * @return void
 	 */
 	public function test_path_joins_cleanly() {
-		$this->assertSame( NEURA_BLOCKS_PATH, Helper::path() );
-		$this->assertSame( NEURA_BLOCKS_PATH . 'includes/', Helper::path( 'includes/' ) );
+		$this->assertSame( ZEALBLOCKS_PATH, Helper::path() );
+		$this->assertSame( ZEALBLOCKS_PATH . 'includes/', Helper::path( 'includes/' ) );
 		$this->assertSame(
-			NEURA_BLOCKS_PATH . 'includes/class-helper.php',
+			ZEALBLOCKS_PATH . 'includes/class-helper.php',
 			Helper::path( '/includes/class-helper.php' ),
 			'a leading slash must not produce a double separator'
 		);

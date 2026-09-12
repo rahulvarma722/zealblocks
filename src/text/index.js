@@ -21,7 +21,7 @@ registerBlockType( metadata.name, {
 	 * block.json declares content as a plain `string` attribute, so core
 	 * stores it inside the block comment delimiter:
 	 *
-	 *     <!-- wp:neura-blocks/text {"content":"Hello","tagName":"h2"} /-->
+	 *     <!-- wp:zealblocks/text {"content":"Hello","tagName":"h2"} /-->
 	 *
 	 * Declaring `"source": "rich-text"` instead — which is what core/heading
 	 * and core/paragraph do — tells core to parse the value back out of the

@@ -2,7 +2,7 @@
 #
 # Builds a WordPress.org-ready ZIP.
 #
-#   ./bin/build-zip.sh              # build dist/neura-blocks-<version>.zip
+#   ./bin/build-zip.sh              # build dist/zealblocks-<version>.zip
 #   ./bin/build-zip.sh --check      # ...then run Plugin Check on the ARTIFACT
 #
 # WHY THIS SCRIPT EXISTS. Two facts about this repo fight each other:
@@ -40,7 +40,7 @@ set -euo pipefail
 
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
-SLUG="neura-blocks"
+SLUG="zealblocks"
 MAIN_FILE="${SLUG}.php"
 DIST="dist"
 RUN_CHECK=0
@@ -78,12 +78,12 @@ printf '\n\033[1mPreflight\033[0m\n'
 
 # Version must agree in three places or users get no update prompt.
 HEADER_VERSION=$( grep -m1 '^\s*\*\s*Version:' "$MAIN_FILE" | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]' )
-CONST_VERSION=$( grep -m1 "define( 'NEURA_BLOCKS_VERSION'" "$MAIN_FILE" | sed -E "s/.*'([^']+)'[^']*\)?;?$/\1/" )
+CONST_VERSION=$( grep -m1 "define( 'ZEALBLOCKS_VERSION'" "$MAIN_FILE" | sed -E "s/.*'([^']+)'[^']*\)?;?$/\1/" )
 README_STABLE=$( grep -m1 '^Stable tag:' readme.txt | sed -E 's/^Stable tag:[[:space:]]*//' | tr -d '[:space:]' )
 
 [[ -n "$HEADER_VERSION" ]] || die "could not read Version from $MAIN_FILE."
 [[ "$HEADER_VERSION" == "$CONST_VERSION" ]] \
-	|| die "version mismatch: header $HEADER_VERSION vs NEURA_BLOCKS_VERSION $CONST_VERSION."
+	|| die "version mismatch: header $HEADER_VERSION vs ZEALBLOCKS_VERSION $CONST_VERSION."
 [[ "$HEADER_VERSION" == "$README_STABLE" ]] \
 	|| die "version mismatch: header $HEADER_VERSION vs readme Stable tag $README_STABLE."
 ok "version $HEADER_VERSION consistent across header, constant and Stable tag"
@@ -391,7 +391,7 @@ printf '\n\033[1mPackaging\033[0m\n'
 # `rm -f "$ZIP"` alone was not enough. It replaced the current version but left
 # every previous one sitting there, so dist/ accumulated builds and it stopped
 # being obvious which file was the one you just made — the exact situation where
-# somebody uploads neura-blocks-0.0.1.zip to .org an hour after bumping to 0.0.2.
+# somebody uploads zealblocks-0.0.1.zip to .org an hour after bumping to 0.0.2.
 #
 # Removals are listed rather than done quietly, so the delete-then-create is
 # visible in the output.
@@ -449,7 +449,7 @@ if (( RUN_CHECK )); then
 		cp -R "${EXTRACT}/${SLUG}" "$CHECK_DIR"
 
 		# Plugin Check derives the expected text domain from the DIRECTORY name,
-		# so a copy scanned as anything but "neura-blocks" reports a mismatch on
+		# so a copy scanned as anything but "zealblocks" reports a mismatch on
 		# every translated string. Those two codes are filtered; nothing else is.
 		CHECK_OUT="$( "$WP" plugin check "$CHECK_SLUG" \
 			--categories=general,plugin_repo,security,performance,accessibility \

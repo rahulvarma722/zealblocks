@@ -20,16 +20,16 @@ import { __ } from '@wordpress/i18n';
  * are written into post content.
  */
 export const STYLE_PRESETS = [
-	{ value: '', label: __( 'Default (follow the tag)', 'neura-blocks' ) },
-	{ value: 'display', label: __( 'Display', 'neura-blocks' ) },
-	{ value: 'h1', label: __( 'Heading 1', 'neura-blocks' ) },
-	{ value: 'h2', label: __( 'Heading 2', 'neura-blocks' ) },
-	{ value: 'h3', label: __( 'Heading 3', 'neura-blocks' ) },
-	{ value: 'h4', label: __( 'Heading 4', 'neura-blocks' ) },
-	{ value: 'h5', label: __( 'Heading 5', 'neura-blocks' ) },
-	{ value: 'h6', label: __( 'Heading 6', 'neura-blocks' ) },
-	{ value: 'lead', label: __( 'Lead', 'neura-blocks' ) },
-	{ value: 'body', label: __( 'Body', 'neura-blocks' ) },
-	{ value: 'caption', label: __( 'Caption', 'neura-blocks' ) },
-	{ value: 'eyebrow', label: __( 'Eyebrow', 'neura-blocks' ) },
+	{ value: '', label: __( 'Default (follow the tag)', 'zealblocks' ) },
+	{ value: 'display', label: __( 'Display', 'zealblocks' ) },
+	{ value: 'h1', label: __( 'Heading 1', 'zealblocks' ) },
+	{ value: 'h2', label: __( 'Heading 2', 'zealblocks' ) },
+	{ value: 'h3', label: __( 'Heading 3', 'zealblocks' ) },
+	{ value: 'h4', label: __( 'Heading 4', 'zealblocks' ) },
+	{ value: 'h5', label: __( 'Heading 5', 'zealblocks' ) },
+	{ value: 'h6', label: __( 'Heading 6', 'zealblocks' ) },
+	{ value: 'lead', label: __( 'Lead', 'zealblocks' ) },
+	{ value: 'body', label: __( 'Body', 'zealblocks' ) },
+	{ value: 'caption', label: __( 'Caption', 'zealblocks' ) },
+	{ value: 'eyebrow', label: __( 'Eyebrow', 'zealblocks' ) },
 ];

@@ -23,7 +23,7 @@ registerBlockType( metadata.name, {
 	 * This block renders through render.php, so it is tempting to return null
 	 * here as a purely dynamic block would. That is wrong for a CONTAINER, and
 	 * the failure is silent and destructive: with no save output, core writes
-	 * the block as a self-closing comment — `<!-- wp:neura-blocks/buttons /-->` —
+	 * the block as a self-closing comment — `<!-- wp:zealblocks/buttons /-->` —
 	 * and every inner block is discarded at save time. The buttons vanish along
 	 * with their text, urls and styles, and nothing warns the user.
 	 *

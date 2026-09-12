@@ -1,6 +1,6 @@
 # Responsive Styles Experiment — the R&D bench
 
-> **What this is.** Neura Blocks is a scratch plugin for probing WordPress 7.1's
+> **What this is.** Zealblocks is a scratch plugin for probing WordPress 7.1's
 > responsive-styles behaviour from the outside — as a third-party plugin, with no
 > private APIs and no core patches. The **Button** block carries a custom
 > per-viewport attribute end to end so the mechanism can be watched rather than
@@ -50,7 +50,7 @@ writing to the wrong layer.
 
 ## 2. What was built
 
-`neura-blocks/button` ("Button") gained one custom attribute — **Custom Width** —
+`zealblocks/button` ("Button") gained one custom attribute — **Custom Width** —
 with no core support behind it, so every part of the pipeline is ours to write:
 
 ```
@@ -116,9 +116,9 @@ keys:
 
 ```js
 style: {
-    neura-blocks: { width: '200px' },                  // base — applies everywhere
-    '@tablet': { neura-blocks: { width: '150px' } },   // tablet band only
-    '@mobile': { neura-blocks: { width: '100%'  } },   // mobile band only
+    zealblocks: { width: '200px' },                  // base — applies everywhere
+    '@tablet': { zealblocks: { width: '150px' } },   // tablet band only
+    '@mobile': { zealblocks: { width: '100%'  } },   // mobile band only
 }
 ```
 
@@ -246,15 +246,15 @@ rule instead of emitting a near-duplicate each.
 
 ```html
 <!-- block output: only the scoping class -->
-<div class="wp-block-neura-blocks-buttons is-layout-flex …">
-  <a class="neura-blocks-btn-ccc3ba64 wp-block-neura-blocks-button" href="https://example.com">Click me</a>
+<div class="wp-block-zealblocks-buttons is-layout-flex …">
+  <a class="zealblocks-btn-ccc3ba64 wp-block-zealblocks-button" href="https://example.com">Click me</a>
 </div>
 
 <!-- printed once by core via wp_add_inline_style(): <head> on block themes, footer on classic -->
-<style id="wp-style-engine-neura-blocks-inline-css">
-.neura-blocks-btn-ccc3ba64{width:200px;}
-@media (width <= 480px){.neura-blocks-btn-ccc3ba64{width:100%;}}
-@media (480px < width <= 782px){.neura-blocks-btn-ccc3ba64{width:150px;}}
+<style id="wp-style-engine-zealblocks-inline-css">
+.zealblocks-btn-ccc3ba64{width:200px;}
+@media (width <= 480px){.zealblocks-btn-ccc3ba64{width:100%;}}
+@media (480px < width <= 782px){.zealblocks-btn-ccc3ba64{width:150px;}}
 </style>
 ```
 
@@ -305,11 +305,11 @@ Both are worth knowing because they are easy to hit again.
 
 ### 8.1 A container block with `save: () => null` destroys its children
 
-`neura-blocks/buttons` is a container rendered through `render.php`, so returning
+`zealblocks/buttons` is a container rendered through `render.php`, so returning
 `null` from `save` looked correct for a "dynamic block". It is not, for a block
 with children:
 
-1. Core serializes it as `<!-- wp:neura-blocks/buttons /-->` — self-closing.
+1. Core serializes it as `<!-- wp:zealblocks/buttons /-->` — self-closing.
 2. **Every inner block is discarded on save**, with its text, urls and styles.
 3. No warning, no validation error. The post reloads with an empty container.
 
@@ -344,7 +344,7 @@ for once before output.
 ## 9. Running the experiment
 
 ```bash
-cd wp-content/plugins/neura-blocks
+cd wp-content/plugins/zealblocks
 npm run build          # or: npm run start   for watch mode
 ```
 

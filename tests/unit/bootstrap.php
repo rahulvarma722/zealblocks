@@ -19,11 +19,11 @@
  * `get_block_wrapper_attributes()` merging classes — those are verified in
  * tests/integration/ against a real WordPress.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
 define( 'ABSPATH', __DIR__ . '/' );
-define( 'NEURA_BLOCKS_PATH', dirname( __DIR__, 2 ) . '/' );
+define( 'ZEALBLOCKS_PATH', dirname( __DIR__, 2 ) . '/' );
 
 /*
  * Slug and version are READ FROM THE SOURCE, not restated here.
@@ -38,14 +38,14 @@ define( 'NEURA_BLOCKS_PATH', dirname( __DIR__, 2 ) . '/' );
  * compares the plugin header, the constant and readme.txt. A stale value here
  * would have made BlockContractTest assert the wrong version and pass.
  */
-$main_file = glob( NEURA_BLOCKS_PATH . '*.php' );
+$main_file = glob( ZEALBLOCKS_PATH . '*.php' );
 $main_file = $main_file ? (string) file_get_contents( $main_file[0] ) : '';
 
 preg_match( "/define\\(\\s*'([A-Z_]+)_SLUG',\\s*'([a-z0-9-]+)'/", $main_file, $slug_match );
 preg_match( '/^\\s*\\*\\s*Version:\\s*(.+)$/m', $main_file, $version_match );
 
-define( 'NEURA_BLOCKS_SLUG', isset( $slug_match[2] ) ? $slug_match[2] : 'neura-blocks' );
-define( 'NEURA_BLOCKS_VERSION', isset( $version_match[1] ) ? trim( $version_match[1] ) : '0.0.0' );
+define( 'ZEALBLOCKS_SLUG', isset( $slug_match[2] ) ? $slug_match[2] : 'zealblocks' );
+define( 'ZEALBLOCKS_VERSION', isset( $version_match[1] ) ? trim( $version_match[1] ) : '0.0.0' );
 
 if ( ! function_exists( 'wp_json_encode' ) ) {
 	/**
@@ -84,6 +84,6 @@ if ( ! function_exists( 'wp_get_global_settings' ) ) {
 	}
 }
 
-require_once NEURA_BLOCKS_PATH . 'includes/class-autoloader.php';
+require_once ZEALBLOCKS_PATH . 'includes/class-autoloader.php';
 
-NeuraBlocks\Autoloader::register();
+Zealblocks\Autoloader::register();

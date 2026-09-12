@@ -2,16 +2,16 @@
 /**
  * Unit tests for the shared render helpers.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  */
 
-namespace NeuraBlocks\Tests\Unit;
+namespace Zealblocks\Tests\Unit;
 
-use NeuraBlocks\Block\Render as Block_Render;
+use Zealblocks\Block\Render as Block_Render;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \NeuraBlocks\Block\Render
+ * @covers \Zealblocks\Block\Render
  */
 final class BlockRenderTest extends TestCase {
 
@@ -83,16 +83,16 @@ final class BlockRenderTest extends TestCase {
 	public function test_responsive_pairs_class_with_rules() {
 		$result = Block_Render::responsive(
 			array(
-				'neura-blocks' => array( 'width' => '200px' ),
-				'@mobile'  => array( 'neura-blocks' => array( 'width' => '100%' ) ),
+				'zealblocks' => array( 'width' => '200px' ),
+				'@mobile'  => array( 'zealblocks' => array( 'width' => '100%' ) ),
 			),
-			'neura-blocks',
+			'zealblocks',
 			array( 'width' => 'width' ),
-			'neura-blocks-btn-'
+			'zealblocks-btn-'
 		);
 
-		$this->assertStringStartsWith( 'neura-blocks-btn-', $result['class'] );
-		$this->assertSame( 8, strlen( $result['class'] ) - strlen( 'neura-blocks-btn-' ), 'class carries an 8-char hash' );
+		$this->assertStringStartsWith( 'zealblocks-btn-', $result['class'] );
+		$this->assertSame( 8, strlen( $result['class'] ) - strlen( 'zealblocks-btn-' ), 'class carries an 8-char hash' );
 		$this->assertNotEmpty( $result['rules'] );
 		foreach ( $result['rules'] as $rule ) {
 			$this->assertSame( '.' . $result['class'], $rule['selector'], 'every rule is scoped to the class' );
@@ -107,12 +107,12 @@ final class BlockRenderTest extends TestCase {
 	 * @return void
 	 */
 	public function test_responsive_hash_is_value_derived() {
-		$style = array( 'neura-blocks' => array( 'width' => '200px' ) );
+		$style = array( 'zealblocks' => array( 'width' => '200px' ) );
 		$props = array( 'width' => 'width' );
 
-		$a = Block_Render::responsive( $style, 'neura-blocks', $props, 'neura-blocks-' );
-		$b = Block_Render::responsive( $style, 'neura-blocks', $props, 'neura-blocks-' );
-		$c = Block_Render::responsive( array( 'neura-blocks' => array( 'width' => '201px' ) ), 'neura-blocks', $props, 'neura-blocks-' );
+		$a = Block_Render::responsive( $style, 'zealblocks', $props, 'zealblocks-' );
+		$b = Block_Render::responsive( $style, 'zealblocks', $props, 'zealblocks-' );
+		$c = Block_Render::responsive( array( 'zealblocks' => array( 'width' => '201px' ) ), 'zealblocks', $props, 'zealblocks-' );
 
 		$this->assertSame( $a['class'], $b['class'], 'same values, same class' );
 		$this->assertNotSame( $a['class'], $c['class'], 'different values, different class' );
@@ -128,10 +128,10 @@ final class BlockRenderTest extends TestCase {
 	 */
 	public function test_responsive_drops_class_when_no_rules_survive() {
 		$result = Block_Render::responsive(
-			array( 'neura-blocks' => array( 'width' => 'expression(alert(1))' ) ),
-			'neura-blocks',
+			array( 'zealblocks' => array( 'width' => 'expression(alert(1))' ) ),
+			'zealblocks',
 			array( 'width' => 'width' ),
-			'neura-blocks-'
+			'zealblocks-'
 		);
 
 		$this->assertSame( '', $result['class'] );
@@ -145,7 +145,7 @@ final class BlockRenderTest extends TestCase {
 	 */
 	public function test_responsive_is_empty_when_unset() {
 		foreach ( array( array(), 'nope', null ) as $style ) {
-			$result = Block_Render::responsive( $style, 'neura-blocks', array( 'width' => 'width' ), 'neura-blocks-' );
+			$result = Block_Render::responsive( $style, 'zealblocks', array( 'width' => 'width' ), 'zealblocks-' );
 			$this->assertSame( array( 'class' => '', 'rules' => array() ), $result );
 		}
 	}

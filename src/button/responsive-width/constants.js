@@ -43,9 +43,9 @@ export const EXPERIMENT_GROUP = 'dimensions';
  * core's own viewport-state shape:
  *
  *   style: {
- *     'neura-blocks': { width: '200px' },                  // base — applies everywhere
- *     '@tablet': { 'neura-blocks': { width: '150px' } },   // tablet band only
- *     '@mobile': { 'neura-blocks': { width: '100%'  } },   // mobile band only
+ *     'zealblocks': { width: '200px' },                  // base — applies everywhere
+ *     '@tablet': { 'zealblocks': { width: '150px' } },   // tablet band only
+ *     '@mobile': { 'zealblocks': { width: '100%'  } },   // mobile band only
  *   }
  *
  * `style` is declared by core as a free-form `{ type: 'object' }` attribute
@@ -59,7 +59,7 @@ export const EXPERIMENT_GROUP = 'dimensions';
  *
  * @type {string}
  */
-export const STYLE_NAMESPACE = 'neura-blocks';
+export const STYLE_NAMESPACE = 'zealblocks';
 
 /**
  * The key under the namespace.
@@ -84,7 +84,7 @@ export const ICON_SIZE_KEY = 'iconSize';
 /**
  * CSS custom properties the stylesheet reads.
  *
- * Named `--neura-blocks-*`, not `--bk-*`. A custom property lands in the page's
+ * Named `--zealblocks-*`, not `--bk-*`. A custom property lands in the page's
  * global CSS namespace alongside every other plugin's, so the prefix is the
  * only thing keeping it from colliding — and an abbreviation is a much weaker
  * guarantee than the full slug. The plugin used both spellings for a while,
@@ -100,7 +100,7 @@ export const ICON_SIZE_KEY = 'iconSize';
  * @type {Object<string, string>}
  */
 export const CSS_VARS = {
-	iconSize: '--neura-blocks-button-icon-size',
+	iconSize: '--zealblocks-button-icon-size',
 };
 
 /**

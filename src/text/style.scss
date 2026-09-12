@@ -27,7 +27,7 @@ $fallback-h1: clamp(2.25rem, 4.5vw, 3.25rem);
 $fallback-h2: clamp(1.75rem, 3.5vw, 2.5rem);
 $fallback-h3: clamp(1.5rem, 2.5vw, 1.875rem);
 
-.wp-block-neura-blocks-text {
+.wp-block-zealblocks-text {
 	// Long words and URLs must not escape the container. Not exposed as a
 	// control: there is no reasonable reason to want overflow here, and core
 	// has no support for it either.

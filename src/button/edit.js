@@ -95,7 +95,7 @@ export default function Edit( {
 	 *
 	 * This is the whole descendant technique: the platform lets us write to the
 	 * block root, so the root carries a variable and the stylesheet spends it on
-	 * `.wp-block-neura-blocks-button__icon`. No selector plumbing, and it behaves
+	 * `.wp-block-zealblocks-button__icon`. No selector plumbing, and it behaves
 	 * identically in the canvas and on the front end because both read the same
 	 * rule from style.scss.
 	 */
@@ -143,7 +143,7 @@ export default function Edit( {
 					<ToolbarButton
 						name="link"
 						icon="admin-links"
-						title={ __( 'Link', 'neura-blocks' ) }
+						title={ __( 'Link', 'zealblocks' ) }
 						onClick={ () => setIsEditingLink( true ) }
 					/>
 				) }
@@ -151,7 +151,7 @@ export default function Edit( {
 					<ToolbarButton
 						name="unlink"
 						icon="editor-unlink"
-						title={ __( 'Unlink', 'neura-blocks' ) }
+						title={ __( 'Unlink', 'zealblocks' ) }
 						onClick={ unlink }
 						isActive
 					/>
@@ -170,11 +170,11 @@ export default function Edit( {
 			/>
 
 			<InspectorControls>
-				<PanelBody title={ __( 'Settings', 'neura-blocks' ) }>
+				<PanelBody title={ __( 'Settings', 'zealblocks' ) }>
 					<SelectControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
-						label={ __( 'Icon', 'neura-blocks' ) }
+						label={ __( 'Icon', 'zealblocks' ) }
 						value={ icon }
 						options={ ICON_OPTIONS }
 						onChange={ ( value ) =>
@@ -186,7 +186,7 @@ export default function Edit( {
 						<ToggleGroupControl
 							__nextHasNoMarginBottom
 							__next40pxDefaultSize
-							label={ __( 'Icon position', 'neura-blocks' ) }
+							label={ __( 'Icon position', 'zealblocks' ) }
 							value={ iconPosition }
 							onChange={ ( value ) =>
 								setAttributes( { iconPosition: value } )
@@ -195,11 +195,11 @@ export default function Edit( {
 						>
 							<ToggleGroupControlOption
 								value="left"
-								label={ __( 'Left', 'neura-blocks' ) }
+								label={ __( 'Left', 'zealblocks' ) }
 							/>
 							<ToggleGroupControlOption
 								value="right"
-								label={ __( 'Right', 'neura-blocks' ) }
+								label={ __( 'Right', 'zealblocks' ) }
 							/>
 						</ToggleGroupControl>
 					) }
@@ -207,7 +207,7 @@ export default function Edit( {
 					<TextControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
-						label={ __( 'Link rel', 'neura-blocks' ) }
+						label={ __( 'Link rel', 'zealblocks' ) }
 						value={ rel }
 						onChange={ ( value ) =>
 							setAttributes( { rel: value } )
@@ -216,14 +216,14 @@ export default function Edit( {
 					<TextControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
-						label={ __( 'Title attribute', 'neura-blocks' ) }
+						label={ __( 'Title attribute', 'zealblocks' ) }
 						value={ title }
 						onChange={ ( value ) =>
 							setAttributes( { title: value } )
 						}
 						help={ __(
 							'Describes the link destination for assistive technology.',
-							'neura-blocks'
+							'zealblocks'
 						) }
 					/>
 				</PanelBody>
@@ -244,7 +244,7 @@ export default function Edit( {
 					tagName="span"
 					value={ text }
 					onChange={ ( value ) => setAttributes( { text: value } ) }
-					placeholder={ __( 'Add text…', 'neura-blocks' ) }
+					placeholder={ __( 'Add text…', 'zealblocks' ) }
 					allowedFormats={ [] }
 					identifier="text"
 				/>

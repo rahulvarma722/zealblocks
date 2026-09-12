@@ -1,8 +1,8 @@
 <?php
 /**
- * Front-end markup for neura-blocks/text.
+ * Front-end markup for zealblocks/text.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  *
  * @var array    $attributes Block attributes.
  * @var string   $content    Inner block content (unused).
@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * closure in wp-includes/blocks.php, which is global scope, and the alias still
  * applies here.
  */
-use NeuraBlocks\Block\Render as Block_Render;
+use Zealblocks\Block\Render as Block_Render;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

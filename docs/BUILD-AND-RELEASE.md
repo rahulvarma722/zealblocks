@@ -41,7 +41,7 @@ Four phases, failing at the first problem so a bad ZIP is never produced.
 
 ### 1. Preflight
 
-Version agreement across the `Version:` header, `NEURA_BLOCKS_VERSION` and readme
+Version agreement across the `Version:` header, `ZEALBLOCKS_VERSION` and readme
 `Stable tag` · `Stable tag` is not `trunk` · no placeholder text · required
 readme headers · short description ≤150 chars · ≤5 tags · `build/` exists with
 at least one block · **runs the build** · no debug artifacts
@@ -57,10 +57,10 @@ no timestamp comparison distinguishes that from a genuinely stale build.
 
 ### 2. Staging
 
-Copies into a temp directory as `neura-blocks/`, from an **allow-list**:
+Copies into a temp directory as `zealblocks/`, from an **allow-list**:
 
 ```
-neura-blocks.php  readme.txt  LICENSE  includes/  build/  src/  package.json
+zealblocks.php  readme.txt  LICENSE  includes/  build/  src/  package.json
 ```
 
 The allow-list is the key decision. Exclusion lists rot — add a directory,
@@ -86,9 +86,9 @@ markdown · no bundled core libraries · the readme's `src/` claim actually hold
 `dist/` is **cleared first** — every `*.zip`, not just the current version's
 filename, with each removal logged. Otherwise old builds accumulate and it
 stops being obvious which file is the one you just made, which is how
-`neura-blocks-0.0.1.zip` gets uploaded an hour after the bump to `0.0.2`.
+`zealblocks-0.0.1.zip` gets uploaded an hour after the bump to `0.0.2`.
 
-Then zips from the temp dir, so the archive root is a single `neura-blocks/` folder,
+Then zips from the temp dir, so the archive root is a single `zealblocks/` folder,
 and asserts ≤10 MB.
 
 ## Checking the artifact
@@ -106,7 +106,7 @@ nothing about the submission, and trains you to skim past them. `--check`
 installs the extracted ZIP alongside and scans that.
 
 One narrow filter: Plugin Check derives the expected text domain from the
-*directory name*, so a copy scanned as anything but `neura-blocks` reports a
+*directory name*, so a copy scanned as anything but `zealblocks` reports a
 mismatch on every translated string. Those two codes are dropped and the script
 says so. Nothing else is ignored.
 
@@ -114,8 +114,8 @@ says so. Nothing else is ignored.
 
 ```bash
 # 1. Bump the version in ALL SIX places.
-#      neura-blocks.php    Version: header        <- gate checks
-#      neura-blocks.php    NEURA_BLOCKS_VERSION       <- gate checks
+#      zealblocks.php    Version: header        <- gate checks
+#      zealblocks.php    ZEALBLOCKS_VERSION       <- gate checks
 #      readme.txt      Stable tag             <- gate checks
 #      readme.txt      Changelog heading
 #      package.json    version
@@ -139,11 +139,11 @@ package. The other three it cannot check — keep them in step by hand.
 `.github/workflows/release.yml` fires on a `v*` tag: builds on PHP 8.1 (the
 declared minimum, so the release validates the floor the readme promises),
 refuses if the tag disagrees with the `Version:` header, runs `build-zip.sh`,
-and attaches two assets — `neura-blocks-<version>.zip` plus a stable-named
-`neura-blocks.zip`, so this link always resolves to the newest:
+and attaches two assets — `zealblocks-<version>.zip` plus a stable-named
+`zealblocks.zip`, so this link always resolves to the newest:
 
 ```
-https://github.com/rahulvarma722/neura-blocks/releases/latest/download/neura-blocks.zip
+https://github.com/rahulvarma722/zealblocks/releases/latest/download/zealblocks.zip
 ```
 
 `.github/workflows/ci.yml` runs the same linters on every push and PR.
@@ -152,7 +152,7 @@ https://github.com/rahulvarma722/neura-blocks/releases/latest/download/neura-blo
 
 ```bash
 ./bin/build-zip.sh
-gh release create v0.0.2 dist/neura-blocks-0.0.2.zip --generate-notes
+gh release create v0.0.2 dist/zealblocks-0.0.2.zip --generate-notes
 ```
 
 `gh release create` uses the REST API, not Actions, so this works even when
@@ -162,7 +162,7 @@ Actions is unavailable.
 
 That archive is the **repository**, not the plugin: `build/` is gitignored, so
 it contains no compiled blocks and the plugin activates while registering
-nothing. It also names the folder `neura-blocks-<branch>` instead of `neura-blocks`,
+nothing. It also names the folder `zealblocks-<branch>` instead of `zealblocks`,
 and ships `bin/`, `.github/` and the dot-files.
 
 ### Why the ZIP is not committed
@@ -185,7 +185,7 @@ itself** from anywhere other than WordPress.org is not. Do not add a
 GitHub-based update checker.
 
 ```bash
-svn co https://plugins.svn.wordpress.org/neura-blocks
+svn co https://plugins.svn.wordpress.org/zealblocks
 # copy the ZIP's CONTENTS into trunk/ — not the ZIP
 svn cp trunk tags/0.0.2
 svn ci -m "Release 0.0.2"

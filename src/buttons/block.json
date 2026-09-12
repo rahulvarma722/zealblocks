@@ -1,16 +1,16 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "neura-blocks/buttons",
+	"name": "zealblocks/buttons",
 	"version": "0.0.1",
 	"title": "Buttons",
-	"category": "neura-blocks",
+	"category": "zealblocks",
 	"icon": "button",
 	"description": "Prompt visitors to take action with a group of button-style links.",
 	"keywords": [ "link", "button" ],
-	"textdomain": "neura-blocks",
+	"textdomain": "zealblocks",
 
-	"allowedBlocks": [ "neura-blocks/button" ],
+	"allowedBlocks": [ "zealblocks/button" ],
 
 	"supports": {
 		"html": false,

@@ -29,10 +29,10 @@
 
 set -euo pipefail
 
-OLD_SLUG="neura-blocks"
-OLD_CONST="NEURA_BLOCKS"
-OLD_CLASS="NeuraBlocks"
-OLD_DISPLAY="Neura Blocks"
+OLD_SLUG="zealblocks"
+OLD_CONST="ZEALBLOCKS"
+OLD_CLASS="Zealblocks"
+OLD_DISPLAY="Zealblocks"
 
 NEW_SLUG="${1:-}"
 NEW_DISPLAY="${2:-}"
@@ -154,11 +154,40 @@ if [[ "$NEW_SLUG" == *-* ]]; then
 		grep -rlE "$pattern" "$@" . 2>/dev/null || true
 	}
 
+	# The PHPCS case needs more than a grep, because a PHPCS config holds the
+	# slug in TWO places with opposite requirements:
+	#
+	#   <property name="prefixes">     PHP identifiers -> must NOT be hyphenated
+	#   <property name="text_domain">  the text domain -> MUST be the slug, hyphens and all
+	#
+	# A flat `<element value="<slug>"/>` scan matched both, so every rename to a
+	# hyphenated slug was refused because of a text_domain that was perfectly
+	# correct — and the error then told the author to fix prefixes that were
+	# already right. Only the prefixes block is a hazard, so only it is read.
+	hazard_scan_phpcs_prefixes() {
+		local file
+		while IFS= read -r file; do
+			awk -v slug="$OLD_SLUG" '
+				/<property[^>]*name="prefixes"/ { inside = 1; next }
+				inside && /<\/property>/        { inside = 0; next }
+				inside && index( $0, "\"" slug "\"" ) { found = 1 }
+				END { exit found ? 0 : 1 }
+			' "$file" 2>/dev/null && printf '%s\n' "$file"
+		done < <(
+			find . -type f \( -name '*.xml' -o -name '*.dist' \) \
+				-not -path "./node_modules/*" -not -path "./vendor/*" 2>/dev/null
+		)
+
+		# Finding nothing is success. Without this the awk exit status leaks out
+		# under `set -e` and kills the script silently — `bash -n` cannot see it.
+		return 0
+	}
+
 	HAZARDS="$(
 		hazard_scan "[$]${OLD_SLUG}_|function[[:space:]]+${OLD_SLUG}_" --include='*.php'
 		hazard_scan "(^|[{,[:space:]])${OLD_SLUG}[[:space:]]*:" --include='*.js'
 		hazard_scan "[.]${OLD_SLUG}([^A-Za-z0-9_-]|$)" --include='*.js'
-		hazard_scan "<element value=\"${OLD_SLUG}\"" --include='*.xml' --include='*.dist'
+		hazard_scan_phpcs_prefixes
 	)"
 	HAZARDS="$( printf '%s\n' "$HAZARDS" | grep -vE '/node_modules/|/vendor/|^$' | sort -u || true )"
 
@@ -277,6 +306,28 @@ done
 # checkable claim, so it is checked here — a rename that half-worked is worse
 # than one that refused, because the plugin still loads and fails later in ways
 # that look unrelated.
+# The list is REBUILT here, deliberately.
+#
+# FILES was captured before the per-file renames above, so it still holds the
+# PRE-rename paths. The main plugin file is always one of them — it is the file
+# whose name carries the slug — so the single most important file in the tree,
+# the one holding Plugin Name, Text Domain and every constant, was silently
+# skipped: grep failed on the missing path and `2>/dev/null` swallowed the
+# error. The check reported success over a file it never opened.
+FILES=()
+while IFS= read -r f; do
+	grep -Iq . "$f" 2>/dev/null || continue
+	FILES+=("$f")
+done < <(
+	find . -type f \
+		-not -path "./node_modules/*" \
+		-not -path "./vendor/*" \
+		-not -path "./build/*" \
+		-not -path "./dist/*" \
+		-not -path "./.git/*" \
+		-not -name "rename.sh"
+)
+
 echo "Verifying no occurrences survive..."
 LEAKS=0
 for f in "${FILES[@]}"; do

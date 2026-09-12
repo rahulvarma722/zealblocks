@@ -1,5 +1,5 @@
 {
-	"name": "amandubey/neura-blocks",
+	"name": "amandubey/zealblocks",
 	"description": "A Gutenberg block collection built on the WordPress 7.1 block API.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",

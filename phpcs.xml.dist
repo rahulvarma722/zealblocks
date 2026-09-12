@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="NeuraBlocks">
-	<description>WordPress coding standards for NeuraBlocks, tuned to what this plugin actually is.</description>
+<ruleset name="Zealblocks">
+	<description>WordPress coding standards for Zealblocks, tuned to what this plugin actually is.</description>
 
 	<!--
 		WHAT IS SCANNED.
@@ -9,7 +9,7 @@
 		render.php and block.json across verbatim at build time, so scanning it
 		reports every finding twice and the second copy is not editable.
 	-->
-	<file>neura-blocks.php</file>
+	<file>zealblocks.php</file>
 	<file>includes</file>
 	<file>src</file>
 
@@ -44,8 +44,8 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="NEURA_BLOCKS"/>
-				<element value="NeuraBlocks"/>
+				<element value="ZEALBLOCKS"/>
+				<element value="Zealblocks"/>
 			</property>
 		</properties>
 	</rule>
@@ -54,7 +54,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="neura-blocks"/>
+				<element value="zealblocks"/>
 			</property>
 		</properties>
 	</rule>

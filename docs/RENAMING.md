@@ -1,17 +1,17 @@
 # Renaming this plugin
 
-Every identifier is derived from two constants in `neura-blocks.php`:
+Every identifier is derived from two constants in `zealblocks.php`:
 
 | Constant | Drives |
 |---|---|
-| `NEURA_BLOCKS_SLUG` | folder name, text domain, script handles, block category |
-| `NEURA_BLOCKS_VERSION` | the canonical version; `bin/build-zip.sh` refuses to package unless it matches the `Version:` header and the readme's `Stable tag` |
+| `ZEALBLOCKS_SLUG` | folder name, text domain, script handles, block category |
+| `ZEALBLOCKS_VERSION` | the canonical version; `bin/build-zip.sh` refuses to package unless it matches the `Version:` header and the readme's `Stable tag` |
 
-Nothing else in the codebase contains the literal string `neura-blocks` except
+Nothing else in the codebase contains the literal string `zealblocks` except
 `block.json` files (where the block name must be a static string) and
 `style.scss` (where the generated CSS class must be written out).
 
-There is deliberately no `NEURA_BLOCKS_NAMESPACE` constant. `register_block_type()`
+There is deliberately no `ZEALBLOCKS_NAMESPACE` constant. `register_block_type()`
 reads the block name only from `block.json`, so a constant beside it could only
 duplicate that literal and drift from it. `bin/rename.sh` rewrites both.
 
@@ -43,29 +43,29 @@ Then deactivate and reactivate the plugin, since the folder path changed.
 
 Two things persist in the database and the script cannot reach them:
 
-1. **Block names.** Post content stores `<!-- wp:neura-blocks/button -->`. Change
+1. **Block names.** Post content stores `<!-- wp:zealblocks/button -->`. Change
    the namespace and every existing post shows "This block contains
    unexpected content."
 2. **Static block classes.** `save.js` output is saved into post content, so
-   `wp-block-neura-blocks-button` is baked into published markup.
+   `wp-block-zealblocks-button` is baked into published markup.
 
 Handling that properly means shipping `deprecated` definitions on each block
 so the old name still parses, or running a content migration. Neither is
 hard, but both are permanent maintenance.
 
 **So:** treat the block namespace as permanent from your first release.
-`NEURA_BLOCKS_SLUG` and the display name stay cheap to change — which is why the
+`ZEALBLOCKS_SLUG` and the display name stay cheap to change — which is why the
 display name lives in a plugin header rather than in an identifier.
 
 ## Rules that keep it that way
 
 - Never write a block name as a literal. Import it from `block.json`:
   `registerBlockType( metadata.name, … )`.
-- Never call `get_option( 'neura-blocks_x' )` with a hardcoded prefix; build the key
-  from `NEURA_BLOCKS_SLUG`. There is no options wrapper at present, because the
+- Never call `get_option( 'zealblocks_x' )` with a hardcoded prefix; build the key
+  from `ZEALBLOCKS_SLUG`. There is no options wrapper at present, because the
   plugin stores no settings — add one when it does, rather than keeping an
   unused class around in anticipation.
-- Never hardcode a script handle. Build it from `NEURA_BLOCKS_SLUG`, or read it back
-  off the registered `\WP_Block_Type`, as `NeuraBlocks\Block\Registrar` does.
+- Never hardcode a script handle. Build it from `ZEALBLOCKS_SLUG`, or read it back
+  off the registered `\WP_Block_Type`, as `Zealblocks\Block\Registrar` does.
 - Keep the display name (`Plugin Name:` header, admin titles) out of
   identifiers. It should be free to change at any time.

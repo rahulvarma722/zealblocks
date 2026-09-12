@@ -1,6 +1,6 @@
 <?php
 /**
- * Front-end markup for neura-blocks/button.
+ * Front-end markup for zealblocks/button.
  *
  * The anchor IS the block root: get_block_wrapper_attributes() is spread
  * onto it, so every class and inline style core generates from the
@@ -14,7 +14,7 @@
  * wrapper would be an empty div that only splits the clickable area from
  * the padded area.
  *
- * @package NeuraBlocks
+ * @package Zealblocks
  *
  * @var array    $attributes Block attributes.
  * @var string   $content    Inner block content (unused).
@@ -31,13 +31,13 @@ defined( 'ABSPATH' ) || exit;
  * file is required from. Core requires this template from inside a closure in
  * wp-includes/blocks.php, which is global scope — but the alias below still
  * applies here, so `Block_Render::` resolves without repeating
- * `\NeuraBlocks\Block_Render` at nine call sites.
+ * `\Zealblocks\Block_Render` at nine call sites.
  *
  * `Responsive_Styles` is NOT aliased on purpose: it is referenced only from
  * inside Block_Render now, and importing a name this file no longer uses would
  * be a lie about its dependencies.
  */
-use NeuraBlocks\Block\Render as Block_Render;
+use Zealblocks\Block\Render as Block_Render;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -84,7 +84,7 @@ if ( '' === trim( wp_strip_all_tags( $text ) ) ) {
  * still letting nonsense through — `target="totally-arbitrary"` is harmless to
  * a parser and meaningless to a browser.
  *
- * The narrowing itself lives in NeuraBlocks\Block_Render, so every block sanitises
+ * The narrowing itself lives in Zealblocks\Block_Render, so every block sanitises
  * the same way and a fix lands in one place. Escaping is then left to
  * get_block_wrapper_attributes(), which esc_attr()s every value it is given
  * (wp-includes/class-wp-block-supports.php:265).
@@ -242,13 +242,13 @@ if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
 	 * rather than the escaping that produced it.
 	 */
 	$icon_markup = sprintf(
-		'<svg class="wp-block-neura-blocks-button__icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true" focusable="false"><path d="%s"/></svg>',
+		'<svg class="wp-block-zealblocks-button__icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true" focusable="false"><path d="%s"/></svg>',
 		esc_attr( $icon_paths[ $icon_key ] )
 	);
 }
 
 /*
- * Per-viewport width and icon size, from `style.neura-blocks.*` and its `@tablet` /
+ * Per-viewport width and icon size, from `style.zealblocks.*` and its `@tablet` /
  * `@mobile` states.
  *
  * Core writes CSS only for style paths it owns, so these namespaced values
@@ -265,19 +265,19 @@ if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
  * writes to the root, and so does core's own per-viewport CSS unless the block
  * declares feature selectors in block.json.
  *
- * style.scss then spends the variable on `.wp-block-neura-blocks-button__icon`. The
+ * style.scss then spends the variable on `.wp-block-zealblocks-button__icon`. The
  * media queries stay on the root, so the icon becomes per-viewport without a
  * single descendant selector being generated here.
  */
 $responsive = Block_Render::responsive(
 	isset( $attributes['style'] ) ? $attributes['style'] : array(),
-	'neura-blocks',
+	'zealblocks',
 	array(
 		// style key => CSS property emitted.
 		'width'    => 'width',
-		'iconSize' => '--neura-blocks-button-icon-size',
+		'iconSize' => '--zealblocks-button-icon-size',
 	),
-	'neura-blocks-btn-'
+	'zealblocks-btn-'
 );
 
 $wrapper_classes = array_filter(
@@ -316,7 +316,7 @@ $wrapper_attributes = get_block_wrapper_attributes(
  * `context` names a store. Core flushes every store in
  * wp_enqueue_stored_styles() — hooked to wp_enqueue_scripts and wp_footer —
  * through wp_register_style(), wp_add_inline_style() and wp_enqueue_style(),
- * as a single style element, `wp-style-engine-neura-blocks-inline-css`. Block
+ * as a single style element, `wp-style-engine-zealblocks-inline-css`. Block
  * themes render the template before the head is printed, so the rules land in
  * the document head;
  * classic themes get them in the footer. That is exactly how core's own
@@ -333,14 +333,14 @@ if ( $responsive['rules'] ) {
 	wp_style_engine_get_stylesheet_from_css_rules(
 		$responsive['rules'],
 		array(
-			'context'  => 'neura-blocks',
+			'context'  => 'zealblocks',
 			'prettify' => false,
 		)
 	);
 }
 
 printf(
-	'<%1$s %2$s><span class="wp-block-neura-blocks-button__text">%3$s</span>%4$s</%1$s>',
+	'<%1$s %2$s><span class="wp-block-zealblocks-button__text">%3$s</span>%4$s</%1$s>',
 	esc_attr( $tag_name ),
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); the string is attribute markup, so escaping it again would corrupt it.
 	wp_kses( $text, Block_Render::LABEL_HTML ),

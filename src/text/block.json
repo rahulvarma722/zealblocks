@@ -1,10 +1,10 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "neura-blocks/text",
+	"name": "zealblocks/text",
 	"version": "0.0.1",
 	"title": "Text",
-	"category": "neura-blocks",
+	"category": "zealblocks",
 	"icon": "editor-textcolor",
 	"description": "Text with a visual style chosen independently of the theme\u2019s default sizing.",
 	"keywords": [
@@ -13,7 +13,7 @@
 		"typography",
 		"style"
 	],
-	"textdomain": "neura-blocks",
+	"textdomain": "zealblocks",
 	"attributes": {
 		"content": {
 			"type": "string",

@@ -1,4 +1,4 @@
-=== Neura Blocks ===
+=== Zealblocks ===
 Contributors:      amandubey
 Tags:              blocks, button, responsive, icons, breakpoints
 Requires at least: 7.1
@@ -12,10 +12,10 @@ Blocks that extend WordPress 7.1 rather than reinvent it — a typographic scale
 
 == Description ==
 
-Neura Blocks adds blocks that build on WordPress 7.1's block API instead of
+Zealblocks adds blocks that build on WordPress 7.1's block API instead of
 duplicating it. Core's typography, colour, spacing and border controls — and
 core's per-viewport style states — are declared as supports and inherited, not
-reimplemented. What Neura Blocks adds is the part core leaves out.
+reimplemented. What Zealblocks adds is the part core leaves out.
 
 = Blocks =
 
@@ -49,19 +49,19 @@ no equivalent in core, and is the one most often faked with an undersized H6.
 
 = On responsive values =
 
-WordPress 7.1 emits per-viewport CSS for its own style paths, so Neura Blocks does
-not need to reinvent that and does not try to. Where Neura Blocks adds a property
+WordPress 7.1 emits per-viewport CSS for its own style paths, so Zealblocks does
+not need to reinvent that and does not try to. Where Zealblocks adds a property
 core has no support for, it stores the value inside core's own `style` attribute
 under a namespaced key, in core's viewport-state shape, and generates the CSS
 using core's media queries:
 
-`style.neura-blocks.width` for the base layer, `style.@tablet.neura-blocks.width`
-and `style.@mobile.neura-blocks.width` for the overrides. Icon size uses the
+`style.zealblocks.width` for the base layer, `style.@tablet.zealblocks.width`
+and `style.@mobile.zealblocks.width` for the overrides. Icon size uses the
 same shape under `iconSize`.
 
 The breakpoints come from `WP_Theme_JSON::get_viewport_media_queries()`, which
 reads `settings.viewport` from theme.json. Change your breakpoints there and
-Neura Blocks follows, because it never had its own.
+Zealblocks follows, because it never had its own.
 
 Desktop is the base layer rather than a third band, matching core: it carries no
 media query and applies at every width, so Mobile falls back to the base value
@@ -77,7 +77,7 @@ decorative, and the button text is the accessible name.
 
 = Privacy =
 
-Neura Blocks does not collect, store or transmit any data. It makes no external
+Zealblocks does not collect, store or transmit any data. It makes no external
 network requests, sets no cookies, creates no database tables, and registers no
 REST endpoints or AJAX handlers.
 
@@ -87,15 +87,15 @@ The JavaScript in `build/` is compiled and minified by `@wordpress/scripts`.
 The unminified sources, the build configuration and the full development
 history are public at:
 
-https://github.com/rahulvarma722/neura-blocks
+https://github.com/rahulvarma722/zealblocks
 
 To build from source: `npm install && npm run build`.
 
 == Installation ==
 
 1. Upload the plugin through **Plugins > Add New**, or extract the ZIP into `wp-content/plugins/`.
-2. Activate **Neura Blocks** through the **Plugins** menu.
-3. In the editor, insert **Buttons** from the **Neura Blocks** category in the block inserter.
+2. Activate **Zealblocks** through the **Plugins** menu.
+3. In the editor, insert **Buttons** from the **Zealblocks** category in the block inserter.
 4. Select a button and open the **Styles** tab to find **Custom Width** and **Icon Size**.
 
 To set a per-viewport value, switch the editor preview to Tablet or Mobile with
@@ -115,7 +115,7 @@ work while writing values the editor could not show back to you.
 
 `WP_Theme_JSON::get_viewport_media_queries()`, which reads `settings.viewport`
 from your theme.json. The defaults are 480px for mobile and 782px for tablet,
-identical to core's. Neura Blocks has no breakpoints of its own to configure.
+identical to core's. Zealblocks has no breakpoints of its own to configure.
 
 = Why is Desktop not listed alongside Tablet and Mobile? =
 
@@ -126,7 +126,7 @@ Mobile fall back to your Desktop value rather than to your Tablet value.
 
 = Can I use these buttons inside core's Buttons block? =
 
-No. This plugin's Button declares `neura-blocks/buttons` as its parent, so it
+No. This plugin's Button declares `zealblocks/buttons` as its parent, so it
 can only be inserted into a Buttons container. The container supplies the flex
 layout and block gap the button expects.
 
@@ -146,7 +146,7 @@ No. Every block renders server-side in PHP and ships no front-end script.
 1. A Buttons container holding two Button blocks, one with an arrow icon.
 2. The Custom Width and Icon Size controls in the Styles tab.
 3. Editing a Mobile-only width with Responsive styles enabled.
-4. The Neura Blocks category in the block inserter.
+4. The Zealblocks category in the block inserter.
 
 == Changelog ==
 

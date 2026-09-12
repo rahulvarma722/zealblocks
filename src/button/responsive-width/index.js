@@ -86,18 +86,18 @@ export default function ResponsiveWidthControl( {
 	const label = stateKey
 		? sprintf(
 				/* translators: %s: device name, e.g. Tablet. */
-				__( 'Custom Width (%s)', 'neura-blocks' ),
+				__( 'Custom Width (%s)', 'zealblocks' ),
 				device
 		  )
-		: __( 'Custom Width', 'neura-blocks' );
+		: __( 'Custom Width', 'zealblocks' );
 
 	const iconLabel = stateKey
 		? sprintf(
 				/* translators: %s: device name, e.g. Tablet. */
-				__( 'Icon Size (%s)', 'neura-blocks' ),
+				__( 'Icon Size (%s)', 'zealblocks' ),
 				device
 		  )
-		: __( 'Icon Size', 'neura-blocks' );
+		: __( 'Icon Size', 'zealblocks' );
 
 	return (
 		<InspectorControls
@@ -143,7 +143,7 @@ export default function ResponsiveWidthControl( {
 					onChange={ onChange }
 					units={ units }
 					min={ 0 }
-					placeholder={ __( 'auto', 'neura-blocks' ) }
+					placeholder={ __( 'auto', 'zealblocks' ) }
 				/>
 
 				{ stateKey && (
@@ -152,7 +152,7 @@ export default function ResponsiveWidthControl( {
 							/* translators: %s: device name, e.g. Tablet. */
 							__(
 								'Applies to %s only. Clearing it falls back to the Desktop value, not to a wider device.',
-								'neura-blocks'
+								'zealblocks'
 							),
 							device
 						) }
@@ -163,7 +163,7 @@ export default function ResponsiveWidthControl( {
 					<Notice status="warning" isDismissible={ false }>
 						{ __(
 							'Editing the Desktop value, which applies at every width. Turn on Responsive styles from View to set this device separately.',
-							'neura-blocks'
+							'zealblocks'
 						) }
 					</Notice>
 				) }
@@ -201,7 +201,7 @@ export default function ResponsiveWidthControl( {
 					onChange={ onIconSizeChange }
 					units={ units }
 					min={ 0 }
-					placeholder={ __( '1em', 'neura-blocks' ) }
+					placeholder={ __( '1em', 'zealblocks' ) }
 				/>
 
 				{ SHOW_DIAGNOSTICS && (

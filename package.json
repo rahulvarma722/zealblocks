@@ -1,5 +1,5 @@
 {
-	"name": "neura-blocks",
+	"name": "zealblocks",
 	"version": "0.0.1",
 	"description": "A Gutenberg block collection built on the WordPress 7.1 block API.",
 	"private": true,
