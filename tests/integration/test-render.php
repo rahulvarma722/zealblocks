@@ -113,7 +113,7 @@ $css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
 $check( 'no <style> element in the block output (Plugin Review: use enqueue APIs)', false === stripos( $out, '<style' ) );
 $check( 'block carries the scoping class the rules target', 1 === preg_match( '/class="[^"]*\bzealblocks-btn-[0-9a-f]{8}\b/', $out ) );
 $check( 'rules reached the style-engine store', '' !== $css );
-$check( 'base width emitted unwrapped', false !== strpos( $css, 'width:200px' ) );
+$check( 'base width emitted unwrapped', 1 === preg_match( '/width:\s*200px/', $css ) );
 $check( 'tablet band emitted', false !== strpos( $css, '150px' ) );
 $check( 'mobile band emitted', false !== strpos( $css, '100%' ) );
 $check( 'icon size emitted as a custom property', false !== strpos( $css, '--zealblocks-button-icon-size' ) );
@@ -130,7 +130,7 @@ wp_print_styles();
 $printed = (string) ob_get_clean();
 
 $check( 'store flushed through wp_add_inline_style() as one tag', false !== strpos( $printed, 'id="wp-style-engine-zealblocks-inline-css"' ) );
-$check( 'flushed tag carries the base width', false !== strpos( $printed, 'width:200px' ) );
+$check( 'flushed tag carries the base width', 1 === preg_match( '/width:\s*200px/', $printed ) );
 $check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
 $check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
 $check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
