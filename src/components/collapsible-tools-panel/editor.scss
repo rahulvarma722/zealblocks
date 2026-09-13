@@ -1,0 +1,52 @@
+/*
+ * CollapsibleToolsPanel — editor-only styles.
+ *
+ * NAMED editor.scss, not style.scss. wp-scripts routes CSS by filename: a file
+ * matching /style\.s?css$/ is extracted into style-index.css, which block.json
+ * declares as the FRONT-END stylesheet. Called style.scss, these editor-only
+ * rules shipped to every visitor of the site.
+ *
+ * Two jobs: hide the duplicate heading, and undo the padding PanelBody adds
+ * around a ToolsPanel that was designed to sit flush in the sidebar.
+ */
+
+.zealblocks-collapsible-panel {
+
+	/*
+	 * HIDING THE SECOND HEADING.
+	 *
+	 * ToolsPanelHeader bails on a falsy label, so the label has to stay — it is
+	 * what keeps the ⋯ menu and "Reset all", and it names the menu button
+	 * ("Responsive options"). That means two titles: PanelBody's and the
+	 * ToolsPanel's.
+	 *
+	 * WHY THIS SELECTOR IS SAFE. The obvious approach — targeting the heading's
+	 * own class — cannot work: @wordpress/components hashes it at build time
+	 * (`_69b138dfa5570d9c__default-controls-item` and friends) and the hash moves
+	 * between WordPress releases. An element selector scoped to our own class
+	 * survives that.
+	 *
+	 * It is also unambiguous. PanelBody renders its title as
+	 * `h2.components-panel__body-title` as a SIBLING of its children, so it is
+	 * never inside `__tools`. ToolsPanelHeader renders `headingLevel = 2`, i.e.
+	 * an <h2>, and it is the only heading inside the ToolsPanel. The `:where()`
+	 * keeps specificity at zero so a consumer can still override.
+	 *
+	 * `visibility` rather than `display: none` so the header keeps its box and
+	 * the ⋯ button stays where the eye expects it, top-right.
+	 */
+	.zealblocks-collapsible-panel__tools > :where(h2) {
+		visibility: hidden;
+	}
+
+	/*
+	 * PanelBody already pads its body, and ToolsPanel expects to be flush
+	 * against the sidebar edge. Without this the controls sit in a double
+	 * gutter and stop lining up with core's panels directly above.
+	 */
+	.zealblocks-collapsible-panel__tools {
+		border-top: 0;
+		margin-inline: -16px;
+		padding-inline: 16px;
+	}
+}
