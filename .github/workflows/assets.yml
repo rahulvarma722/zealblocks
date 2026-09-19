@@ -1,0 +1,38 @@
+name: Update wp.org assets and readme
+
+# Banners, icons, screenshots and the readme ship on their OWN path —
+# no version bump, no tag, no release.
+#
+# This is the practical payoff of how `Stable tag` works: wordpress.org reads
+# the plugin PAGE from trunk/readme.txt, but serves the DOWNLOAD from
+# tags/<Stable tag>/. So description, FAQ and changelog text can be corrected
+# without shipping code, and a new screenshot reaches the directory in minutes.
+#
+# The action parses the stable tag out of the readme and updates that tag's
+# readme as well as trunk, so the two never drift.
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'readme.txt'
+      - '.wordpress-org/**'
+  workflow_dispatch:
+
+jobs:
+  assets:
+    name: Push assets and readme to SVN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update WordPress.org assets
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: zealblocks
+          ASSETS_DIR: .wordpress-org
+          # Copy only the readme and assets, and ignore anything else that
+          # changed in the same push, instead of aborting the run.
+          IGNORE_OTHER_FILES: true
