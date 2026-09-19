@@ -26,6 +26,10 @@ on:
       tag:
         description: 'Tag to build and release (e.g. v1.0.0)'
         required: true
+      dry_run:
+        description: 'Rehearse the wp.org deploy without committing to SVN'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -97,3 +101,44 @@ jobs:
           files: |
             dist/zealblocks-${{ steps.version.outputs.version }}.zip
             dist/zealblocks.zip
+
+      # ---------------------------------------------------------------
+      # WordPress.org
+      # ---------------------------------------------------------------
+      #
+      # BUILD_DIR, not .distignore.
+      #
+      # The 10up action normally packages the repo itself and honours
+      # .distignore. We do not use that: bin/build-zip.sh already produces a
+      # verified tree, and its allow-list is stricter than an ignore list —
+      # it fails loudly on anything unexpected rather than silently excluding
+      # a known set. Keeping one source of truth means the bytes that reach
+      # wordpress.org are the exact bytes Plugin Check passed.
+      #
+      # Per the action's docs: "All files and folders in the build directory
+      # will be deployed, .distignore or .gitattributes will be ignored."
+      #
+      # BUILD_DIR holds the plugin's files at its ROOT — not nested inside a
+      # zealblocks/ folder, which is how the ZIP is laid out.
+      - name: Stage the verified package for SVN
+        run: |
+          rm -rf svn-build && mkdir -p svn-build
+          unzip -q "dist/zealblocks-${{ steps.version.outputs.version }}.zip" -d /tmp/unpacked
+          cp -R /tmp/unpacked/zealblocks/. svn-build/
+          rm -rf /tmp/unpacked
+          echo "Staged $( find svn-build -type f | wc -l | tr -d ' ' ) files for SVN:"
+          find svn-build -maxdepth 1 -mindepth 1 | sort
+
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          # A manual run defaults to a rehearsal: it builds, stages and diffs
+          # against SVN but skips the commit. Tag pushes deploy for real.
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: zealblocks
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD_DIR: ./svn-build
+          ASSETS_DIR: .wordpress-org
