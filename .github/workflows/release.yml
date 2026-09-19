@@ -126,6 +126,18 @@ jobs:
           unzip -q "dist/zealblocks-${{ steps.version.outputs.version }}.zip" -d /tmp/unpacked
           cp -R /tmp/unpacked/zealblocks/. svn-build/
           rm -rf /tmp/unpacked
+          # The ZIP is already free of dotfiles — build-zip.sh prunes them,
+          # excludes them at zip time, and fails the gate on any that survive.
+          # This guards the one path that check does not cover: files that
+          # enter the staging directory on their way to SVN. Plugin Check
+          # treats hidden files as an ERROR, and SVN has no delete — a mistake
+          # here is permanent public history.
+          HIDDEN=$( find svn-build -name '.*' ! -name '.' ! -name '..' )
+          if [ -n "$HIDDEN" ]; then
+            echo "::error::hidden files staged for SVN:"; echo "$HIDDEN"
+            exit 1
+          fi
+
           echo "Staged $( find svn-build -type f | wc -l | tr -d ' ' ) files for SVN:"
           find svn-build -maxdepth 1 -mindepth 1 | sort
 
