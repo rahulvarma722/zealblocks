@@ -15,10 +15,12 @@
 		"test:js": "wp-scripts test-unit-js",
 		"test:php": "vendor/bin/phpunit",
 		"test:integration": "./bin/test-integration.sh",
-		"test": "npm run test:php && npm run test:js"
+		"test": "npm run test:php && npm run test:js",
+		"update-icons": "node bin/generate-icons-json.js --version=7.3.1"
 	},
 	"devDependencies": {
-		"@wordpress/scripts": "^30.0.0"
+		"@wordpress/scripts": "^30.0.0",
+		"js-yaml": "^4.1.0"
 	},
 	"overrides": {
 		"typescript": "~5.9.0"
