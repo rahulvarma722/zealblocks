@@ -146,6 +146,13 @@ ok "$TAG_COUNT tags (max 5)"
 # passed every other check in this script and would have shipped.
 if [[ -x node_modules/.bin/wp-scripts ]]; then
 	NODE_ENV=production node_modules/.bin/wp-scripts build >/dev/null 2>&1 || die "the build failed; run 'npm run build' to see why."
+
+	# The admin app is a SECOND entry point. wp-scripts derives its entries by
+	# scanning block.json files, so the command above never sees src/admin —
+	# WP_SOURCE_PATH re-points both the entry lookup and the block.json copy
+	# step, which is what keeps block metadata out of build/admin.
+	NODE_ENV=production WP_SOURCE_PATH=src/admin node_modules/.bin/wp-scripts build --output-path=build/admin >/dev/null 2>&1 || die "the admin build failed; run 'npm run build:admin' to see why."
+
 	ok "build/ regenerated from src/ (production mode)"
 else
 	warn "node_modules absent — could not rebuild; build/ is being shipped as found"
@@ -157,6 +164,9 @@ fi
 # reason it was about to fix itself.
 [[ -d "build" ]] || die "build/ is missing and could not be generated. Run 'npm run build' — blocks are registered from build/, so the plugin does nothing without it."
 for d in build/*/; do
+	# build/admin/ is the settings app, not a block — it legitimately has no
+	# block.json. Everything else in build/ must, or the build is incomplete.
+	[[ "$d" == "build/admin/" ]] && continue
 	[[ -f "${d}block.json" ]] || die "${d} has no block.json; the build looks incomplete."
 done
 BLOCK_COUNT=$( find build -mindepth 2 -maxdepth 2 -name block.json | wc -l | tr -d ' ' )

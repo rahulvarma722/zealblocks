@@ -4,7 +4,9 @@
 	"description": "A Gutenberg block collection built on the WordPress 7.1 block API.",
 	"private": true,
 	"scripts": {
-		"build": "wp-scripts build",
+		"build:blocks": "wp-scripts build",
+		"build:admin": "WP_SOURCE_PATH=src/admin wp-scripts build --output-path=build/admin",
+		"build": "npm run build:blocks && npm run build:admin",
 		"start": "wp-scripts start",
 		"lint:js": "wp-scripts lint-js",
 		"lint:css": "wp-scripts lint-style",
@@ -15,10 +17,14 @@
 		"test:js": "wp-scripts test-unit-js",
 		"test:php": "vendor/bin/phpunit",
 		"test:integration": "./bin/test-integration.sh",
-		"test": "npm run test:php && npm run test:js"
+		"test": "npm run test:php && npm run test:js",
+		"start:admin": "WP_SOURCE_PATH=src/admin wp-scripts start --output-path=build/admin"
 	},
 	"devDependencies": {
-		"@wordpress/scripts": "^30.0.0"
+		"@wordpress/scripts": "^30.0.0",
+		"autoprefixer": "^10.6.1",
+		"postcss": "^8.5.28",
+		"tailwindcss": "^3.4.19"
 	},
 	"overrides": {
 		"typescript": "~5.9.0"
@@ -26,5 +32,11 @@
 	"author": {
 		"name": "Aman Dubey",
 		"url": "https://amandubey.com/"
+	},
+	"dependencies": {
+		"@radix-ui/react-dialog": "^1.1.23",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"tailwind-merge": "^3.7.0"
 	}
 }
