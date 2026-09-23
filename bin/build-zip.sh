@@ -59,6 +59,7 @@ PAYLOAD=(
 	"readme.txt"
 	"LICENSE"
 	"includes"
+	"assets"
 	"build"
 )
 
@@ -323,7 +324,7 @@ ok "no bundled core libraries"
 #
 # Stronger than a blocklist on purpose: a blocklist has to predict what someone
 # will add next.
-EXPECTED_ROOT=( "$MAIN_FILE" "readme.txt" "LICENSE" "includes" "build" )
+EXPECTED_ROOT=( "$MAIN_FILE" "readme.txt" "LICENSE" "includes" "assets" "build" )
 
 while IFS= read -r entry; do
 	name="$( basename "$entry" )"

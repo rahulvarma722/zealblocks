@@ -402,6 +402,71 @@ $check(
 );
 
 // ---------------------------------------------------------------------
+echo "\nIcon collection\n";
+// ---------------------------------------------------------------------
+$collections = wp_list_pluck( WP_Icon_Collections_Registry::get_instance()->get_all_registered(), 'label', 'slug' );
+
+$check(
+	'collection is registered under the plugin slug',
+	isset( $collections[ ZEALBLOCKS_SLUG ] )
+);
+$check(
+	'collection label is the display name, not the slug',
+	'Zeal Icons' === ( $collections[ ZEALBLOCKS_SLUG ] ?? '' )
+);
+
+/*
+ * THE CHECK THAT EARNS ITS KEEP.
+ *
+ * WP_Icons_Registry::sanitize_icon_content() is wp_kses with a three-tag
+ * allow-list — svg, path, polygon — and it fails SILENTLY: an icon drawn with
+ * <circle>, <rect> or strokes registers happily, appears in the library, and
+ * renders as an empty box. Nothing in core reports it. So asserting "is
+ * registered" proves nothing; the only meaningful assertion is that drawable
+ * markup survives the sanitiser.
+ */
+foreach ( Zealblocks\Icons::ICONS as $icon_slug ) {
+	$icon_name = ZEALBLOCKS_SLUG . '/' . $icon_slug;
+	$markup    = wp_get_icon( $icon_name, array( 'size' => 24 ) );
+
+	$check(
+		sprintf( '%s survives the SVG sanitiser with a drawable path', $icon_name ),
+		false !== strpos( $markup, '<path' ) && 1 === preg_match( '/width="24"/', $markup )
+	);
+}
+
+/*
+ * The editor reaches icons over REST, and that route is permission-gated on
+ * `edit_posts` — with no current user the request 401s and proves nothing. So
+ * borrow an administrator for the one call and put the global back, because
+ * the checks after this one must not inherit a logged-in user.
+ */
+$previous_user = get_current_user_id();
+$administrator = get_users(
+	array(
+		'role'   => 'administrator',
+		'number' => 1,
+		'fields' => 'ID',
+	)
+);
+
+if ( empty( $administrator ) ) {
+	$check( 'a user exists to exercise the REST route with', false );
+} else {
+	wp_set_current_user( (int) $administrator[0] );
+
+	$icon_response = rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/icons/' . ZEALBLOCKS_SLUG ) );
+
+	$check(
+		'REST serves the whole collection to the editor',
+		200 === $icon_response->get_status()
+			&& count( Zealblocks\Icons::ICONS ) === count( $icon_response->get_data() )
+	);
+
+	wp_set_current_user( $previous_user );
+}
+
+// ---------------------------------------------------------------------
 echo "\nPHP notices from plugin files\n";
 // ---------------------------------------------------------------------
 $notices = array_unique( $GLOBALS['plugin_notices'] );

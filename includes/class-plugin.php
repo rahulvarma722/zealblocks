@@ -30,6 +30,7 @@ final class Plugin {
 	 * @var string[] Fully-qualified class names implementing Module.
 	 */
 	const MODULES = array(
+		Icons::class,
 		Registrar::class,
 	);
 
