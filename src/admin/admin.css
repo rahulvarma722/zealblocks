@@ -1,0 +1,52 @@
+/*
+ * Design tokens, mapped to WordPress admin.
+ *
+ * WHY THE TOKENS ARE SCOPED BUT THE UTILITIES ARE NOT.
+ *
+ * With `preflight: false` and a `zb-` prefix, a Tailwind utility is inert until
+ * something carries its class — `.zb-flex` cannot affect an element that does
+ * not ask for it, and the prefix means it cannot collide with WordPress admin's
+ * own `.hidden` / `.button` / `.center`. So emitting utilities globally is safe
+ * and costs nothing.
+ *
+ * The VARIABLES are different: they set colour and radius for everything
+ * beneath them, so they are scoped to `.zb-ui` and inherited only by our own
+ * trees (including the portal container, which carries the same class).
+ *
+ * Values are WordPress admin's, not shadcn's defaults. #2271b1 is the admin
+ * link/primary blue and 3px is the admin control radius — shadcn ships 8px,
+ * which is what makes an unthemed install look foreign here.
+ */
+
+.zb-ui {
+	--zb-background: #fff;
+	--zb-foreground: #1e1e1e;
+	--zb-muted: #f0f0f1;
+	--zb-muted-foreground: #50575e;
+	--zb-border: #dcdcde;
+	--zb-input: #8c8f94;
+	--zb-ring: #2271b1;
+	--zb-primary: #2271b1;
+	--zb-primary-foreground: #fff;
+	--zb-destructive: #d63638;
+	--zb-destructive-foreground: #fff;
+	--zb-radius: 3px;
+
+	color: var(--zb-foreground);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+@media ( prefers-color-scheme: dark ) {
+
+	.zb-ui[data-zb-scheme="auto"] {
+		--zb-background: #1e1e1e;
+		--zb-foreground: #f0f0f1;
+		--zb-muted: #2c3338;
+		--zb-muted-foreground: #a7aaad;
+		--zb-border: #3c434a;
+	}
+}
+
+@tailwind components;
+@tailwind utilities;

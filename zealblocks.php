@@ -28,6 +28,11 @@ defined( 'ABSPATH' ) || exit;
  *                  category. Changeable before release; after release the
  *                  folder rename breaks .org updates.
  *
+ * ZEALBLOCKS_PATH    Filesystem path, for require/include.
+ * ZEALBLOCKS_URL     Public URL, for enqueued assets. Blocks never needed it
+ *                  because register_block_type_from_metadata() resolves its
+ *                  own URLs; anything enqueued by hand does.
+ *
  * ZEALBLOCKS_VERSION The canonical version. Read by bin/build-zip.sh, which
  *                  refuses to package unless this, the `Version:` header
  *                  and readme.txt's `Stable tag` all agree.
@@ -46,6 +51,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'ZEALBLOCKS_VERSION', '0.0.1' );
 define( 'ZEALBLOCKS_SLUG', 'zealblocks' );
 define( 'ZEALBLOCKS_PATH', plugin_dir_path( __FILE__ ) );
+define( 'ZEALBLOCKS_URL', plugin_dir_url( __FILE__ ) );
 
 /*
  * ---------------------------------------------------------------------
