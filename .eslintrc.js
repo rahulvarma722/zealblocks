@@ -62,5 +62,21 @@ module.exports = {
 			files: [ 'tests/**/*.js' ],
 			env: { jest: true },
 		},
+		{
+			/*
+			 * shadcn components import `react` directly rather than
+			 * `@wordpress/element`, and that is correct — do not "fix" it.
+			 *
+			 * wp-scripts externalises `react` to the script handle WordPress
+			 * already enqueues, so nothing is bundled and nothing duplicated.
+			 * The rule fires only because `react` is absent from package.json,
+			 * which is right: WordPress provides it, we do not install it.
+			 *
+			 * Rewriting the import would mean hand-editing every component
+			 * pasted in from the registry, forever.
+			 */
+			files: [ 'src/ui/**/*.{js,jsx}' ],
+			rules: { 'import/no-extraneous-dependencies': 'off' },
+		},
 	],
 };
