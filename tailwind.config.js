@@ -15,6 +15,54 @@ module.exports = {
 	// container is off because it is the one core plugin that ignores the
 	// `important` selector — it emits a bare `.container` that escapes our scope.
 	corePlugins: { preflight: false, container: false },
-	theme: { extend: {} },
-	plugins: [],
+	theme: {
+		extend: {
+			/*
+			 * shadcn components use semantic colour names — `bg-primary`,
+			 * `hover:bg-accent`, `border-input`. These are not stock Tailwind, so
+			 * they have to be declared here or those classes generate nothing.
+			 *
+			 * Values live as CSS variables in src/ui/tailwind.css, pointed at
+			 * WordPress admin's palette rather than shadcn's defaults.
+			 */
+			colors: {
+				border: 'var(--zb-border)',
+				input: 'var(--zb-input)',
+				ring: 'var(--zb-ring)',
+				background: 'var(--zb-background)',
+				foreground: 'var(--zb-foreground)',
+				primary: {
+					DEFAULT: 'var(--zb-primary)',
+					foreground: 'var(--zb-primary-foreground)',
+				},
+				secondary: {
+					DEFAULT: 'var(--zb-secondary)',
+					foreground: 'var(--zb-secondary-foreground)',
+				},
+				destructive: {
+					DEFAULT: 'var(--zb-destructive)',
+					foreground: 'var(--zb-destructive-foreground)',
+				},
+				accent: {
+					DEFAULT: 'var(--zb-accent)',
+					foreground: 'var(--zb-accent-foreground)',
+				},
+				muted: {
+					DEFAULT: 'var(--zb-muted)',
+					foreground: 'var(--zb-muted-foreground)',
+				},
+			},
+			borderRadius: {
+				lg: 'var(--zb-radius)',
+				md: 'calc(var(--zb-radius) - 1px)',
+				sm: 'calc(var(--zb-radius) - 2px)',
+			},
+		},
+	},
+	/*
+	 * shadcn's overlays use `animate-in`, `fade-in-0`, `zoom-in-95` and friends,
+	 * which this plugin supplies. Without it those classes silently produce
+	 * nothing and dialogs appear with no transition.
+	 */
+	plugins: [ require( 'tailwindcss-animate' ) ],
 };
