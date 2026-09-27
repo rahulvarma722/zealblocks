@@ -64,6 +64,19 @@ module.exports = {
 		},
 		{
 			/*
+			 * BUILD SCRIPTS are Node programs, not browser source. Printing to
+			 * stdout is their entire interface, and they require devDependencies
+			 * directly rather than importing shipped modules.
+			 */
+			files: [ 'bin/**/*.js' ],
+			env: { node: true },
+			rules: {
+				'no-console': 'off',
+				'import/no-extraneous-dependencies': 'off',
+			},
+		},
+		{
+			/*
 			 * shadcn components import `react` directly rather than
 			 * `@wordpress/element`, and that is correct — do not "fix" it.
 			 *

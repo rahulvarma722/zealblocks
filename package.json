@@ -15,11 +15,13 @@
 		"test:js": "wp-scripts test-unit-js",
 		"test:php": "vendor/bin/phpunit",
 		"test:integration": "./bin/test-integration.sh",
-		"test": "npm run test:php && npm run test:js"
+		"test": "npm run test:php && npm run test:js",
+		"update-icons": "node bin/generate-icons-json.js --version=7.3.1"
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^30.0.0",
 		"autoprefixer": "^10.6.1",
+		"js-yaml": "^4.1.0",
 		"postcss": "^8.5.28",
 		"tailwindcss": "^3.4.19",
 		"tailwindcss-animate": "^1.0.7"
