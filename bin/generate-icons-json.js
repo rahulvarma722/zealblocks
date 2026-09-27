@@ -49,16 +49,16 @@
 
 'use strict';
 
-const fs      = require( 'fs' );
-const path    = require( 'path' );
-const https   = require( 'https' );
-const crypto  = require( 'crypto' );
-const yaml    = require( 'js-yaml' );
+const fs = require( 'fs' );
+const path = require( 'path' );
+const https = require( 'https' );
+const crypto = require( 'crypto' );
+const yaml = require( 'js-yaml' );
 
-const ROOT        = path.resolve( __dirname, '..' );
-const OUT_DIR     = path.join( ROOT, 'icon-handler' );
+const ROOT = path.resolve( __dirname, '..' );
+const OUT_DIR = path.join( ROOT, 'icon-handler' );
 const TEXT_DOMAIN = 'zealblocks';
-const REPO        = 'https://raw.githubusercontent.com/FortAwesome/Font-Awesome';
+const REPO = 'https://raw.githubusercontent.com/FortAwesome/Font-Awesome';
 
 const arg = ( name, fallback ) => {
 	const hit = process.argv.find( ( a ) => a.startsWith( `--${ name }=` ) );
@@ -66,8 +66,8 @@ const arg = ( name, fallback ) => {
 };
 
 const FA_VERSION = arg( 'version', '7.3.1' );
-const ICONS_SRC  = arg( 'icons' );
-const CATS_SRC   = arg( 'categories' );
+const ICONS_SRC = arg( 'icons' );
+const CATS_SRC = arg( 'categories' );
 
 function download( url ) {
 	return new Promise( ( resolve, reject ) => {
@@ -90,27 +90,45 @@ function download( url ) {
 }
 
 const read = async ( local, remote ) =>
-	local ? fs.readFileSync( path.resolve( local ), 'utf8' ) : download( remote );
+	local
+		? fs.readFileSync( path.resolve( local ), 'utf8' )
+		: download( remote );
 
-const sha256 = ( s ) => crypto.createHash( 'sha256' ).update( s, 'utf8' ).digest( 'hex' );
+const sha256 = ( s ) =>
+	crypto.createHash( 'sha256' ).update( s, 'utf8' ).digest( 'hex' );
 
 // Byte length, not string length. A JS string counts characters, so a file with
 // multi-byte characters reports short — icons.json is 4,853,474 bytes but 4,853,455
 // characters. Provenance has to match what the server served.
 const byteLength = ( s ) => Buffer.byteLength( s, 'utf8' );
 
-const phpEscape = ( s ) => String( s ).replace( /\\/g, '\\\\' ).replace( /'/g, "\\'" );
+const phpEscape = ( s ) =>
+	String( s ).replace( /\\/g, '\\\\' ).replace( /'/g, "\\'" );
 
 async function main() {
 	console.log( `Font Awesome Free ${ FA_VERSION }` );
 
-	const iconsRaw = await read( ICONS_SRC, `${ REPO }/${ FA_VERSION }/metadata/icons.json` );
-	const catsRaw  = await read( CATS_SRC,  `${ REPO }/${ FA_VERSION }/metadata/categories.yml` );
+	const iconsRaw = await read(
+		ICONS_SRC,
+		`${ REPO }/${ FA_VERSION }/metadata/icons.json`
+	);
+	const catsRaw = await read(
+		CATS_SRC,
+		`${ REPO }/${ FA_VERSION }/metadata/categories.yml`
+	);
 
-	console.log( `  icons.json      ${ ( byteLength( iconsRaw ) / 1048576 ).toFixed( 2 ) } MB  sha256 ${ sha256( iconsRaw ).slice( 0, 16 ) }…` );
-	console.log( `  categories.yml  ${ ( byteLength( catsRaw ) / 1024 ).toFixed( 0 ) } KB  sha256 ${ sha256( catsRaw ).slice( 0, 16 ) }…` );
+	console.log(
+		`  icons.json      ${ ( byteLength( iconsRaw ) / 1048576 ).toFixed(
+			2
+		) } MB  sha256 ${ sha256( iconsRaw ).slice( 0, 16 ) }…`
+	);
+	console.log(
+		`  categories.yml  ${ ( byteLength( catsRaw ) / 1024 ).toFixed(
+			0
+		) } KB  sha256 ${ sha256( catsRaw ).slice( 0, 16 ) }…`
+	);
 
-	const raw  = JSON.parse( iconsRaw );
+	const raw = JSON.parse( iconsRaw );
 	const cats = yaml.load( catsRaw );
 
 	/*
@@ -142,7 +160,9 @@ async function main() {
 		}
 
 		const parts = [
-			`'label' => __( '${ phpEscape( data.label || slug ) }', '${ TEXT_DOMAIN }' )`,
+			`'label' => __( '${ phpEscape(
+				data.label || slug
+			) }', '${ TEXT_DOMAIN }' )`,
 			`'width' => ${ art.width }`,
 			`'height' => ${ art.height }`,
 			`'path' => '${ phpEscape( art.path ) }'`,
@@ -150,10 +170,16 @@ async function main() {
 
 		const mine = categoryOf[ slug ];
 		if ( mine?.length ) {
-			parts.push( `'categories' => array( ${ mine.map( ( c ) => `'${ phpEscape( c ) }'` ).join( ', ' ) } )` );
+			parts.push(
+				`'categories' => array( ${ mine
+					.map( ( c ) => `'${ phpEscape( c ) }'` )
+					.join( ', ' ) } )`
+			);
 		}
 
-		rows.push( `\t'${ phpEscape( slug ) }' => array( ${ parts.join( ', ' ) } ),` );
+		rows.push(
+			`\t'${ phpEscape( slug ) }' => array( ${ parts.join( ', ' ) } ),`
+		);
 	}
 
 	const php = [
@@ -195,11 +221,17 @@ async function main() {
 		path.join( OUT_DIR, 'source.json' ),
 		JSON.stringify(
 			{
-				source:   'Font Awesome Free',
-				version:  FA_VERSION,
-				license:  'CC BY 4.0 — https://fontawesome.com/license/free',
-				icons:    { sha256: sha256( iconsRaw ), bytes: byteLength( iconsRaw ) },
-				categories: { sha256: sha256( catsRaw ), bytes: byteLength( catsRaw ) },
+				source: 'Font Awesome Free',
+				version: FA_VERSION,
+				license: 'CC BY 4.0 — https://fontawesome.com/license/free',
+				icons: {
+					sha256: sha256( iconsRaw ),
+					bytes: byteLength( iconsRaw ),
+				},
+				categories: {
+					sha256: sha256( catsRaw ),
+					bytes: byteLength( catsRaw ),
+				},
 				generated: new Date().toISOString().slice( 0, 10 ),
 			},
 			null,
@@ -207,9 +239,17 @@ async function main() {
 		) + '\n'
 	);
 
-	console.log( `\n  icons written   ${ rows.length }${ skipped ? ` (${ skipped } skipped, no usable path)` : '' }` );
+	console.log(
+		`\n  icons written   ${ rows.length }${
+			skipped ? ` (${ skipped } skipped, no usable path)` : ''
+		}`
+	);
 	console.log( `  categories      ${ Object.keys( cats ).length }` );
-	console.log( `  icon-handler/icons.php    ${ ( fs.statSync( outFile ).size / 1048576 ).toFixed( 2 ) } MB` );
+	console.log(
+		`  icon-handler/icons.php    ${ (
+			fs.statSync( outFile ).size / 1048576
+		).toFixed( 2 ) } MB`
+	);
 	console.log( `  icon-handler/source.json  provenance recorded` );
 }
 
