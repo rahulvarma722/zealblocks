@@ -38,6 +38,7 @@ defined( 'ABSPATH' ) || exit;
  * be a lie about its dependencies.
  */
 use Zealblocks\Block\Render as Block_Render;
+use Zealblocks\Icon_Handler\Library as Icon_Library;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -201,51 +202,20 @@ if ( '' !== $link_title ) {
 }
 
 /*
- * The PHP twin of src/button/icon.js. Kept in step by hand: the editor renders
- * from JS and the front end from here, so a key added in one has to be added in
- * the other or the icon silently disappears on save.
+ * Icons come from the generated library, not a map kept here by hand.
+ *
+ * This used to be a four-entry $icon_paths array duplicating src/button/icon.js,
+ * with a comment warning that a key added to one had to be added to the other
+ * or the icon silently disappeared on save. Both sides now resolve the same
+ * slug through the same generated data, so they cannot drift.
+ *
+ * Icon_Library::render() escapes the path and builds the SVG; the wrapper is
+ * rebuilt rather than stored so the same geometry can take different classes.
  */
-$icon_paths = array(
-	'arrow'    => 'M4 10h9.2l-3.6-3.6L11 5l6 5-6 5-1.4-1.4L13.2 10H4z',
-	'chevron'  => 'M7.5 4.5L13 10l-5.5 5.5L6 14l4-4-4-4z',
-	'download' => 'M9 3h2v7h3l-4 5-4-5h3zM4 16h12v2H4z',
-	'external' => 'M11 3h6v6h-2V6.4l-6.3 6.3-1.4-1.4L13.6 5H11zM4 6h4v2H6v6h6v-2h2v4H4z',
-);
-
 $icon_key      = Block_Render::text( $attributes, 'icon' );
 $icon_position = Block_Render::one_of( Block_Render::text( $attributes, 'iconPosition' ), array( 'left', 'right' ), 'right' );
-$icon_markup   = '';
+$icon_markup   = Icon_Library::render( $icon_key, array( 'class' => 'wp-block-zealblocks-button__icon' ) );
 
-if ( '' !== $icon_key && isset( $icon_paths[ $icon_key ] ) ) {
-	/*
-	 * aria-hidden: the icon is decorative, the button text is the accessible
-	 * name. No width/height attribute — the size comes from CSS so it can be
-	 * per-viewport.
-	 *
-	 * esc_attr() on the path, and the SVG itself is a literal — NOT wp_kses().
-	 *
-	 * wp_kses() cannot express inline SVG. It lowercases every attribute name
-	 * before matching, so `viewBox` becomes `viewbox` no matter what the
-	 * allow-list says, and an allow-list written as `viewBox` matches nothing and
-	 * drops the attribute outright. Verified both ways against this WordPress
-	 * build.
-	 *
-	 * `viewbox` does survive in practice, because an HTML parser runs its "adjust
-	 * SVG attributes" step and maps it back. But viewBox is the attribute that
-	 * makes the icon scale, and leaning on parser error-correction to keep it
-	 * working is a poor trade for defence-in-depth on a value that cannot vary:
-	 * $icon_key had to match a key of the four-entry $icon_paths map above to get
-	 * here, so the interpolated string is one of four literals in this file.
-	 *
-	 * esc_attr() on that value is therefore the whole of the escaping story, and
-	 * the printf() below carries a phpcs:ignore because the sniff sees a variable
-	 * rather than the escaping that produced it.
-	 */
-	$icon_markup = sprintf(
-		'<svg class="wp-block-zealblocks-button__icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true" focusable="false"><path d="%s"/></svg>',
-		esc_attr( $icon_paths[ $icon_key ] )
-	);
-}
 
 /*
  * Per-viewport width and icon size, from `style.zealblocks.*` and its `@tablet` /
