@@ -4,9 +4,9 @@
  *
  * Downloads Font Awesome's own metadata at a PINNED TAG and writes two files:
  *
- *   icon-handler/icons.php    label, width, height, path — read by PHP to
+ *   includes/icon-handler/icons.php    label, width, height, path — read by PHP to
  *                             render an icon on the front end.
- *   src/ui/icons-data.js      the same geometry plus categories — read by the
+ *   src/ui/icon-library/icons-data.js  the same geometry plus categories — read by the
  *                             editor's icon picker.
  *
  * WHY TWO FILES AND NOT ONE.
@@ -336,7 +336,7 @@ function jsEscape( text ) {
 }
 
 /**
- * Writes icon-handler/icons.php — the front end's resolver.
+ * Writes includes/icon-handler/icons.php — the front end's resolver.
  *
  * Carries NO categories. PHP resolves one slug per icon on the page and never
  * groups or searches, so category data would be weight on every front-end
@@ -413,6 +413,11 @@ function renderPhp( icons, version ) {
  * dynamic import() splits it into its own chunk — so it loads when the picker
  * first opens, not on every editor page load.
  *
+ * Field names match the PHP file exactly — `width`/`height`, not `w`/`h`. The
+ * picker hands a chosen icon straight to the render cache, and a shape
+ * difference would mean translating between them at every hand-off, which is
+ * a bug waiting to be written once and missed everywhere else.
+ *
  * Strings here duplicate the PHP file's labels on purpose. Identical msgids
  * collapse in the .pot, so a translator writes "Heart" once and it fixes both
  * the front-end aria-label and the picker tile.
@@ -453,7 +458,7 @@ function renderJs( icons, cats, version ) {
 		return (
 			`\t'${ jsEscape( slug ) }': { ` +
 			`label: __( '${ jsEscape( i.label ) }', '${ TEXT_DOMAIN }' ), ` +
-			`w: ${ i.width }, h: ${ i.height }, ` +
+			`width: ${ i.width }, height: ${ i.height }, ` +
 			`path: '${ jsEscape( i.path ) }'${ cat } },`
 		);
 	} );
@@ -521,8 +526,14 @@ async function main() {
 	const cats = yaml.load( catsRaw );
 	const { icons, skipped } = buildIconSet( raw, cats );
 
-	const phpPath = path.join( ROOT, 'icon-handler', 'icons.php' );
-	const jsPath = path.join( ROOT, 'src', 'ui', 'icons-data.js' );
+	const phpPath = path.join( ROOT, 'includes', 'icon-handler', 'icons.php' );
+	const jsPath = path.join(
+		ROOT,
+		'src',
+		'ui',
+		'icon-library',
+		'icons-data.js'
+	);
 
 	fs.mkdirSync( path.dirname( phpPath ), { recursive: true } );
 	fs.mkdirSync( path.dirname( jsPath ), { recursive: true } );
@@ -535,7 +546,7 @@ async function main() {
 	 * future maintainer can prove which release an icon came from.
 	 */
 	fs.writeFileSync(
-		path.join( ROOT, 'icon-handler', 'source.json' ),
+		path.join( ROOT, 'includes', 'icon-handler', 'source.json' ),
 		JSON.stringify(
 			{
 				source: 'Font Awesome Free',
@@ -565,9 +576,9 @@ async function main() {
 	}
 
 	console.log( `  categories      ${ Object.keys( cats ).length }` );
-	console.log( `\n  icon-handler/icons.php    ${ kb( phpPath ) }` );
-	console.log( `  src/ui/icons-data.js      ${ kb( jsPath ) }` );
-	console.log( `  icon-handler/source.json  provenance recorded` );
+	console.log( `\n  includes/icon-handler/icons.php    ${ kb( phpPath ) }` );
+	console.log( `  src/ui/icon-library/icons-data.js  ${ kb( jsPath ) }` );
+	console.log( `  includes/icon-handler/source.json  provenance recorded` );
 }
 
 main().catch( ( err ) => {
