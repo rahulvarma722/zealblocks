@@ -31,5 +31,17 @@
 }
 
 @tailwind base;
+
+/*
+ * The inspector preview mirrors on exactly the terms the front end does, so an
+ * LTR editor shows the icon as an LTR visitor will see it. See the note in
+ * src/button/style.scss for why RTLCSS has to be told to leave this alone.
+ */
+
+/*rtl:ignore*/
+[dir="rtl"] .zb-ui .zb-icon-preview--rtl {
+	transform: scaleX(-1);
+}
+
 @tailwind components;
 @tailwind utilities;
