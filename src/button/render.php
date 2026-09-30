@@ -204,10 +204,10 @@ if ( '' !== $link_title ) {
 /*
  * Icons come from the generated library, not a map kept here by hand.
  *
- * This used to be a four-entry $icon_paths array duplicating src/button/icon.js,
- * with a comment warning that a key added to one had to be added to the other
- * or the icon silently disappeared on save. Both sides now resolve the same
- * slug through the same generated data, so they cannot drift.
+ * This used to be a four-entry $icon_paths array, with a JS twin in the block's
+ * own directory and a comment on each warning that a key added to one had to be
+ * added to the other or the icon silently disappeared on save. Both sides now
+ * resolve the same slug through the same generated data, so they cannot drift.
  *
  * Icon_Library::render() escapes the path and builds the SVG; the wrapper is
  * rebuilt rather than stored so the same geometry can take different classes.
