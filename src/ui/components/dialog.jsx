@@ -17,7 +17,10 @@
  *    its duration, so the panel flies in from the right and snaps into place on
  *    the last frame. Margin-auto centring leaves `transform` free.
  *
- * 3. The animation and the close button copy core's Modal
+ * 3. The export list is trimmed to what this plugin renders — see the note
+ *    above it.
+ *
+ * 4. The animation and the close button copy core's Modal
  *    (wp-includes/css/dist/components/style.css): 200ms opacity + scale(.9) on
  *    an `rgba(0,0,0,.35)` overlay, and a plain 36px icon button that turns the
  *    admin accent colour on hover.
@@ -55,8 +58,6 @@ const DialogPortal = ( { container, ...props } ) => (
 		{ ...props }
 	/>
 );
-
-const DialogClose = DialogPrimitive.Close;
 
 const DialogOverlay = React.forwardRef( ( { className, ...props }, ref ) => (
 	<DialogPrimitive.Overlay
@@ -122,17 +123,6 @@ const DialogHeader = ( { className, ...props } ) => (
 );
 DialogHeader.displayName = 'DialogHeader';
 
-const DialogFooter = ( { className, ...props } ) => (
-	<div
-		className={ cn(
-			'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
-			className
-		) }
-		{ ...props }
-	/>
-);
-DialogFooter.displayName = 'DialogFooter';
-
 const DialogTitle = React.forwardRef( ( { className, ...props }, ref ) => (
 	<DialogPrimitive.Title
 		ref={ ref }
@@ -145,26 +135,10 @@ const DialogTitle = React.forwardRef( ( { className, ...props }, ref ) => (
 ) );
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
-const DialogDescription = React.forwardRef(
-	( { className, ...props }, ref ) => (
-		<DialogPrimitive.Description
-			ref={ ref }
-			className={ cn( 'text-sm text-muted-foreground', className ) }
-			{ ...props }
-		/>
-	)
-);
-DialogDescription.displayName = DialogPrimitive.Description.displayName;
-
-export {
-	Dialog,
-	DialogPortal,
-	DialogOverlay,
-	DialogTrigger,
-	DialogClose,
-	DialogContent,
-	DialogHeader,
-	DialogFooter,
-	DialogTitle,
-	DialogDescription,
-};
+/*
+ * Only what something actually renders. Upstream also exports Portal, Overlay,
+ * Close, Footer and Description; Portal and Overlay are used here and the rest
+ * were dead. Re-running the shadcn CLI brings them all back, which is the
+ * point of the tool — there is nothing to lose by not carrying them.
+ */
+export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle };

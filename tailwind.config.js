@@ -18,35 +18,18 @@ module.exports = {
 	theme: {
 		extend: {
 			/*
-			 * shadcn components use semantic colour names — `bg-primary`,
-			 * `hover:bg-accent`, `border-input`. These are not stock Tailwind, so
-			 * they have to be declared here or those classes generate nothing.
+			 * shadcn components use semantic colour names — `bg-muted`,
+			 * `border-border`. These are not stock Tailwind, so they have to be
+			 * declared here or those classes generate nothing, with no error.
 			 *
-			 * Values live as CSS variables in src/ui/tailwind.css, pointed at
-			 * WordPress admin's palette rather than shadcn's defaults.
+			 * Listed here is what the plugin actually uses. src/ui/tailwind.css
+			 * holds the values and names the rest of shadcn's palette, for
+			 * whoever adds the next component from the registry.
 			 */
 			colors: {
 				border: 'var(--zb-border)',
-				input: 'var(--zb-input)',
-				ring: 'var(--zb-ring)',
 				background: 'var(--zb-background)',
 				foreground: 'var(--zb-foreground)',
-				primary: {
-					DEFAULT: 'var(--zb-primary)',
-					foreground: 'var(--zb-primary-foreground)',
-				},
-				secondary: {
-					DEFAULT: 'var(--zb-secondary)',
-					foreground: 'var(--zb-secondary-foreground)',
-				},
-				destructive: {
-					DEFAULT: 'var(--zb-destructive)',
-					foreground: 'var(--zb-destructive-foreground)',
-				},
-				accent: {
-					DEFAULT: 'var(--zb-accent)',
-					foreground: 'var(--zb-accent-foreground)',
-				},
 				muted: {
 					DEFAULT: 'var(--zb-muted)',
 					foreground: 'var(--zb-muted-foreground)',

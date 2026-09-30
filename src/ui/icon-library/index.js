@@ -7,6 +7,11 @@
  *
  *   import IconControl from '@/ui/icon-library';          the inspector field
  *   import { useIcon, Icon } from '@/ui/icon-library';    render a saved slug
+ *   import { IconPicker } from '@/ui/icon-library';       open the picker yourself
+ *
+ * primeIcon is NOT exported. It writes to the render cache, which only the
+ * picker has any business doing, and a block calling it could seed a slug with
+ * geometry that does not match what the front end will draw.
  *
  * icons-data.js is deliberately NOT exported. It is ~1.5 MB and must only ever
  * be reached through the picker's dynamic import(); a static re-export here
@@ -14,6 +19,5 @@
  */
 
 export { default } from './icon-control';
-export { default as IconControl } from './icon-control';
 export { default as IconPicker } from './icon-picker';
-export { useIcon, Icon, primeIcon } from './use-icon';
+export { useIcon, Icon } from './use-icon';
