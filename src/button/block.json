@@ -54,6 +54,10 @@
 				"right"
 			],
 			"default": "right"
+		},
+		"flipForRTL": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"supports": {
