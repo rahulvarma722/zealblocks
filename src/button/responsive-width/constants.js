@@ -107,8 +107,8 @@ export const CSS_VARS = {
  * Core's device names, as returned by `select( 'core/editor' ).getDeviceType()`.
  */
 export const DESKTOP = 'Desktop';
-export const TABLET = 'Tablet';
-export const MOBILE = 'Mobile';
+const TABLET = 'Tablet';
+const MOBILE = 'Mobile';
 
 /**
  * Device name to the viewport-state key core uses inside `style`.
