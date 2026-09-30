@@ -202,28 +202,28 @@ $check( 'unknown icon key ignored', false === strpos( $out, 'passwd' ) );
 $check( 'hostile block emitted no <style> element at all', false === stripos( $out, '<style' ) );
 
 // ---------------------------------------------------------------------
-echo "\nIcon — core's icon registry\n";
+echo "\nIcon — the plugin's own icon library\n";
 // ---------------------------------------------------------------------
 $check( 'zealblocks/icon registered', $registry->is_registered( 'zealblocks/icon' ) );
-$check( "core's wp_get_icon() is available", function_exists( 'wp_get_icon' ) );
+$check( 'Icon_Library resolves a slug', null !== Zealblocks\Icon_Handler\Library::get( 'star' ) );
 
-$out = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled"} /-->' );
+$out = do_blocks( '<!-- wp:zealblocks/icon {"icon":"star"} /-->' );
 
-$check( 'renders an SVG from the registry', false !== strpos( $out, '<svg' ) );
+$check( 'renders an SVG from the library', false !== strpos( $out, '<svg' ) );
 $check( 'wrapped for block supports', false !== strpos( $out, 'wp-block-zealblocks-icon' ) );
 
 /*
- * The accessibility branch is core's, and it is the reason for using
- * wp_get_icon() rather than emitting SVG by hand: an unlabelled icon is
- * decoration and must be hidden from assistive technology, a labelled one is
- * content and must be announced.
+ * The accessibility branch lives in Icon_Library::render(), and the editor's
+ * <Icon> mirrors it: an unlabelled icon is decoration and must be hidden from
+ * assistive technology, a labelled one is content and must be announced. Both
+ * blocks get it from the same place, so neither can drift.
  */
 $check(
     'no label -> aria-hidden + focusable=false',
     false !== strpos( $out, 'aria-hidden="true"' ) && false !== strpos( $out, 'focusable="false"' )
 );
 
-$labelled = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","label":"Rating"} /-->' );
+$labelled = do_blocks( '<!-- wp:zealblocks/icon {"icon":"star","label":"Rating"} /-->' );
 
 $check(
     'label -> role=img + aria-label',
@@ -233,18 +233,18 @@ $check( 'a labelled icon is NOT aria-hidden', false === strpos( $labelled, 'aria
 
 // Flip and rotation belong on the SVG, not the wrapper: a transform on the
 // wrapper would rotate any background, border and padding with it.
-$flipped = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
+$flipped = do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","flipHorizontal":true,"flipVertical":true} /-->' );
 
 $check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-horizontal is-flip-vertical/', $flipped ) );
 $check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
 
-$rotated = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","rotation":90} /-->' );
+$rotated = do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":90} /-->' );
 $check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
 
 // Normalisation: a stored value outside 0-359 must not emit a meaningless
 // declaration, and a negative must resolve to its positive equivalent.
-$check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","rotation":720} /-->' ), 'rotate:' ) );
-$check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
+$check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":720} /-->' ), 'rotate:' ) );
+$check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
 
 // ---------------------------------------------------------------------
 echo "\nIcon — block by default, inline on request\n";
@@ -254,18 +254,18 @@ echo "\nIcon — block by default, inline on request\n";
  * is opt-in. Asserted because the class is what the CSS keys off — a silent
  * change here would alter every icon's layout on every site.
  */
-$block_level = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled"} /-->' );
-$inline      = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","isInline":true} /-->' );
+$block_level = do_blocks( '<!-- wp:zealblocks/icon {"icon":"star"} /-->' );
+$inline      = do_blocks( '<!-- wp:zealblocks/icon {"icon":"star","isInline":true} /-->' );
 
 $check( 'default emits no is-inline class', false === strpos( $block_level, 'is-inline' ) );
 $check( 'isInline true emits is-inline', false !== strpos( $inline, 'is-inline' ) );
 $check(
     'isInline false is the same as omitting it',
-    ( false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","isInline":false} /-->' ), 'is-inline' ) )
+    ( false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"star","isInline":false} /-->' ), 'is-inline' ) )
 );
 $check(
     'is-inline composes with rotation and a width',
-    1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
+    1 === preg_match( '/<div[^>]*is-inline/', do_blocks( '<!-- wp:zealblocks/icon {"icon":"star","isInline":true,"rotation":90,"style":{"dimensions":{"width":"32px"}}} /-->' ) )
 );
 
 // ---------------------------------------------------------------------
@@ -278,10 +278,10 @@ echo "\nIcon — the icon name is resolved by core, which is the validation\n";
  * assuming it.
  */
 $hostile = array(
-    'unregistered'     => 'core/does-not-exist',
+    'unregistered'     => 'does-not-exist',
     'unnamespaced'     => 'star-filled',
     'path traversal'   => '../../wp-config',
-    'script injection' => 'core/x"><script>alert(1)</script>',
+    'script injection' => 'x"><script>alert(1)</script>',
     'raw svg tag'      => '<svg onload=alert(1)>',
     'empty'            => '',
 );
@@ -298,7 +298,7 @@ foreach ( $hostile as $why => $name ) {
 
 $check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
 
-$escaped = do_blocks( '<!-- wp:zealblocks/icon {"icon":"core/star-filled","label":"\"><script>alert(1)</script>"} /-->' );
+$escaped = do_blocks( '<!-- wp:zealblocks/icon {"icon":"star","label":"\"><script>alert(1)</script>"} /-->' );
 $check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
 
 // ---------------------------------------------------------------------

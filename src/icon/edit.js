@@ -2,7 +2,7 @@
  * Icon — editor.
  */
 
-import { __, sprintf } from '@wordpress/i18n';
+import { __ } from '@wordpress/i18n';
 import {
 	useBlockProps,
 	InspectorControls,
@@ -10,7 +10,6 @@ import {
 } from '@wordpress/block-editor';
 import {
 	Button,
-	Modal,
 	ToggleControl,
 	RangeControl,
 	TextControl,
@@ -21,32 +20,21 @@ import {
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
+
 import { useState } from '@wordpress/element';
 
-import { useIcons, findIcon } from './use-icons';
-import IconPicker from './icon-picker';
+import IconControl, { IconPicker, useIcon, Icon } from '@/ui/icon-library';
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
 	const { icon, isInline, flipHorizontal, flipVertical, rotation, label } =
 		attributes;
 
-	const { icons, isLoading } = useIcons();
-	const selected = findIcon( icons, icon );
-
 	/*
-	 * The picker opens in a MODAL, not inline in the sidebar.
-	 *
-	 * A grid of 88 glyphs in a 280px inspector panel is about four per row and
-	 * a lot of scrolling — you cannot scan it, which is the one thing a visual
-	 * picker has to allow. The modal also leaves room for search and the
-	 * collection filter without them squeezing the grid.
+	 * One slug, not a list. The old hook fetched all 88 registered icons over
+	 * REST just to find the one this block had; PHP now inlines whatever the
+	 * post uses, so this is usually resolved before the first render.
 	 */
-	const [ isPickerOpen, setIsPickerOpen ] = useState( false );
-
-	const choose = ( name ) => {
-		setAttributes( { icon: name } );
-		setIsPickerOpen( false );
-	};
+	const iconData = useIcon( icon );
 
 	/*
 	 * `is-placeholder` exists because blockProps HAS to sit on the outermost
@@ -75,22 +63,43 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			 * regardless of the setting.
 			 */
 			hasIcon && isInline ? 'is-inline' : '',
-			flipHorizontal ? 'is-flip-horizontal' : '',
-			flipVertical ? 'is-flip-vertical' : '',
 		]
 			.filter( Boolean )
 			.join( ' ' ),
 	} );
 
-	const modal = isPickerOpen && (
-		<Modal
-			title={ __( 'Icon library', 'zealblocks' ) }
-			onRequestClose={ () => setIsPickerOpen( false ) }
-			size="medium"
-			className="zealblocks-icon-picker__modal"
-		>
-			<IconPicker value={ icon } onSelect={ choose } />
-		</Modal>
+	/*
+	 * Flip classes go on the SVG, not here.
+	 *
+	 * style.scss selects `svg.is-flip-horizontal`, and render.php puts them
+	 * there with the HTML API. The editor had them on the wrapper, where that
+	 * selector cannot match — so flipping did nothing in the canvas while
+	 * working perfectly once published.
+	 */
+	const svgClasses = [
+		'wp-block-zealblocks-icon__svg',
+		flipHorizontal ? 'is-flip-horizontal' : '',
+		flipVertical ? 'is-flip-vertical' : '',
+	]
+		.filter( Boolean )
+		.join( ' ' );
+
+	const setIcon = ( value ) => setAttributes( { icon: value } );
+
+	/*
+	 * One picker for the whole block, opened from the toolbar and from the
+	 * empty state. Driven rather than triggered, because neither of those
+	 * buttons is safe to hand to Radix's `asChild`.
+	 */
+	const [ isPickerOpen, setIsPickerOpen ] = useState( false );
+
+	const picker = (
+		<IconPicker
+			value={ icon }
+			onChange={ setIcon }
+			open={ isPickerOpen }
+			onOpenChange={ setIsPickerOpen }
+		/>
 	);
 
 	const toolbar = (
@@ -128,21 +137,12 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					isShownByDefault
 					panelId={ clientId }
 				>
-					<Button
-						__next40pxDefaultSize
-						variant="secondary"
-						onClick={ () => setIsPickerOpen( true ) }
-						disabled={ isLoading }
-						aria-haspopup="dialog"
-					>
-						{ selected
-							? sprintf(
-									/* translators: %s: the selected icon's name. */
-									__( 'Change icon: %s', 'zealblocks' ),
-									selected.label || selected.name
-							  )
-							: __( 'Select an icon', 'zealblocks' ) }
-					</Button>
+					{ /*
+					 * The same control the button block uses. Two blocks
+					 * rendering their own idea of an icon field is how they
+					 * drift.
+					 */ }
+					<IconControl value={ icon } onChange={ setIcon } />
 				</ToolsPanelItem>
 
 				<ToolsPanelItem
@@ -258,30 +258,13 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		</InspectorControls>
 	);
 
-	if ( isLoading && ! icon ) {
+	// Nothing chosen yet.
+	if ( ! icon ) {
 		return (
 			<>
 				{ toolbar }
 				{ controls }
-				{ modal }
-				<div { ...blockProps }>
-					<Placeholder
-						icon="star-filled"
-						label={ __( 'Icon', 'zealblocks' ) }
-					>
-						<Spinner />
-					</Placeholder>
-				</div>
-			</>
-		);
-	}
-
-	if ( ! selected ) {
-		return (
-			<>
-				{ toolbar }
-				{ controls }
-				{ modal }
+				{ picker }
 				<div { ...blockProps }>
 					<Placeholder
 						icon="star-filled"
@@ -305,30 +288,52 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		);
 	}
 
+	/*
+	 * Chosen, but not resolved yet. Only reachable for a slug PHP did not
+	 * inline — pasted content, or an icon picked in another session of the
+	 * same page — so it is brief and rare. Showing the empty placeholder here
+	 * would tell the user their icon had been lost.
+	 */
+	if ( ! iconData ) {
+		return (
+			<>
+				{ toolbar }
+				{ controls }
+				{ picker }
+				<div { ...blockProps }>
+					<Placeholder
+						icon="star-filled"
+						label={ __( 'Icon', 'zealblocks' ) }
+					>
+						<Spinner />
+					</Placeholder>
+				</div>
+			</>
+		);
+	}
+
 	return (
 		<>
 			{ toolbar }
 			{ controls }
-			{ modal }
+			{ picker }
 			<div { ...blockProps }>
 				{ /*
-				 * The SVG markup comes from core's icon registry over an
-				 * authenticated REST endpoint (`edit_posts`), and is the same
-				 * markup wp_get_icon() prints on the front end. There is no
-				 * React equivalent — the registry stores markup, not
-				 * components — so this is the only way to preview it, and
-				 * rendering anything else here would mean the canvas showing
-				 * something the front end does not produce.
+				 * Drawn from the same data the front end uses, by a component
+				 * that mirrors Icon_Library::render() — so the canvas cannot
+				 * show something publishing would not produce. The old path
+				 * injected registry markup with dangerouslySetInnerHTML,
+				 * which this removes.
 				 */ }
-				<span
-					className="wp-block-zealblocks-icon__svg"
+				<Icon
+					icon={ iconData }
+					className={ svgClasses }
+					label={ label }
 					style={
 						rotation
 							? { rotate: `${ rotation % 360 }deg` }
 							: undefined
 					}
-					// eslint-disable-next-line react/no-danger
-					dangerouslySetInnerHTML={ { __html: selected.content } }
 				/>
 			</div>
 		</>

@@ -160,12 +160,27 @@ export function useIcon( slug ) {
  * @param {Object}  props           Props.
  * @param {?Object} props.icon      Icon data from useIcon().
  * @param {string=} props.className Extra classes.
+ * @param {string=} props.label     Accessible label. Empty hides the icon from
+ *                                  assistive technology, which is right for an
+ *                                  icon sitting beside its own text.
+ * @param {Object=} props.style     Inline style, for values a class cannot
+ *                                  carry — the icon block's free rotation.
+ *                                  render.php sets the same attribute.
  * @return {?Element} The SVG, or null.
  */
-export function Icon( { icon, className = '' } ) {
+export function Icon( { icon, className = '', label = '', style } ) {
 	if ( ! icon ) {
 		return null;
 	}
+
+	/*
+	 * Same branch as the PHP. An icon with a label is content and announces
+	 * itself; one without is decoration and must not, or a screen reader reads
+	 * the button's text twice.
+	 */
+	const accessibility = label
+		? { role: 'img', 'aria-label': label }
+		: { 'aria-hidden': 'true', focusable: 'false' };
 
 	return (
 		<svg
@@ -173,8 +188,8 @@ export function Icon( { icon, className = '' } ) {
 			xmlns="http://www.w3.org/2000/svg"
 			viewBox={ `0 0 ${ icon.width } ${ icon.height }` }
 			fill="currentColor"
-			aria-hidden="true"
-			focusable="false"
+			style={ style }
+			{ ...accessibility }
 		>
 			<path d={ icon.path } />
 		</svg>
