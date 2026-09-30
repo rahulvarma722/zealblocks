@@ -18,11 +18,11 @@ import {
 	Spinner,
 	ToolbarGroup,
 	ToolbarButton,
-	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 
+import CollapsibleToolsPanel from '../components/collapsible-tools-panel';
 import { useIcons, findIcon } from './use-icons';
 import IconPicker from './icon-picker';
 
@@ -108,8 +108,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	const controls = (
 		<InspectorControls group="settings">
-			<ToolsPanel
+			<CollapsibleToolsPanel
 				label={ __( 'Icon', 'zealblocks' ) }
+				initialOpen={ true }
 				resetAll={ () =>
 					setAttributes( {
 						isInline: false,
@@ -254,7 +255,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						) }
 					/>
 				</ToolsPanelItem>
-			</ToolsPanel>
+			</CollapsibleToolsPanel>
 		</InspectorControls>
 	);
 
