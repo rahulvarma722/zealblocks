@@ -1,11 +1,16 @@
 /*
  * Design tokens for shadcn components.
  *
- * Names match shadcn's registry — `--zb-primary` feeds `bg-primary`, and so on
- * via tailwind.config.js. The VALUES are WordPress admin's: #2271b1 is the
- * admin link/primary blue and 3px is the admin control radius, against
- * shadcn's default 8px. That difference is most of what makes an unthemed
- * shadcn install look foreign inside wp-admin.
+ * Names match shadcn's registry — `--zb-muted` feeds `bg-muted`, and so on via
+ * tailwind.config.js. The VALUES are WordPress admin's, and 3px is the admin
+ * control radius against shadcn's default 8px. That difference is most of what
+ * makes an unthemed shadcn install look foreign inside wp-admin.
+ *
+ * ONLY WHAT IS USED IS DECLARED. shadcn's full palette also has primary,
+ * secondary, destructive, accent, input and ring. A component pasted from the
+ * registry that reaches for one of those will generate NOTHING and fail
+ * silently — add the token here and the mapping in tailwind.config.js at the
+ * same time.
  *
  * Scoped to .zb-ui because every utility is emitted as `.zb-ui .foo` — an
  * element outside this class gets no styling at all.
@@ -14,19 +19,9 @@
 .zb-ui {
 	--zb-background: #fff;
 	--zb-foreground: #1e1e1e;
-	--zb-primary: #2271b1;
-	--zb-primary-foreground: #fff;
-	--zb-secondary: #f0f0f1;
-	--zb-secondary-foreground: #1e1e1e;
-	--zb-destructive: #d63638;
-	--zb-destructive-foreground: #fff;
-	--zb-accent: #f0f0f1;
-	--zb-accent-foreground: #1e1e1e;
 	--zb-muted: #f0f0f1;
 	--zb-muted-foreground: #50575e;
 	--zb-border: #dcdcde;
-	--zb-input: #8c8f94;
-	--zb-ring: #2271b1;
 	--zb-radius: 3px;
 }
 
