@@ -363,8 +363,20 @@ export default function IconPicker( { value, onChange, children } ) {
 							 * Hand the geometry straight to the render cache.
 							 * The picker already has it, so the block that is
 							 * about to draw this icon needs no request.
+							 *
+							 * The category NAME goes with it, resolved here
+							 * because this is the only place it exists — the
+							 * PHP library carries no categories at all, since
+							 * the front end never groups or searches. The
+							 * inspector shows it when it has it.
 							 */
-							primeIcon( slug, data.ICONS[ slug ] );
+							const chosen = data.ICONS[ slug ];
+
+							primeIcon( slug, {
+								...chosen,
+								categoryLabel:
+									data.CATEGORIES[ chosen?.cats?.[ 0 ] ],
+							} );
 							onChange( slug );
 							setIsOpen( false );
 						} }

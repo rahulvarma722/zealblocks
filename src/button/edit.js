@@ -66,8 +66,17 @@ export default function Edit( {
 	isSelected,
 	clientId,
 } ) {
-	const { text, url, linkTarget, rel, title, style, icon, iconPosition } =
-		attributes;
+	const {
+		text,
+		url,
+		linkTarget,
+		rel,
+		title,
+		style,
+		icon,
+		iconPosition,
+		flipForRTL,
+	} = attributes;
 
 	// Resolves the saved slug. Preloaded by PHP, so this costs nothing on load.
 	const iconData = useIcon( icon );
@@ -121,14 +130,17 @@ export default function Edit( {
 			inline[ CSS_VARS.iconSize ] = previewIconSize;
 		}
 
+		// Mirrors render.php, so the canvas and the front end agree.
+		const classes = [
+			icon && 'left' === iconPosition ? 'has-icon-left' : '',
+			icon && flipForRTL ? 'has-rtl-flip' : '',
+		].filter( Boolean );
+
 		return {
 			...( Object.keys( inline ).length ? { style: inline } : {} ),
-			// Mirrors render.php, so the icon sits on the same side in both.
-			...( icon && 'left' === iconPosition
-				? { className: 'has-icon-left' }
-				: {} ),
+			...( classes.length ? { className: classes.join( ' ' ) } : {} ),
 		};
-	}, [ previewWidth, previewIconSize, icon, iconPosition ] );
+	}, [ previewWidth, previewIconSize, icon, iconPosition, flipForRTL ] );
 
 	// The block root. render.php puts the same classes on its <a>.
 	const blockProps = useBlockProps( extraBlockProps );
@@ -177,6 +189,10 @@ export default function Edit( {
 						value={ icon }
 						onChange={ ( value ) =>
 							setAttributes( { icon: value } )
+						}
+						flipForRTL={ flipForRTL }
+						onFlipForRTLChange={ ( value ) =>
+							setAttributes( { flipForRTL: value } )
 						}
 					/>
 
