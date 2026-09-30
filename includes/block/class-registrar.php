@@ -118,7 +118,7 @@ final class Registrar implements Module {
 			array(
 				array(
 					'slug'  => ZEALBLOCKS_SLUG,
-					'title' => __( 'Zealblocks', 'zealblocks' ),
+					'title' => __( 'Zealblocks (Beta)', 'zealblocks' ),
 					'icon'  => null,
 				),
 			),
