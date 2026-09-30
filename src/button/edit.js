@@ -18,7 +18,6 @@ import {
 import {
 	PanelBody,
 	TextControl,
-	SelectControl,
 	ToolbarButton,
 	Popover,
 	__experimentalToggleGroupControl as ToggleGroupControl,
@@ -26,7 +25,7 @@ import {
 } from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 
-import { ButtonIcon, ICON_OPTIONS } from './icon';
+import IconControl, { useIcon, Icon } from '@/ui/icon-library';
 import ResponsiveWidthControl from './responsive-width';
 import { useStyleState } from './responsive-width/use-style-state';
 import { getResolvedValue } from './responsive-width/style-value';
@@ -69,6 +68,9 @@ export default function Edit( {
 } ) {
 	const { text, url, linkTarget, rel, title, style, icon, iconPosition } =
 		attributes;
+
+	// Resolves the saved slug. Preloaded by PHP, so this costs nothing on load.
+	const iconData = useIcon( icon );
 
 	const [ isEditingLink, setIsEditingLink ] = useState( false );
 
@@ -171,12 +173,8 @@ export default function Edit( {
 
 			<InspectorControls>
 				<PanelBody title={ __( 'Settings', 'zealblocks' ) }>
-					<SelectControl
-						__nextHasNoMarginBottom
-						__next40pxDefaultSize
-						label={ __( 'Icon', 'zealblocks' ) }
+					<IconControl
 						value={ icon }
-						options={ ICON_OPTIONS }
 						onChange={ ( value ) =>
 							setAttributes( { icon: value } )
 						}
@@ -248,7 +246,10 @@ export default function Edit( {
 					allowedFormats={ [] }
 					identifier="text"
 				/>
-				<ButtonIcon icon={ icon } />
+				<Icon
+					icon={ iconData }
+					className="wp-block-zealblocks-button__icon"
+				/>
 			</span>
 
 			{ isSelected && isEditingLink && (
