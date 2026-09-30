@@ -83,3 +83,26 @@
 		flex-direction: row-reverse;
 	}
 }
+
+/*
+ * RTL MIRRORING.
+ *
+ * Some icons carry a direction — an arrow, a reply, a chevron — and read
+ * backwards in a right-to-left language. Others, a heart or a clock, must
+ * never be mirrored. Only the author knows which, so it is opt-in per block
+ * rather than applied to everything with a `transform`.
+ *
+ * Costs nothing in LTR: the rule cannot match, so no transform is created and
+ * no compositing layer with it.
+ *
+ * `/*rtl:ignore*\/` is load-bearing. wp-scripts runs RTLCSS over this file to
+ * build style-index-rtl.css, and RTLCSS swaps `[dir="rtl"]` for `[dir="ltr"]`
+ * — which would leave the rule matching in LTR and dead in RTL, the exact
+ * reverse of the intent. RTL sites load only the generated file, so there
+ * would be nothing left to notice the mistake.
+ */
+
+/*rtl:ignore*/
+[dir="rtl"] .wp-block-zealblocks-button.has-rtl-flip .wp-block-zealblocks-button__icon {
+	transform: scaleX(-1);
+}

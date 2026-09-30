@@ -255,6 +255,8 @@ $wrapper_classes = array_filter(
 		$responsive['class'],
 		// Mirrors the editor, so the icon sits on the same side in both.
 		'' !== $icon_markup && 'left' === $icon_position ? 'has-icon-left' : '',
+		// Opt-in mirroring for directional icons; style.scss gates it on [dir=rtl].
+		'' !== $icon_markup && ! empty( $attributes['flipForRTL'] ) ? 'has-rtl-flip' : '',
 	)
 );
 
