@@ -135,6 +135,18 @@ $check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
 $check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 512 512"' ) );
 $check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
 $check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' ) );
+$check( 'no RTL flip class unless asked for', false === strpos( $out, 'has-rtl-flip' ) );
+
+/*
+ * RTL MIRRORING is opt-in, and only means anything when there is an icon to
+ * mirror. The class is all the front end needs: style.scss gates the transform
+ * on [dir=rtl], so this costs an LTR page nothing.
+ */
+$rtl_flipped = do_blocks( '<!-- wp:zealblocks/button {"text":"Back","url":"https://ex.org","icon":"arrow-right","flipForRTL":true} /-->' );
+$rtl_no_icon = do_blocks( '<!-- wp:zealblocks/button {"text":"Back","url":"https://ex.org","flipForRTL":true} /-->' );
+
+$check( 'flipForRTL adds the class', false !== strpos( $rtl_flipped, 'has-rtl-flip' ) );
+$check( 'flipForRTL is inert without an icon', false === strpos( $rtl_no_icon, 'has-rtl-flip' ) );
 
 /*
  * THE REGRESSION THIS PINS. The guard used to fire only when rel was EMPTY, so
