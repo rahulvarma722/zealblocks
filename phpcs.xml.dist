@@ -16,6 +16,19 @@
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<exclude-pattern>*/build/*</exclude-pattern>
+
+	<!--
+		GENERATED ICON DATA.
+
+		includes/icon-handler/icons.php is ~1.5 MB of machine-written array rows.
+		PHPCS reads it fine, but the FIXER exhausts a 128 MB limit building its
+		token map, which fails the release gate with a fatal rather than a finding.
+
+		The file already carries its own phpcs:disable for the one sniff it would
+		trip, so scanning it was buying nothing. bin/generate-icons-json.js is
+		linted normally — the generator is hand-written and its output is not.
+	-->
+	<exclude-pattern>*/includes/icon-handler/icons.php</exclude-pattern>
 	<exclude-pattern>*/dist/*</exclude-pattern>
 
 	<!-- Only PHP. src/ is mostly JS/SCSS, which wp-scripts lints. -->
