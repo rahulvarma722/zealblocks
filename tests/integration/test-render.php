@@ -94,7 +94,7 @@ $check( 'sub-namespace classes autoload from includes/block/', class_exists( 'Ze
 echo "\nRendering — the happy path\n";
 // ---------------------------------------------------------------------
 $good = '<!-- wp:zealblocks/buttons -->'
-	. '<!-- wp:zealblocks/button {"text":"Click me","url":"https://example.org/?a=1&b=2","icon":"arrow",'
+	. '<!-- wp:zealblocks/button {"text":"Click me","url":"https://example.org/?a=1&b=2","icon":"arrow-right",'
 	. '"iconPosition":"left","linkTarget":"_blank","style":{"zealblocks":{"width":"200px","iconSize":"1.5em"},'
 	. '"@tablet":{"zealblocks":{"width":"150px"}},"@mobile":{"zealblocks":{"width":"100%","iconSize":"2em"}}}} /-->'
 	. '<!-- /wp:zealblocks/buttons -->';
@@ -132,7 +132,7 @@ $printed = (string) ob_get_clean();
 $check( 'store flushed through wp_add_inline_style() as one tag', false !== strpos( $printed, 'id="wp-style-engine-zealblocks-inline-css"' ) );
 $check( 'flushed tag carries the base width', 1 === preg_match( '/width:\s*200px/', $printed ) );
 $check( 'icon is aria-hidden', false !== strpos( $out, 'aria-hidden="true"' ) );
-$check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 20 20"' ) );
+$check( 'viewBox casing preserved (wp_kses would lowercase it)', false !== strpos( $out, 'viewBox="0 0 512 512"' ) );
 $check( 'left icon position class applied', false !== strpos( $out, 'has-icon-left' ) );
 $check( 'noopener added for target=_blank', false !== strpos( $out, 'noopener' ) );
 
@@ -161,7 +161,7 @@ echo "\nRendering — hostile input\n";
 // ---------------------------------------------------------------------
 $hostile = '<!-- wp:zealblocks/buttons -->'
 	. '<!-- wp:zealblocks/button {"text":"Hi <script>alert(1)</script><img src=x onerror=alert(1)><strong>bold</strong>",'
-	. '"url":"https://ex.org","icon":"arrow","linkTarget":"evil\" onmouseover=\"alert(1)",'
+	. '"url":"https://ex.org","icon":"arrow-right","linkTarget":"evil\" onmouseover=\"alert(1)",'
 	. '"rel":"noopener\"><script>alert(1)</script>","title":"<script>alert(1)</script>tip",'
 	. '"style":{"zealblocks":{"width":"expression(alert(1))"},"@mobile":{"zealblocks":{"width":"-50px"}}}} /-->'
 	. '<!-- wp:zealblocks/button {"text":"T2","url":"javascript:alert(1)"} /-->'
