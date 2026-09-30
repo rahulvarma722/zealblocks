@@ -287,16 +287,45 @@ function Browser( { data, value, onSelect, onScrolledChange } ) {
 /**
  * Icon picker dialog.
  *
- * @param {Object}   props          Props.
- * @param {?string}  props.value    Selected slug.
- * @param {Function} props.onChange Called with the new slug.
- * @param {Element}  props.children The trigger.
+ * @param {Object}    props              Props.
+ * @param {?string}   props.value        Selected slug.
+ * @param {Function}  props.onChange     Called with the new slug.
+ * @param {Element=}  props.children     The trigger. Omit when driving `open`.
+ * @param {boolean=}  props.open         Controls the dialog. Omit to self-manage.
+ * @param {Function=} props.onOpenChange Called when the dialog wants to open or close.
  * @return {Element} The picker.
  */
-export default function IconPicker( { value, onChange, children } ) {
-	const [ isOpen, setIsOpen ] = useState( false );
+export default function IconPicker( {
+	value,
+	onChange,
+	children,
+	open,
+	onOpenChange,
+} ) {
+	const [ internalOpen, setInternalOpen ] = useState( false );
 	const [ data, setData ] = useState( null );
 	const [ isScrolled, setIsScrolled ] = useState( false );
+
+	/*
+	 * Controlled when a caller passes `open`, self-managing otherwise.
+	 *
+	 * The trigger covers most callers — a button that opens the picker sitting
+	 * right where the picker belongs. It does not cover a toolbar button:
+	 * ToolbarButton is an Ariakit composite item with its own roving tabindex,
+	 * and handing that to Radix's `asChild` to clone is the kind of thing that
+	 * works until it silently does not. A caller in that position drives the
+	 * open state directly and passes no children.
+	 */
+	const isControlled = undefined !== open;
+	const isOpen = isControlled ? open : internalOpen;
+
+	const setIsOpen = ( next ) => {
+		if ( ! isControlled ) {
+			setInternalOpen( next );
+		}
+
+		onOpenChange?.( next );
+	};
 
 	useEffect( () => {
 		if ( ! isOpen || data ) {
@@ -319,18 +348,20 @@ export default function IconPicker( { value, onChange, children } ) {
 	return (
 		<Dialog
 			open={ isOpen }
-			onOpenChange={ ( open ) => {
-				setIsOpen( open );
+			onOpenChange={ ( next ) => {
+				setIsOpen( next );
 
 				// The grid unmounts with the dialog and comes back at the top,
 				// with no scroll event to say so. Without this the rule would
 				// still be showing the next time the picker opens.
-				if ( ! open ) {
+				if ( ! next ) {
 					setIsScrolled( false );
 				}
 			} }
 		>
-			<DialogTrigger asChild>{ children }</DialogTrigger>
+			{ children ? (
+				<DialogTrigger asChild>{ children }</DialogTrigger>
+			) : null }
 
 			{ /* gap-0 because the header band below sets its own spacing. */ }
 			<DialogContent className="w-[80rem] max-w-[calc(100%-32px)] gap-0">

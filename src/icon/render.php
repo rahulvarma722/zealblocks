@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
  * this template from inside a closure in global scope.
  */
 use Zealblocks\Block\Render as Block_Render;
+use Zealblocks\Icon_Handler\Library as Icon_Library;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -35,30 +36,30 @@ if ( '' === $icon_name ) {
 }
 
 /*
- * THE SVG COMES FROM CORE, NOT FROM US.
+ * THE SVG COMES FROM OUR OWN LIBRARY.
  *
- * wp_get_icon() (WordPress 7.1) resolves a namespaced name against
- * WP_Icons_Registry and returns the markup. Building the SVG here instead
- * would mean shipping our own copy of every icon and hand-rolling the
- * accessibility attributes — which is exactly what the button block does, and
- * why its icon map has to be kept in step with icon.js by hand.
+ * This used to call core's wp_get_icon(), which meant this block and the
+ * button block drew from two different sets with two different slug
+ * namespaces — `core/star-filled` here, `star` there — and neither could
+ * render the other's saved value.
  *
- * It also returns '' for an unknown name, which is the validation: a name that
- * is not registered cannot produce markup, so there is no allow-list to
- * maintain here and no way for a stored value to inject anything.
+ * Icon_Library::render() returns '' for a slug it does not hold, which is the
+ * validation: an unknown value cannot produce markup, so there is no
+ * allow-list to maintain and no way for a stored string to inject anything.
+ * The path itself is esc_attr()'d there.
  *
- * `size => null` leaves the SVG's intrinsic viewBox alone. Sizing is the
+ * No size is passed, so the SVG keeps its intrinsic viewBox. Sizing is the
  * `dimensions.width` support's job — core serialises it onto the wrapper and
- * style.scss makes the SVG fill it, so a user's width setting wins and stays
- * overridable. Passing a number here would hard-code width/height attributes
- * that CSS then has to fight.
+ * style.scss makes the SVG fill it, so the user's setting wins and stays
+ * overridable. Hard-coding width/height here would only give CSS something to
+ * fight.
  */
 $label = Block_Render::text( $attributes, 'label' );
 
-$svg = wp_get_icon(
+$svg = Icon_Library::render(
 	$icon_name,
 	array(
-		'size'  => null,
+		'class' => 'wp-block-zealblocks-icon__svg',
 		'label' => $label,
 	)
 );
@@ -128,5 +129,5 @@ $wrapper_attributes = get_block_wrapper_attributes(
 printf(
 	'<div %1$s>%2$s</div>',
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); the string is attribute markup, so escaping it again would corrupt it.
-	$svg // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Produced by core's wp_get_icon() from the icon registry, then rewritten by WP_HTML_Tag_Processor. An unregistered name returns '' and is refused above.
+	$svg // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built by Icon_Library::render(), which esc_attr()s every interpolated value, then rewritten by WP_HTML_Tag_Processor. An unknown slug returns '' and is refused above.
 );
