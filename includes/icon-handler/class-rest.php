@@ -46,6 +46,13 @@ final class Rest implements \Zealblocks\Module {
 	const ROUTE = '/icons';
 
 	/**
+	 * Route serving the picker's labels and categories.
+	 *
+	 * @var string
+	 */
+	const CATALOG_ROUTE = '/icon-catalog';
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function register() {
@@ -73,6 +80,24 @@ final class Rest implements \Zealblocks\Module {
 						'sanitize_callback' => 'sanitize_text_field',
 					),
 				),
+			)
+		);
+
+		/*
+		 * The picker's text, separate from its geometry.
+		 *
+		 * The geometry is an async chunk webpack loads at runtime, which is not
+		 * a registered script handle — so WordPress can never load JS
+		 * translations for it. Labels and category titles come through here
+		 * instead, already translated by PHP, where the .org pipeline works.
+		 */
+		register_rest_route(
+			self::NAMESPACE,
+			self::CATALOG_ROUTE,
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'handle_catalog' ),
+				'permission_callback' => array( $this, 'can_read' ),
 			)
 		);
 	}
@@ -105,6 +130,26 @@ final class Rest implements \Zealblocks\Module {
 		 */
 		$slugs = array_slice( array_unique( $slugs ), 0, 100 );
 
-		return rest_ensure_response( Library::get_many( $slugs ) );
+		return rest_ensure_response( Catalog::with_category( Library::get_many( $slugs ) ) );
+	}
+
+	/**
+	 * Returns every label and category title, translated.
+	 *
+	 * One response for the whole picker rather than a search endpoint: the
+	 * picker filters 1992 rows locally as you type, and a request per keystroke
+	 * would make an instant interaction network-bound.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function handle_catalog() {
+		/*
+		 * Deliberately no Cache-Control. The set only changes on plugin update,
+		 * so a long max-age looks free — but the URL carries no version, so it
+		 * would serve a stale catalog for the length of the header after every
+		 * update. The picker already caches this for the session in module
+		 * scope, which is the win that matters.
+		 */
+		return rest_ensure_response( Catalog::index() );
 	}
 }

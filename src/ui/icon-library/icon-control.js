@@ -104,13 +104,13 @@ export default function IconControl( {
 	} );
 
 	/*
-	 * The source, and the category when we know it.
+	 * The source, and the category.
 	 *
-	 * categoryLabel is attached by the picker at selection time, because it is
-	 * the only place the category NAMES exist — icons.php carries no categories
-	 * at all, deliberately, since the front end never groups or searches. So an
-	 * icon chosen in this session reads "Library · Commerce" and one restored
-	 * from a saved post reads "Library" until the picker is opened.
+	 * categoryLabel is attached server-side by Catalog::with_category(), on
+	 * both editor paths — the inlined payload and the REST route — so this
+	 * reads the same for an icon restored from a saved post as for one just
+	 * chosen. It used to come only from the picker, which meant the line
+	 * quietly lost its category on reload.
 	 */
 	const meta = [ __( 'Library', 'zealblocks' ), icon?.categoryLabel ]
 		.filter( Boolean )

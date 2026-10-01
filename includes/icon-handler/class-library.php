@@ -61,6 +61,20 @@ final class Library {
 	}
 
 	/**
+	 * Every icon, for the one caller that genuinely needs the whole set.
+	 *
+	 * That caller is the picker's index (Catalog::index()), which labels 1992
+	 * grid cells. Everything else resolves by slug and must keep doing so —
+	 * handing the full array around is how a front-end path ends up loading
+	 * 1.5 MB to draw one glyph.
+	 *
+	 * @return array<string, array> Slug => { label, width, height, path }.
+	 */
+	public static function all_icons() {
+		return self::all();
+	}
+
+	/**
 	 * Looks up one icon.
 	 *
 	 * @param string $slug Icon slug, e.g. 'heart'.
