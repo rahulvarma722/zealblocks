@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Zealblocks (Beta)
  * Description:       A Gutenberg block collection built on the WordPress 7.1 block API.
- * Version:           0.0.1-beta
+ * Version:           0.0.2-beta
  * Requires at least: 7.1
  * Requires PHP:      8.1
  * Author:            Aman Dubey
@@ -43,7 +43,7 @@ defined( 'ABSPATH' ) || exit;
  *   site saves a post using one of these blocks. Changing it without
  *   shipping block `deprecated` definitions breaks existing content.
  */
-define( 'ZEALBLOCKS_VERSION', '0.0.1-beta' );
+define( 'ZEALBLOCKS_VERSION', '0.0.2-beta' );
 define( 'ZEALBLOCKS_SLUG', 'zealblocks' );
 define( 'ZEALBLOCKS_PATH', plugin_dir_path( __FILE__ ) );
 
