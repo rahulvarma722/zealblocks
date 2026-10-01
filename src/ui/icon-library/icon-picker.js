@@ -3,18 +3,29 @@
  *
  * Basic on purpose; the shape is what matters for now.
  *
- * WHY THE DATA IS IMPORTED DYNAMICALLY.
+ * WHERE ITS DATA COMES FROM, AND WHY IT IS TWO PLACES.
  *
- * ui/icons-data.js is ~1.5 MB. A static import would fold it into the editor
- * bundle for everyone, including sessions that never open the picker — and
- * because wp-scripts disables webpack's default chunk sharing, every block
- * that imported it would carry its OWN copy. `import()` emits one async chunk,
- * fetched on first open and cached by the browser after that.
+ * Geometry — 1.3 MB of SVG paths — is a dynamically imported chunk. A static
+ * import would fold it into the editor bundle for everyone, including sessions
+ * that never open the picker, and because wp-scripts disables webpack's chunk
+ * sharing every block that imported it would carry its OWN copy.
+ *
+ * Text — labels and category titles — comes from REST, resolved by PHP.
+ *
+ * That split is not an optimisation, it is the only arrangement in which the
+ * picker can be translated. A chunk is loaded by the webpack runtime, not
+ * enqueued, so it is not a registered script handle; WordPress looks up JS
+ * translations by md5 of a handle's src, finds nothing, and every label stays
+ * English with no error. PHP has no such problem.
+ *
+ * Both are fetched in parallel on first open, so the round trip costs nothing
+ * against a 1.3 MB download.
  */
 
 import { __ } from '@wordpress/i18n';
 import { useState, useEffect, useMemo, useRef } from '@wordpress/element';
 import { SearchControl, Spinner } from '@wordpress/components';
+import apiFetch from '@wordpress/api-fetch';
 
 import {
 	Dialog,
@@ -63,13 +74,54 @@ const HEADER_RULE_COLOR = '#dbdbdb';
 /** Resolved once per session, shared by every picker instance. */
 let dataPromise = null;
 
+/**
+ * Fetches geometry and text together, and merges them into one map.
+ *
+ * @return {Promise<Object>} { CATEGORIES, ICONS }.
+ */
 function loadIconData() {
 	if ( ! dataPromise ) {
-		dataPromise = import( '@/ui/icon-library/icons-data' ).catch( () => {
-			// Never cache a failure, or the picker stays empty for the session.
-			dataPromise = null;
-			return { CATEGORIES: {}, ICONS: {} };
-		} );
+		dataPromise = Promise.all( [
+			/*
+			 * The chunk is NAMED, and that name is load-bearing. Left to
+			 * webpack it is `898.js`, an id that moves whenever the module
+			 * graph does — which would change this file's path, and with it
+			 * anything keyed to that path, silently.
+			 */
+			import(
+				/* webpackChunkName: "icons-data" */ '@/ui/icon-library/icons-data'
+			),
+			apiFetch( { path: '/zealblocks/v1/icon-catalog' } ),
+		] )
+			.then( ( [ geometry, catalog ] ) => {
+				const ICONS = {};
+
+				/*
+				 * Driven by the catalog, not the geometry: an icon with no
+				 * label cannot be searched for or shown, so it has no business
+				 * in the grid. This also means a slug present in one and not
+				 * the other is dropped rather than rendered half-formed.
+				 */
+				Object.entries( catalog?.icons ?? {} ).forEach(
+					( [ slug, text ] ) => {
+						const art = geometry.ICONS[ slug ];
+
+						if ( art ) {
+							ICONS[ slug ] = { ...art, ...text };
+						}
+					}
+				);
+
+				return {
+					CATEGORIES: catalog?.categories ?? {},
+					ICONS,
+				};
+			} )
+			.catch( () => {
+				// Never cache a failure, or the picker stays empty for the session.
+				dataPromise = null;
+				return { CATEGORIES: {}, ICONS: {} };
+			} );
 	}
 
 	return dataPromise;

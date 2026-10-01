@@ -63,7 +63,7 @@ final class Editor_Provider implements \Zealblocks\Module {
 		// lookup and one entry in the payload.
 		$slugs = array_slice( array_values( array_unique( $slugs ) ), 0, self::MAX_INLINE );
 
-		$data['icons'] = Library::get_many( $slugs );
+		$data['icons'] = Catalog::with_category( Library::get_many( $slugs ) );
 
 		return $data;
 	}
