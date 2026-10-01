@@ -140,11 +140,8 @@ package. The other three it cannot check — keep them in step by hand.
 declared minimum, so the release validates the floor the readme promises),
 refuses if the tag disagrees with the `Version:` header, runs `build-zip.sh`,
 and attaches two assets — `zealblocks-<version>.zip` plus a stable-named
-`zealblocks.zip`, so this link always resolves to the newest:
-
-```
-https://github.com/rahulvarma722/zealblocks/releases/latest/download/zealblocks.zip
-```
+`zealblocks.zip`, so the repository's "latest release" download link always
+resolves to the newest build.
 
 `.github/workflows/ci.yml` runs the same linters on every push and PR.
 

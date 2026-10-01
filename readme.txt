@@ -81,16 +81,6 @@ Zealblocks does not collect, store or transmit any data. It makes no external
 network requests, sets no cookies, creates no database tables, and registers no
 REST endpoints or AJAX handlers.
 
-= Source code =
-
-The JavaScript in `build/` is compiled and minified by `@wordpress/scripts`.
-The unminified sources, the build configuration and the full development
-history are public at:
-
-https://github.com/rahulvarma722/zealblocks
-
-To build from source: `npm install && npm run build`.
-
 == Installation ==
 
 1. Upload the plugin through **Plugins > Add New**, or extract the ZIP into `wp-content/plugins/`.

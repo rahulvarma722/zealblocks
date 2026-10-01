@@ -349,15 +349,21 @@ done
 ok "no development files"
 
 # Guideline 4: the shipped JS is minified, so the source has to be reachable.
-# src/ no longer ships, which means the readme disclosure is now the ONLY thing
-# satisfying it — so it is verified rather than assumed.
-if ! grep -qE 'https?://[^ ]+' readme.txt; then
-	die "readme.txt must document where the unminified source lives (Guideline 4), since src/ is not shipped."
-fi
-ok "readme documents the source location (Guideline 4)"
-
+#
+# NOTHING IN THIS PACKAGE SATISFIES THAT RIGHT NOW. src/ does not ship, and the
+# readme's source disclosure was removed deliberately — the only public mirror
+# named an account the author does not want published.
+#
+# A plain `grep for a URL` check would pass on the GPL License URI and report a
+# compliance that does not exist, so it warns on every build instead of lying.
+# Closing it means one of: shipping src/ in the payload, or a source URL that
+# is safe to publish.
 if [[ -d "$ROOT/src" ]]; then
-	die "src/ is in the package but the readme points elsewhere for source — pick one."
+	ok "src/ ships, so the minified build has its source alongside it (Guideline 4)"
+elif grep -qE '^= Source code =' readme.txt; then
+	ok "readme documents the source location (Guideline 4)"
+else
+	warn "no source disclosure: src/ is not shipped and readme.txt has no 'Source code' section. Guideline 4 covers minified JS and is enforced on review."
 fi
 
 # The plugin must actually be loadable: main file parseable and headers intact.
