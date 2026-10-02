@@ -24,11 +24,15 @@ reimplemented. What Zealblocks adds is the part core leaves out.
 * **Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
 * **Button** — a button-style link with an optional icon, and per-viewport width and icon size.
 
-= Built on the WordPress icon library =
+= 1,992 icons, shared by every block =
 
-The Icon block uses the icon registry WordPress 7.1 added, so it draws on the 88
-icons that ship with core rather than bundling its own set — and any icon a
-theme or plugin registers appears in it automatically.
+The Icon and Button blocks draw from one bundled library of 1,992 Font Awesome
+Free icons, searchable and grouped into 68 categories. A block stores only the
+icon's name, so the artwork is resolved when the page renders — post content
+stays small, and an updated icon set applies to pages already published.
+
+The picker loads its artwork only when you open it, so an editor session that
+never picks an icon never downloads one.
 
 Icons are marked up correctly for assistive technology: leave the alternative
 text empty and the icon is hidden from screen readers as decoration; set it and
@@ -69,17 +73,29 @@ when unset, never to Tablet.
 
 = Icons =
 
-Four built-in icons (arrow, chevron, download, external), positionable left or
-right. Position is done with `flex-direction: row-reverse` rather than `order`,
-so the DOM order stays text-then-icon and the button's accessible name is
-unaffected by where the icon appears. Icons are marked `aria-hidden` — they are
-decorative, and the button text is the accessible name.
+Any icon from the bundled library, positionable left or right. Position is done
+with `flex-direction: row-reverse` rather than `order`, so the DOM order stays
+text-then-icon and the button's accessible name is unaffected by where the icon
+appears. Icons are marked `aria-hidden` — they are decorative, and the button
+text is the accessible name.
+
+Directional icons can be set to mirror in right-to-left languages. It is opt-in
+per block, because an arrow should flip and a clock should not.
 
 = Privacy =
 
 Zealblocks does not collect, store or transmit any data. It makes no external
-network requests, sets no cookies, creates no database tables, and registers no
-REST endpoints or AJAX handlers.
+network requests, sets no cookies, and creates no database tables.
+
+It registers two REST routes under `zealblocks/v1`, used by the editor to look
+up icon names and artwork. Both require the `edit_posts` capability, read only
+from files bundled with the plugin, and are never called by the front end.
+
+= Credits =
+
+Icons are from Font Awesome Free 7.3.1, licensed CC BY 4.0
+(https://fontawesome.com/license/free). Font Awesome is a trademark of
+Fonticons, Inc.
 
 == Installation ==
 
@@ -140,6 +156,13 @@ No. Every block renders server-side in PHP and ships no front-end script.
 
 == Changelog ==
 
+= 0.0.2-beta =
+* Icon library: 1,992 Font Awesome Free icons in 68 categories, shared by the Icon and Button blocks.
+* Icon picker with search, category filtering and a virtualised grid.
+* The Icon block now uses this library instead of core's icon registry. Icons saved with a previous version must be re-selected.
+* Buttons can mirror a directional icon in right-to-left languages.
+* Marked beta.
+
 = 0.0.1 =
 * Initial release.
 * Buttons container block with flex layout, block gap, padding and wide/full alignment.
@@ -147,6 +170,9 @@ No. Every block renders server-side in PHP and ships no front-end script.
 * Per-viewport Custom Width and Icon Size using WordPress 7.1 style states and core's viewport media queries.
 
 == Upgrade Notice ==
+
+= 0.0.2-beta =
+Beta release. The Icon block moves to a new bundled icon library, so icons chosen with 0.0.1 need re-selecting.
 
 = 0.0.1 =
 Initial release.
