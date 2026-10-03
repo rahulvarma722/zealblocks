@@ -1,61 +1,76 @@
 # Zealblocks — developer documentation
 
-A Gutenberg block collection built on the WordPress 7.1 block API. Four blocks:
-a buttons container and its child, an icon, and a text block. Core 7.1 already
-emits per-viewport CSS for its own style paths, so the plugin inherits that
-rather than reimplementing it; what it adds is per-viewport support for
-properties core has no support for, stored in core's own `style` attribute
-under a namespaced key and generated with core's breakpoints.
+A Gutenberg block collection built on the WordPress 7.1 block API.
 
 ## Where to start
 
-| Document | What it covers |
+| if you want to… | read |
 |---|---|
-| [Architecture](ARCHITECTURE.md) | Namespace, autoloader, bootstrap order, class map, file layout |
-| [Blocks](BLOCKS.md) | Registration by directory scan, `block.json`, the save/render split, parent–child |
-| [Styles](STYLES.md) | SCSS layout, class naming, the per-viewport mechanism, the CSS-variable indirection |
-| [Testing](TESTING.md) | The three suites, what each is for, and how to add to them |
-| [Build and release](BUILD-AND-RELEASE.md) | `npm run build:zip`, the release gate, linting, GitHub + WordPress.org |
-| [Renaming](RENAMING.md) | Changing the plugin's name, and what becomes permanent after the first release |
-| [Responsive styles experiment](RESPONSIVE-STYLES-EXPERIMENT.md) | The R&D log behind the per-viewport work: what was tried, what core allows, two bugs found |
+| understand the plugin's shape | [architecture.md](architecture.md) |
+| work on a block | [blocks/](blocks/README.md) |
+| work on icons | [icons/](icons/README.md) |
+| work on per-viewport values | [responsive-styles/](responsive-styles/README.md) |
+| understand the CSS conventions | [styles.md](styles.md) |
+| add or run tests | [testing.md](testing.md) |
+| cut a release | [build-and-release.md](build-and-release.md) |
 
 ## The 60-second version
 
+Four blocks — `buttons`, `button`, `icon`, `text` — all of which return `null`
+from `save()` and render in PHP. Blocks register from `build/`, so
+`npm install && npm run build` is required after a checkout or the plugin
+activates while registering nothing.
+
+Two features carry most of the complexity:
+
+- **Icons** — 1,992 bundled Font Awesome icons, resolved by slug, with a
+  searchable picker. Roughly 4,500 hand-written lines plus three generated files.
+- **Responsive styles** — per-viewport values built on core's style states.
+
+## Layout
+
 ```
-zealblocks.php              header + constants + boot (GLOBAL namespace)
-  └─ includes/            everything else, namespace Zealblocks
-       class-autoloader.php        Zealblocks\* -> includes/class-*.php
-       class-plugin.php            module registry: a list of what is enabled
-       class-helper.php            environment getters (breakpoints, paths)
-       class-responsive-styles.php turns per-viewport values into CSS
-       block/                      code that talks to the block API
-         class-registrar.php         registers every block found in build/
-         class-render.php            shared render-template helpers
-  ├─ src/                 authored blocks — edit.js, block.json, scss, render.php
-  └─ build/               wp-scripts output; THIS is what gets registered
+includes/              PHP. Namespaced Zealblocks\, PSR-4-ish autoloading
+  block/               registration and render helpers
+  icon-handler/        the icon library (+ 2 generated files)
+src/                   JS and SCSS sources — NOT loaded at runtime
+  <block>/             one folder per block
+  ui/                  shared editor UI: icon library, Tailwind, shadcn dialog
+build/                 what actually loads. Generated. gitignored
+bin/                   generator, zip builder, integration runner
+tests/                 unit (PHP), js (Jest), integration (real WordPress)
+docs/                  you are here
 ```
-
-Two facts explain most of the surprising decisions in this codebase:
-
-1. **Blocks are registered from `build/`, not `src/`.** `wp-scripts` copies
-   `block.json` and `render.php` across at build time, and the compiled
-   `block.json` references asset files that only exist there. `build/` is
-   gitignored, so a fresh clone needs `npm install && npm run build` before the
-   plugin does anything at all.
-
-2. **Per-viewport values live inside core's `style` attribute** under a
-   namespaced key, not in attributes of our own. That is what makes a Zealblocks
-   control behave like a core one — same breakpoints, same state model, same
-   reset behaviour — and it is why `render.php` has to generate the CSS itself.
 
 ## Conventions
 
-- **PHP** — WordPress-Extra + WordPress-Docs, enforced by `composer lint`.
-  Namespaced `Zealblocks\*`, autoloaded, no global functions or classes added.
-- **JS/CSS** — `@wordpress/scripts` defaults, enforced by `npm run lint:js` and
-  `npm run lint:css`.
-- **No literals for identity.** Block names come from `block.json`, option keys
-  and handles from `ZEALBLOCKS_SLUG`. See [Renaming](RENAMING.md) for why.
-- **Comments explain *why*.** The what is readable from the code; the reason a
-  non-obvious choice was made is not, and this codebase leans on core
-  internals often enough that the reason matters.
+- **Comments explain why, not what.** If a line's reason is not obvious from the
+  code, it gets a comment; otherwise it does not.
+- **Decisions are recorded where they bind**, not in a changelog. A constraint
+  that will trip someone up belongs next to the code that depends on it.
+- **Generated files are committed** and marked as generated in their headers.
+  Never edit them by hand.
+- **Verify in compiled output**, not source. Several real bugs here passed every
+  gate while being broken — a Tailwind class that silently generated nothing, an
+  RTL rule inverted by RTLCSS, translations keyed to a file nothing loads.
+
+## Documentation layout
+
+Feature-based. A feature gets a folder when it is large enough to need one, and
+a single file otherwise.
+
+```
+docs/
+├── README.md                    this file
+├── architecture.md              boot, autoloading, modules, editor data
+├── icons/                       6 files — the largest feature
+├── blocks/                      shared concerns + one file per block
+├── responsive-styles/           the shipped feature + the R&D bench
+├── styles.md
+├── testing.md
+└── build-and-release.md
+```
+
+When adding a feature, document what a developer actually needs to **set it up,
+understand its data flow, extend it and troubleshoot it** — not every section
+mechanically. Only what applies.

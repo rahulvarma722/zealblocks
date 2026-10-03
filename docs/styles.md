@@ -193,7 +193,7 @@ detection.
 
 The full reasoning, what else was tried, and why the `styles` inspector group
 is a trap, is in
-[Responsive styles experiment](RESPONSIVE-STYLES-EXPERIMENT.md).
+[Responsive styles experiment](responsive-styles/experiment.md).
 
 ## Editor/front-end parity
 

@@ -147,7 +147,7 @@ is the only real check that the floor holds.
 
 There is deliberately **no** namespace constant — `register_block_type()` reads
 block names only from `block.json`, so a constant could only duplicate that
-literal and drift from it. See [Renaming](RENAMING.md).
+literal and drift from it.
 
 ## The classes
 
@@ -241,7 +241,53 @@ than reaching a stylesheet.
 
 ### `Responsive_Styles`
 Converts namespaced per-viewport values into CSS, using the bands
-`Helper::media_queries()` resolves. Covered in [Styles](STYLES.md).
+`Helper::media_queries()` resolves. Covered in [Styles](styles.md).
+
+## The icon library
+
+Five classes were added with the icon library and are documented in full under
+[icons/](icons/README.md):
+
+| class | file | role |
+|---|---|---|
+| `Icon_Handler\Library` | `includes/icon-handler/class-library.php` | slug → geometry; front end and editor |
+| `Icon_Handler\Catalog` | `includes/icon-handler/class-catalog.php` | category titles and membership; **editor only** |
+| `Icon_Handler\Rest` | `includes/icon-handler/class-rest.php` | `/zealblocks/v1/icons` and `/icon-catalog` |
+| `Icon_Handler\Editor_Provider` | `includes/icon-handler/class-editor-provider.php` | inlines a post's icons into the editor |
+| `Editor_Settings` | `includes/class-editor-settings.php` | the generic editor-data pipeline |
+
+Both `Library` and `Catalog` read **generated** files and must load them
+lazily — each calls `__()` on include, and a text domain used before
+`after_setup_theme` raises `_doing_it_wrong` (`wp-includes/l10n.php:1444`).
+
+## The editor-data pipeline
+
+`Editor_Settings` is **not icon-specific**, and that is the point.
+
+Any feature wanting server-resolved data in the editor needs the same two
+things first: the post parsed into blocks, and only this plugin's blocks. Done
+per feature, that is one full walk of the block tree each.
+
+So the walk happens once, and anything contributes through a filter:
+
+```php
+add_filter( 'zealblocks_editor_data', function ( $data, $blocks ) {
+	$data['your_feature'] = …;   // return an empty value and the key is dropped
+	return $data;
+}, 10, 2 );
+```
+
+The result is printed as a JS global before the bundle:
+
+```php
+wp_add_inline_script( 'wp-blocks', 'window.zealblocksData = {…}', 'before' );
+```
+
+**Not `block_editor_settings_all`.** `core/block-editor` filters settings
+through an allow-list of keys it knows and silently drops a plugin's own — the
+key comes back `undefined` with no error anywhere.
+
+Icons are the first caller, not the only one.
 
 ## What this plugin does not do
 

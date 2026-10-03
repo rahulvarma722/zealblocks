@@ -22,7 +22,7 @@ defined( 'ABSPATH' ) || exit;
  * ---------------------------------------------------------------------
  * Nothing else in the codebase should contain the literal string
  * "zealblocks" except each block's `block.json`, where the name has to be a
- * static string — see bin/rename.sh and docs/RENAMING.md.
+ * static string — see bin/rename.sh.
  *
  * ZEALBLOCKS_SLUG    Folder name, text domain, script handles, block
  *                  category. Changeable before release; after release the

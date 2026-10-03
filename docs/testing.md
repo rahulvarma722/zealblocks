@@ -67,7 +67,7 @@ rules binding them are invariants **no single file can check**:
 | `block.json` `version` must match the plugin version | Browsers stay on a stale asset bundle |
 
 The first two **both shipped as real bugs**, and both were documented as traps
-in [BLOCKS.md](BLOCKS.md) *first*. That did not help, because a comment cannot
+in [blocks/README.md](blocks/README.md) *first*. That did not help, because a comment cannot
 fail a build. The checks now live at the same scope as the invariants: they read
 the files together and assert the relationship.
 
