@@ -30,7 +30,7 @@ Neither is needed to *run* the plugin, only to build and lint it. Nothing in
 | `composer lint` / `npm run lint:php` | PHPCS |
 | `composer format` / `npm run format:php` | PHPCBF |
 | `npm run lint:js` / `lint:css` | ESLint / Stylelint |
-| `./bin/rename.sh <slug>` | Rename the plugin — see [Renaming](RENAMING.md) |
+| `./bin/rename.sh <slug>` | Rename the plugin. Pre-release only — after release the folder rename breaks .org updates. The script's own comments are the reference. |
 
 `build-zip.sh` runs the linters and the build itself, so you do not need to run
 them separately before packaging.
