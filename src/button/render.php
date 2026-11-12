@@ -38,6 +38,7 @@ defined( 'ABSPATH' ) || exit;
  * be a lie about its dependencies.
  */
 use Zealblocks\Block\Hover;
+use Zealblocks\Block\Hover_Label;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Icon_Handler\Library as Icon_Library;
 
@@ -69,12 +70,6 @@ use Zealblocks\Icon_Handler\Library as Icon_Library;
  */
 
 $text = Block_Render::text( $attributes, 'text' );
-
-// An empty button is invisible on the front end but still occupies a
-// flex slot, so render nothing at all.
-if ( '' === trim( wp_strip_all_tags( $text ) ) ) {
-	return;
-}
 
 /*
  * SANITISE ON THE WAY IN, ESCAPE ON THE WAY OUT.
@@ -215,7 +210,69 @@ if ( '' !== $link_title ) {
  */
 $icon_key      = Block_Render::text( $attributes, 'icon' );
 $icon_position = Block_Render::one_of( Block_Render::text( $attributes, 'iconPosition' ), array( 'left', 'right' ), 'right' );
-$icon_markup   = Icon_Library::render( $icon_key, array( 'class' => 'wp-block-zealblocks-button__icon' ) );
+
+/*
+ * Rotation (B-08), and the hover icon's own (B-10), as a custom property on
+ * each SVG rather than a `transform`: style.scss spends it, and its RTL rule
+ * combines it with the flip in the right order, which an inline transform
+ * would override. 0 adds nothing, so an unrotated icon prints as before.
+ */
+$icon_args = static function ( $class_name, $angle ) {
+	return 0 === $angle
+		? array( 'class' => $class_name )
+		: array(
+			'class' => $class_name . ' has-rotation',
+			'style' => sprintf( '--zealblocks-button-icon-rotation:%ddeg;', $angle ),
+		);
+};
+
+$icon_markup = Icon_Library::render(
+	$icon_key,
+	$icon_args( 'wp-block-zealblocks-button__icon', Block_Render::angle( $attributes, 'iconRotation' ) )
+);
+
+/*
+ * Icon only (B-09): "Show text" off hides the text and makes it the button's
+ * aria-label, as in Spectra. Only with an icon that resolves: without one the
+ * button would be empty, so the text shows whatever the attribute says.
+ */
+$hides_text = '' !== $icon_markup && false === ( $attributes['showText'] ?? true );
+
+// An empty button is invisible on the front end but still occupies a
+// flex slot, so render nothing at all. An icon-only button is not empty.
+if ( ! $hides_text && '' === trim( wp_strip_all_tags( $text ) ) ) {
+	return;
+}
+
+if ( $hides_text ) {
+	$aria_label = trim( wp_strip_all_tags( $text ) );
+
+	// Escaped with the rest by get_block_wrapper_attributes(). Left out when
+	// empty: an empty aria-label names nothing, and hides the title.
+	if ( '' !== $aria_label ) {
+		$extra_attributes['aria-label'] = $aria_label;
+	}
+}
+
+/*
+ * The hover icon (B-10): replaces the icon while the button is hovered or has
+ * keyboard focus, or appears beside the text when there is no icon. Printed
+ * after the icon; style.scss orders it left or right of the text. Its label
+ * swaps the aria-label on hover and focus, which only means something when
+ * there is no visible text to name the button, so it is used only then.
+ */
+$hover_icon_markup = empty( $attributes['showIconOnHover'] )
+	? ''
+	: Icon_Library::render(
+		Block_Render::text( $attributes, 'hoverIcon' ),
+		$icon_args( 'wp-block-zealblocks-button__hover-icon', Block_Render::angle( $attributes, 'hoverIconRotation' ) )
+	);
+$hover_icon_left   = '' !== $hover_icon_markup && ! $hides_text
+	&& 'left' === Block_Render::one_of( Block_Render::text( $attributes, 'hoverIconPosition' ), array( 'left', 'right' ), 'right' );
+
+if ( '' !== $hover_icon_markup && $hides_text ) {
+	$extra_attributes = array_merge( $extra_attributes, Hover_Label::attributes( Block_Render::text( $attributes, 'hoverIconAriaLabel' ) ) );
+}
 
 
 /*
@@ -312,6 +369,9 @@ $wrapper_classes = array_filter(
 		'' !== $icon_markup && 'left' === $icon_position ? 'has-icon-left' : '',
 		// Opt-in mirroring for directional icons; style.scss gates it on [dir=rtl].
 		'' !== $icon_markup && ! empty( $attributes['flipForRTL'] ) ? 'has-rtl-flip' : '',
+		'' !== $hover_icon_markup ? 'has-hover-icon' : '',
+		$hover_icon_left ? 'has-hover-icon-left' : '',
+		'' !== $hover_icon_markup && ! empty( $attributes['hoverIconFlipForRTL'] ) ? 'has-hover-icon-rtl-flip' : '',
 		...$hover_classes,
 		$has_shadow_hover ? 'has-shadow-hover' : '',
 	)
@@ -363,9 +423,10 @@ $wrapper_attributes = get_block_wrapper_attributes(
 Block_Render::store_rules( $responsive['rules'] );
 
 printf(
-	'<%1$s %2$s><span class="wp-block-zealblocks-button__text">%3$s</span>%4$s</%1$s>',
+	'<%1$s %2$s>%3$s%4$s%5$s</%1$s>',
 	esc_attr( $tag_name ),
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); the string is attribute markup, so escaping it again would corrupt it.
-	wp_kses( $text, Block_Render::LABEL_HTML ),
-	$icon_markup // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Literal SVG template; the only interpolated value is esc_attr()'d above and comes from a fixed four-entry map. See the note there for why wp_kses() cannot be used.
+	$hides_text ? '' : '<span class="wp-block-zealblocks-button__text">' . wp_kses( $text, Block_Render::LABEL_HTML ) . '</span>',
+	$icon_markup, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built by Icon_Library::render(), which esc_attr()s every interpolated value.
+	$hover_icon_markup // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built by Icon_Library::render(), which esc_attr()s every interpolated value.
 );

@@ -98,6 +98,26 @@ final class Render {
 	}
 
 	/**
+	 * Reads an angle attribute as whole degrees, 0 to 359.
+	 *
+	 * A cast rather than a pattern: the value comes from an angle picker, and
+	 * an integer cannot carry anything into a style attribute. The modulo folds
+	 * the picker's 360 and a hand-edited 720 into the same turn, and a negative
+	 * angle into its positive equivalent, so equal rotations print equally.
+	 *
+	 * @param array  $attributes Block attributes.
+	 * @param string $key        Attribute name.
+	 * @return int
+	 */
+	public static function angle( $attributes, $key ) {
+		$value = is_array( $attributes ) && isset( $attributes[ $key ] ) && is_numeric( $attributes[ $key ] )
+			? (int) $attributes[ $key ] % 360
+			: 0;
+
+		return $value < 0 ? $value + 360 : $value;
+	}
+
+	/**
 	 * Escapes a URL, returning '' when it is not usable.
 	 *
 	 * The return value is the thing to branch on, not the input. esc_url()

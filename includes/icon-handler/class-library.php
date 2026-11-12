@@ -129,6 +129,9 @@ final class Library {
 	 *     @type string $label Accessible label. When empty the SVG is hidden
 	 *                         from assistive technology, which is correct for
 	 *                         an icon sitting beside its own text.
+	 *     @type string $style Inline style, for a value a class cannot carry:
+	 *                         the Button's icon rotation. Escaped here; the
+	 *                         caller builds it from validated values only.
 	 * }
 	 * @return string SVG markup, or '' when the slug is unknown.
 	 */
@@ -142,16 +145,19 @@ final class Library {
 		$class = isset( $args['class'] ) ? trim( 'zealblocks-icon ' . $args['class'] ) : 'zealblocks-icon';
 		$label = $args['label'] ?? '';
 
+		$style = isset( $args['style'] ) ? trim( (string) $args['style'] ) : '';
+
 		$accessibility = '' !== $label
 			? sprintf( ' role="img" aria-label="%s"', esc_attr( $label ) )
 			: ' aria-hidden="true" focusable="false"';
 
 		return sprintf(
-			'<svg class="%1$s" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %2$d %3$d" fill="currentColor"%4$s><path d="%5$s"/></svg>',
+			'<svg class="%1$s" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %2$d %3$d" fill="currentColor"%4$s%5$s><path d="%6$s"/></svg>',
 			esc_attr( $class ),
 			(int) $icon['width'],
 			(int) $icon['height'],
 			$accessibility,
+			'' !== $style ? sprintf( ' style="%s"', esc_attr( $style ) ) : '',
 			esc_attr( $icon['path'] )
 		);
 	}

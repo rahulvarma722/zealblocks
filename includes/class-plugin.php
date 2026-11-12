@@ -9,6 +9,7 @@ namespace Zealblocks;
 
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
+use Zealblocks\Block\Hover_Label;
 use Zealblocks\Block\Registrar;
 use Zealblocks\Icon_Handler\Editor_Provider as Icon_Editor_Provider;
 use Zealblocks\Icon_Handler\Rest as Icon_Rest;
@@ -40,6 +41,7 @@ final class Plugin {
 		Registrar::class,
 		Display_Conditions::class,
 		Animation::class,
+		Hover_Label::class,
 	);
 
 	/**

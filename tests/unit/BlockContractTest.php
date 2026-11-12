@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
+use Zealblocks\Block\Hover_Label;
 use Zealblocks\Block\Z_Index;
 
 /**
@@ -436,6 +437,25 @@ final class BlockContractTest extends TestCase {
 		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $button . 'constants.js' ) );
 		$this->assertStringContainsString( '".wp-block-zealblocks-button", "' . $prefix . '",', $flat( $button . 'style.scss' ) );
 		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-button", "' . $prefix . '")', (string) file_get_contents( $button . 'editor.scss' ) );
+	}
+
+	/**
+	 * The hover label's data attribute is the same in Hover_Label and in the
+	 * script that reads it. If they differed, the label would be printed and
+	 * never swapped, with no error anywhere.
+	 *
+	 * @return void
+	 */
+	public function test_hover_label_attribute_matches_its_script() {
+		$view = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/hover-label/view.js' );
+
+		$this->assertStringContainsString( "ATTRIBUTE = '" . Hover_Label::ATTRIBUTE . "'", $view );
+		$this->assertStringContainsString(
+			"'shared/hover-label-view'",
+			(string) file_get_contents( ZEALBLOCKS_PATH . 'webpack.config.js' ),
+			'Hover_Label::SCRIPT is built by its own webpack entry'
+		);
+		$this->assertSame( 'build/shared/hover-label-view.js', Hover_Label::SCRIPT );
 	}
 
 	/**

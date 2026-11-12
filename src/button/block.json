@@ -58,6 +58,42 @@
 		"flipForRTL": {
 			"type": "boolean",
 			"default": false
+		},
+		"iconRotation": {
+			"type": "number",
+			"default": 0
+		},
+		"showText": {
+			"type": "boolean",
+			"default": true
+		},
+		"showIconOnHover": {
+			"type": "boolean",
+			"default": false
+		},
+		"hoverIcon": {
+			"type": "string",
+			"default": ""
+		},
+		"hoverIconPosition": {
+			"type": "string",
+			"enum": [
+				"left",
+				"right"
+			],
+			"default": "right"
+		},
+		"hoverIconRotation": {
+			"type": "number",
+			"default": 0
+		},
+		"hoverIconFlipForRTL": {
+			"type": "boolean",
+			"default": false
+		},
+		"hoverIconAriaLabel": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

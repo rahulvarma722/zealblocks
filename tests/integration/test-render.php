@@ -520,6 +520,78 @@ $block_supports = WP_Block_Type_Registry::get_instance()->get_registered( 'zealb
 $check( 'margin, four-sided padding and writing mode are supported (B-11 to B-13)', true === ( $block_supports['spacing']['margin'] ?? null ) && true === ( $block_supports['spacing']['padding'] ?? null ) && true === ( $block_supports['typography']['__experimentalWritingMode'] ?? null ) );
 
 // ---------------------------------------------------------------------
+echo "\nButton — rotation, icon only and hover icon (B-08 to B-10)\n";
+// ---------------------------------------------------------------------
+$button_html = static function ( $attrs ) {
+	return do_blocks( '<!-- wp:zealblocks/button ' . wp_json_encode( array_merge( array( 'url' => 'https://ex.org' ), $attrs ) ) . ' /-->' );
+};
+
+$plain_icon = $button_html( array( 'text' => 'Go', 'icon' => 'arrow-right' ) );
+$rotated    = $button_html( array( 'text' => 'Go', 'icon' => 'arrow-right', 'iconRotation' => -90 ) );
+$full_turn  = $button_html( array( 'text' => 'Go', 'icon' => 'arrow-right', 'iconRotation' => 360 ) );
+
+$check( 'an unrotated icon prints no class and no style', false === strpos( $plain_icon, 'has-rotation' ) && 0 === preg_match( '#<svg[^>]*\sstyle=#', $plain_icon ) );
+$check( 'a rotation is a variable on the SVG, folded into one turn', false !== strpos( $rotated, 'class="zealblocks-icon wp-block-zealblocks-button__icon has-rotation"' ) && false !== strpos( $rotated, 'style="--zealblocks-button-icon-rotation:270deg;"' ) );
+$check( 'a full turn is no rotation', false === strpos( $full_turn, 'has-rotation' ) && false === strpos( $full_turn, '--zealblocks-button-icon-rotation' ) );
+
+$icon_only = $button_html( array( 'text' => 'Tom &amp; <strong>Jerry</strong>', 'icon' => 'heart', 'showText' => false ) );
+$check( 'icon only: no text span', false === strpos( $icon_only, 'wp-block-zealblocks-button__text' ) && false !== strpos( $icon_only, 'wp-block-zealblocks-button__icon' ) );
+$check( 'icon only: the text, tags stripped, is the aria-label', false !== strpos( $icon_only, 'aria-label="Tom &amp; Jerry"' ) );
+
+$no_icon = $button_html( array( 'text' => 'Shown', 'showText' => false ) );
+$check( 'Show text off without an icon still shows the text', false !== strpos( $no_icon, '>Shown</span>' ) && false === strpos( $no_icon, 'aria-label' ) );
+
+$unknown_icon = $button_html( array( 'text' => 'Shown', 'icon' => 'no-such-icon', 'showText' => false ) );
+$check( 'nor with an icon that does not resolve', false !== strpos( $unknown_icon, '>Shown</span>' ) );
+
+$unnamed = $button_html( array( 'text' => '', 'icon' => 'heart', 'showText' => false ) );
+$check( 'an icon-only button renders with empty text, with no empty aria-label', false !== strpos( $unnamed, 'wp-block-zealblocks-button__icon' ) && false === strpos( $unnamed, 'aria-label' ) );
+
+$hover_icon = $button_html(
+	array(
+		'text'                => 'Go',
+		'showIconOnHover'     => true,
+		'hoverIcon'           => 'arrow-right',
+		'hoverIconPosition'   => 'left',
+		'hoverIconFlipForRTL' => true,
+		'hoverIconRotation'   => 90,
+		'hoverIconAriaLabel'  => 'Ignored with text',
+	)
+);
+$check( 'hover icon: printed after the text, with its own rotation', 1 === preg_match( '#__text">Go</span><svg class="zealblocks-icon wp-block-zealblocks-button__hover-icon has-rotation"[^>]*style="--zealblocks-button-icon-rotation:90deg;"#', $hover_icon ) );
+$check( 'hover icon: side and flip classes on the root', false !== strpos( $hover_icon, 'has-hover-icon ' ) && false !== strpos( $hover_icon, 'has-hover-icon-left' ) && false !== strpos( $hover_icon, 'has-hover-icon-rtl-flip' ) );
+$check( 'hover icon: no hover label while the text shows', false === strpos( $hover_icon, Zealblocks\Block\Hover_Label::ATTRIBUTE ) );
+
+$hover_off = $button_html( array( 'text' => 'Go', 'hoverIcon' => 'arrow-right' ) );
+$hover_bad = $button_html( array( 'text' => 'Go', 'showIconOnHover' => true, 'hoverIcon' => '../../etc/passwd' ) );
+$check( 'a hover icon needs the toggle on', false === strpos( $hover_off, 'hover-icon' ) );
+$check( 'an unknown hover icon prints nothing', false === strpos( $hover_bad, 'hover-icon' ) );
+
+$hover_label_handle = Zealblocks\Block\Hover_Label::handle();
+$check( 'hover label script registered from build/shared', wp_script_is( $hover_label_handle, 'registered' ) && false !== strpos( (string) wp_scripts()->registered[ $hover_label_handle ]->src, 'build/shared/hover-label-view.js' ) );
+$check( 'and built', is_readable( ZEALBLOCKS_PATH . Zealblocks\Block\Hover_Label::SCRIPT ) );
+$check( 'not loaded by a hover icon beside text', ! wp_script_is( $hover_label_handle, 'enqueued' ) );
+
+$labelled = $button_html(
+	array(
+		'text'               => 'Download',
+		'icon'               => 'heart',
+		'showText'           => false,
+		'showIconOnHover'    => true,
+		'hoverIcon'          => 'arrow-right',
+		'hoverIconPosition'  => 'left',
+		'hoverIconAriaLabel' => 'Learn <b>more</b>',
+	)
+);
+$check( 'icon only + hover icon: the hover label, tags stripped', false !== strpos( $labelled, 'aria-label="Download"' ) && false !== strpos( $labelled, Zealblocks\Block\Hover_Label::ATTRIBUTE . '="Learn more"' ) );
+$check( 'icon only + hover icon: no side class', false === strpos( $labelled, 'has-hover-icon-left' ) );
+$check( 'and the script is loaded', wp_script_is( $hover_label_handle, 'enqueued' ) );
+wp_dequeue_script( $hover_label_handle );
+
+$editor_icons = ( new Zealblocks\Icon_Handler\Editor_Provider() )->add_icons( array(), array( array( 'attrs' => array( 'hoverIcon' => 'heart' ) ) ) );
+$check( 'the editor preloads hover icons too', isset( $editor_icons['icons']['heart'] ) );
+
+// ---------------------------------------------------------------------
 echo "\nColour functions reach the page\n";
 // ---------------------------------------------------------------------
 /*

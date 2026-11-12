@@ -29,6 +29,14 @@ described in [README.md](README.md).
 | `icon` | string | an icon slug — see [../icons/](../icons/README.md) |
 | `iconPosition` | enum | `left` or `right` |
 | `flipForRTL` | boolean | mirror the icon in RTL locales |
+| `iconRotation` | number | degrees; read as 0 to 359 (`Render::angle()`) |
+| `showText` | boolean | `false` with an icon: icon-only, the text becomes the `aria-label` |
+| `showIconOnHover` | boolean | turns the hover icon on |
+| `hoverIcon` | string | icon slug shown on hover and keyboard focus |
+| `hoverIconPosition` | enum | `left` or `right` of the text |
+| `hoverIconRotation` | number | degrees, as `iconRotation` |
+| `hoverIconFlipForRTL` | boolean | mirror the hover icon in RTL locales |
+| `hoverIconAriaLabel` | string | icon-only buttons: the `aria-label` while the hover icon shows |
 
 ## The opener guard — a regression worth knowing
 
@@ -64,6 +72,45 @@ flip, a heart must not.
 
 The `/*rtl:ignore*/` directive above that rule is load-bearing — see
 [../icons/frontend.md](../icons/frontend.md).
+
+The hover icon has its own toggle, `hoverIconFlipForRTL` (`has-hover-icon-rtl-flip`).
+With a rotation, the flip is applied **after** it
+(`transform: scaleX(-1) rotate(…)`), so the whole rotated icon is mirrored: an
+arrow turned to point down and right points down and left. In Spectra the
+inline `rotate()` overrides the flip, so a rotated icon is not mirrored at all.
+
+## Rotation, icon-only buttons and the hover icon (B-08 to B-10)
+
+Plain attributes in the Settings panel, not per-device styles: Spectra does not
+vary them by device, and neither does the Icon block's rotation.
+
+**Rotation.** Each rotated SVG carries `has-rotation` and its own
+`--zealblocks-button-icon-rotation`; `style.scss` turns that into
+`transform: rotate()`. An unrotated icon prints exactly as before. The RTL
+stylesheet keeps the rule unchanged: RTLCSS negates a literal `rotate()` angle
+but leaves `var()` alone. The control shows whenever there is an icon; Spectra
+hides it on icon-only buttons, though it still applies the rotation.
+
+**Icon only.** "Show text" off, with an icon that resolves, drops the text span
+and prints the text, tags stripped, as `aria-label`. The editor shows the text
+as an "Aria label" field instead, and stores what is typed escaped, so `<` stays
+a character. Without an icon, or with a slug that does not resolve, the text
+shows whatever the attribute says, and removing the icon in the editor turns
+"Show text" back on. An icon-only button with empty text still renders, with no
+`aria-label` (an empty one names nothing); the field's help text asks for one.
+
+**Hover icon.** Printed after the icon, hidden by `style.scss` until
+`:hover` or `:focus-visible`, then shown in place of the icon, or beside the
+text when there is no icon. It takes the icon size and the hover icon colour.
+Its side uses `order`: `has-icon-left` reverses the row, so `order: -1` puts it
+on the left of a normal row and on the right of a reversed one.
+
+**Hover aria label.** Only on icon-only buttons, where no visible text names
+the button. `Hover_Label::attributes()` writes it to
+`data-zealblocks-hover-label` and enqueues `build/shared/hover-label-view.js`,
+a small script that sets it as the `aria-label` while the button is hovered or
+focused, and puts the original back once it is neither. Loaded only on pages
+that need it, like the animation script.
 
 ## Per-viewport width and icon size
 

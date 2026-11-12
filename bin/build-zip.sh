@@ -158,10 +158,11 @@ fi
 [[ -d "build" ]] || die "build/ is missing and could not be generated. Run 'npm run build' — blocks are registered from build/, so the plugin does nothing without it."
 for d in build/*/; do
 	# build/shared/ is not a block: it holds what several blocks use (the
-	# animation view script, a webpack entry of its own). Checked for that
+	# animation and hover label view scripts, webpack entries of their own). Checked for that
 	# instead, since without it an animated block stays transparent forever.
 	if [[ "$d" == "build/shared/" ]]; then
 		[[ -f "build/shared/animation-view.js" ]] || die "build/shared/animation-view.js is missing; animated blocks would never appear."
+		[[ -f "build/shared/hover-label-view.js" ]] || die "build/shared/hover-label-view.js is missing; hover icon labels would never change."
 		continue
 	fi
 	[[ -f "${d}block.json" ]] || die "${d} has no block.json; the build looks incomplete."

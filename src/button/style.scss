@@ -65,9 +65,10 @@
 	 * root. The fallback keeps the icon visible before any value is set.
 	 */
 
-	// Only becomes a flex container when it actually has an icon, so a plain
-	// text button keeps its natural inline-block behaviour.
-	&:has(.wp-block-zealblocks-button__icon) {
+	// Only becomes a flex container when it actually has an icon or a hover
+	// icon, so a plain text button keeps its natural inline-block behaviour.
+	&:has(.wp-block-zealblocks-button__icon),
+	&:has(.wp-block-zealblocks-button__hover-icon) {
 		display: inline-flex;
 		align-items: center;
 		// Text-icon gap, per viewport through the variable (B-07).
@@ -91,6 +92,46 @@
 	&:hover &__icon,
 	&:focus-visible &__icon {
 		color: var(--zealblocks-button-icon-hover-color, var(--zealblocks-button-icon-color, currentcolor));
+	}
+
+	/*
+	 * THE HOVER ICON (B-10). Hidden until the button is hovered or has
+	 * keyboard focus, then shown in place of the icon (the swap is the last
+	 * rule in this block). It is only ever seen in that state, so it takes
+	 * the hover icon colour directly.
+	 */
+	&__hover-icon {
+		display: none;
+		flex: none;
+		width: var(--zealblocks-button-icon-size, 1em);
+		height: var(--zealblocks-button-icon-size, 1em);
+		color: var(--zealblocks-button-icon-hover-color, var(--zealblocks-button-icon-color, currentcolor));
+	}
+
+	/*
+	 * Its side. The hover icon follows the icon in the DOM, so it sits on the
+	 * right by default. `has-icon-left` reverses the row, which flips that,
+	 * so `order: -1` puts it on the left in a normal row and on the right in
+	 * a reversed one.
+	 */
+	&.has-hover-icon-left &__hover-icon,
+	&.has-icon-left &__hover-icon {
+		order: -1;
+	}
+
+	&.has-icon-left.has-hover-icon-left &__hover-icon {
+		order: 0;
+	}
+
+	/*
+	 * Rotation (B-08), for the icon and the hover icon alike: each rotated SVG
+	 * carries its own angle. The same in the RTL stylesheet, deliberately:
+	 * RTLCSS negates a literal rotate() angle but leaves var() alone, and
+	 * mirroring is the author's call, made by the flip toggles below.
+	 */
+	&__icon.has-rotation,
+	&__hover-icon.has-rotation {
+		transform: rotate(var(--zealblocks-button-icon-rotation));
 	}
 
 	/*
@@ -123,6 +164,19 @@
 	&.has-icon-left:has(.wp-block-zealblocks-button__icon) {
 		flex-direction: row-reverse;
 	}
+
+	// The hover icon swap, last so it outranks every icon rule above.
+	&.has-hover-icon:hover,
+	&.has-hover-icon:focus-visible {
+
+		.wp-block-zealblocks-button__icon {
+			display: none;
+		}
+
+		.wp-block-zealblocks-button__hover-icon {
+			display: block;
+		}
+	}
 }
 
 /*
@@ -153,7 +207,13 @@
 	(color, background, border-color, box-shadow)
 );
 
+/*
+ * The flip comes after the rotation, so a rotated icon is mirrored as a whole:
+ * an arrow turned to point down and right points down and left.
+ */
+
 /*rtl:ignore*/
-[dir="rtl"] .wp-block-zealblocks-button.has-rtl-flip .wp-block-zealblocks-button__icon {
-	transform: scaleX(-1);
+[dir="rtl"] .wp-block-zealblocks-button.has-rtl-flip .wp-block-zealblocks-button__icon,
+[dir="rtl"] .wp-block-zealblocks-button.has-hover-icon-rtl-flip .wp-block-zealblocks-button__hover-icon {
+	transform: scaleX(-1) rotate(var(--zealblocks-button-icon-rotation, 0deg));
 }

@@ -9,10 +9,10 @@
  * `import { cn } from "@/ui/cn"`. Without it every component would need its
  * imports rewritten by hand.
  *
- * The extra entry is the shared animation view script. It belongs to no single
- * block, so no block.json names it and wp-scripts would not find it: it is
- * registered by Zealblocks\Block\Animation and enqueued only when an animated
- * block renders. `defaultConfig.entry` is a function (it scans for block.json
+ * The extra entries are the shared view scripts: the animation, and the hover
+ * label swap. They belong to no single block's block.json, so wp-scripts would
+ * not find them: each is registered by its module in includes/block/
+ * (Animation, Hover_Label) and enqueued only when a block needs it. `defaultConfig.entry` is a function (it scans for block.json
  * files at build time), so it is called rather than spread.
  */
 
@@ -28,6 +28,10 @@ module.exports = {
 		'shared/animation-view': path.resolve(
 			__dirname,
 			'src/shared/animation/view.js'
+		),
+		'shared/hover-label-view': path.resolve(
+			__dirname,
+			'src/shared/hover-label/view.js'
 		),
 	} ),
 	resolve: {

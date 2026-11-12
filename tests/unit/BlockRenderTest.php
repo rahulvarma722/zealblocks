@@ -252,4 +252,28 @@ final class BlockRenderTest extends TestCase {
 		$this->assertSame( '.' . $result['class'], $result['rules'][0]['selector'] );
 		$this->assertArrayNotHasKey( 'important', $result['rules'][0] );
 	}
+
+	/**
+	 * Angles read as whole degrees, 0 to 359, so equal rotations print
+	 * equally and nothing but an integer reaches a style attribute.
+	 *
+	 * @return void
+	 */
+	public function test_angle_normalises_to_one_turn() {
+		$angle = static function ( $value ) {
+			return Block_Render::angle( array( 'a' => $value ), 'a' );
+		};
+
+		$this->assertSame( 0, Block_Render::angle( array(), 'a' ) );
+		$this->assertSame( 0, Block_Render::angle( 'not an array', 'a' ) );
+		$this->assertSame( 45, $angle( 45 ) );
+		$this->assertSame( 45, $angle( '45' ) );
+		$this->assertSame( 45, $angle( 45.9 ) );
+		$this->assertSame( 0, $angle( 360 ) );
+		$this->assertSame( 0, $angle( 720 ) );
+		$this->assertSame( 270, $angle( -90 ) );
+		$this->assertSame( 0, $angle( '45deg;color:red' ) );
+		$this->assertSame( 0, $angle( array( 45 ) ) );
+		$this->assertSame( 0, $angle( null ) );
+	}
 }

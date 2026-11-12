@@ -20,8 +20,6 @@ import {
 	TextControl,
 	ToolbarButton,
 	Popover,
-	__experimentalToggleGroupControl as ToggleGroupControl,
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 
@@ -37,6 +35,8 @@ import {
 	IconGapControl,
 	ShadowHoverControl,
 } from './style-controls';
+import { getIconClasses, getIconProps, hidesText } from './icon-options';
+import { HoverIconPanel, IconTextSettings, SideControl } from './icon-settings';
 
 const NEW_TAB_TARGET = '_blank';
 
@@ -83,10 +83,19 @@ export default function Edit( {
 		icon,
 		iconPosition,
 		flipForRTL,
+		iconRotation,
+		showText,
+		showIconOnHover,
+		hoverIcon,
+		hoverIconPosition,
+		hoverIconRotation,
+		hoverIconFlipForRTL,
 	} = attributes;
 
-	// Resolves the saved slug. Preloaded by PHP, so this costs nothing on load.
+	// Resolves the saved slugs. Preloaded by PHP, so this costs nothing on load.
 	const iconData = useIcon( icon );
+	const hoverIconData = useIcon( showIconOnHover ? hoverIcon : '' );
+	const isIconOnly = hidesText( { icon, showText } );
 
 	const [ isEditingLink, setIsEditingLink ] = useState( false );
 
@@ -141,10 +150,18 @@ export default function Edit( {
 
 		// Mirrors render.php, so the canvas and the front end agree.
 		const classes = [
-			icon && 'left' === iconPosition ? 'has-icon-left' : '',
-			icon && flipForRTL ? 'has-rtl-flip' : '',
+			...getIconClasses( {
+				icon,
+				iconPosition,
+				flipForRTL,
+				showText,
+				showIconOnHover,
+				hoverIcon,
+				hoverIconPosition,
+				hoverIconFlipForRTL,
+			} ),
 			...preview.classes,
-		].filter( Boolean );
+		];
 
 		return {
 			...( Object.keys( inline ).length ? { style: inline } : {} ),
@@ -158,6 +175,11 @@ export default function Edit( {
 		icon,
 		iconPosition,
 		flipForRTL,
+		showText,
+		showIconOnHover,
+		hoverIcon,
+		hoverIconPosition,
+		hoverIconFlipForRTL,
 	] );
 
 	// The block root. render.php puts the same classes on its <a>.
@@ -220,7 +242,15 @@ export default function Edit( {
 					<IconControl
 						value={ icon }
 						onChange={ ( value ) =>
-							setAttributes( { icon: value } )
+							/*
+							 * Removing the icon brings the text back, as in
+							 * Spectra: an icon-only button with no icon would
+							 * be empty. render.php shows the text anyway.
+							 */
+							setAttributes( {
+								icon: value,
+								...( value ? {} : { showText: true } ),
+							} )
 						}
 						flipForRTL={ flipForRTL }
 						onFlipForRTLChange={ ( value ) =>
@@ -228,27 +258,20 @@ export default function Edit( {
 						}
 					/>
 
-					{ !! icon && (
-						<ToggleGroupControl
-							__nextHasNoMarginBottom
-							__next40pxDefaultSize
+					{ !! icon && ! isIconOnly && (
+						<SideControl
 							label={ __( 'Icon position', 'zealblocks' ) }
 							value={ iconPosition }
 							onChange={ ( value ) =>
 								setAttributes( { iconPosition: value } )
 							}
-							isBlock
-						>
-							<ToggleGroupControlOption
-								value="left"
-								label={ __( 'Left', 'zealblocks' ) }
-							/>
-							<ToggleGroupControlOption
-								value="right"
-								label={ __( 'Right', 'zealblocks' ) }
-							/>
-						</ToggleGroupControl>
+						/>
 					) }
+
+					<IconTextSettings
+						attributes={ attributes }
+						setAttributes={ setAttributes }
+					/>
 
 					<TextControl
 						__nextHasNoMarginBottom
@@ -273,6 +296,11 @@ export default function Edit( {
 						) }
 					/>
 				</PanelBody>
+
+				<HoverIconPanel
+					attributes={ attributes }
+					setAttributes={ setAttributes }
+				/>
 			</InspectorControls>
 
 			{ /*
@@ -286,17 +314,32 @@ export default function Edit( {
 			 * also what render.php does.
 			 */ }
 			<span { ...blockProps }>
-				<RichText
-					tagName="span"
-					value={ text }
-					onChange={ ( value ) => setAttributes( { text: value } ) }
-					placeholder={ __( 'Add text…', 'zealblocks' ) }
-					allowedFormats={ [] }
-					identifier="text"
-				/>
+				{ ! isIconOnly && (
+					<RichText
+						tagName="span"
+						value={ text }
+						onChange={ ( value ) =>
+							setAttributes( { text: value } )
+						}
+						placeholder={ __( 'Add text…', 'zealblocks' ) }
+						allowedFormats={ [] }
+						identifier="text"
+					/>
+				) }
 				<Icon
 					icon={ iconData }
-					className="wp-block-zealblocks-button__icon"
+					{ ...getIconProps(
+						'wp-block-zealblocks-button__icon',
+						iconRotation
+					) }
+				/>
+				{ /* Shown on hover by style.scss, as on the front end. */ }
+				<Icon
+					icon={ hoverIconData }
+					{ ...getIconProps(
+						'wp-block-zealblocks-button__hover-icon',
+						hoverIconRotation
+					) }
 				/>
 			</span>
 

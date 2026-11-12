@@ -31,6 +31,15 @@ final class Editor_Provider implements \Zealblocks\Module {
 	const MAX_INLINE = 200;
 
 	/**
+	 * Block attributes that hold an icon slug: the icon, and the Button's
+	 * hover icon. A slug in an attribute missing here still draws, but over
+	 * REST after the editor loads, so the canvas shows it late.
+	 *
+	 * @var string[]
+	 */
+	const ICON_ATTRIBUTES = array( 'icon', 'hoverIcon' );
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function register() {
@@ -48,10 +57,12 @@ final class Editor_Provider implements \Zealblocks\Module {
 		$slugs = array();
 
 		foreach ( $blocks as $block ) {
-			$slug = $block['attrs']['icon'] ?? null;
+			foreach ( self::ICON_ATTRIBUTES as $attribute ) {
+				$slug = $block['attrs'][ $attribute ] ?? null;
 
-			if ( is_string( $slug ) && '' !== $slug ) {
-				$slugs[] = $slug;
+				if ( is_string( $slug ) && '' !== $slug ) {
+					$slugs[] = $slug;
+				}
 			}
 		}
 
