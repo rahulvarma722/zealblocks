@@ -16,6 +16,7 @@ defined( 'ABSPATH' ) || exit;
  * lexical and per-file, so the alias applies here even though core requires
  * this template from inside a closure in global scope.
  */
+use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Icon_Handler\Library as Icon_Library;
 
@@ -56,11 +57,25 @@ if ( '' === $icon_name ) {
  */
 $label = Block_Render::text( $attributes, 'label' );
 
+/*
+ * THE LINK (I-04). With a usable URL the wrapper itself becomes the <a>, as in
+ * Spectra, so the whole box is clickable and hover reaches it from the
+ * keyboard. href, target and rel are validated by Block_Render::link(), shared
+ * with the Button.
+ *
+ * A link needs a name, and an SVG inside it is not one, so the name moves to
+ * the link and the SVG is hidden. The alternative text names it when there is
+ * some; otherwise the icon's own name does, so the link is never announced as
+ * a bare URL. Spectra leaves a link around a decorative icon nameless; the
+ * editor asks for alternative text instead.
+ */
+$link_attributes = Block_Render::link( $attributes );
+
 $svg = Icon_Library::render(
 	$icon_name,
 	array(
 		'class' => 'wp-block-zealblocks-icon__svg',
-		'label' => $label,
+		'label' => $link_attributes ? '' : $label,
 	)
 );
 
@@ -93,41 +108,68 @@ if ( $processor->next_tag( 'svg' ) ) {
 	}
 
 	/*
-	 * Rotation is a plain integer, normalised to 0-359.
+	 * Rotation, as whole degrees 0-359 (Block_Render::angle()), so nothing but
+	 * an integer reaches the style attribute.
 	 *
-	 * (int) rather than a regex: the value arrives from a NumberControl, and a
-	 * cast cannot produce anything but an integer, so there is no string to
-	 * escape into the style attribute. The modulo keeps a stored 720 from
-	 * emitting a meaningless declaration.
+	 * A custom property, not an inline `rotate`: style.scss spends it, and its
+	 * RTL rule needs the angle to mirror a rotated icon (I-03), which it could
+	 * not read back from an inline declaration.
 	 */
-	$rotation = isset( $attributes['rotation'] ) ? (int) $attributes['rotation'] % 360 : 0;
+	$rotation = Block_Render::angle( $attributes, 'rotation' );
 
 	if ( 0 !== $rotation ) {
-		if ( $rotation < 0 ) {
-			$rotation += 360;
-		}
-
 		$processor->add_class( 'has-rotation' );
-		$processor->set_attribute( 'style', sprintf( 'rotate:%ddeg;', $rotation ) );
+		$processor->set_attribute( 'style', sprintf( '--zealblocks-icon-rotation:%ddeg;', $rotation ) );
 	}
 
 	$svg = $processor->get_updated_html();
 }
 
 /*
- * `is-inline` is opt-in, and the default is a block-level wrapper.
- *
- * An icon is usually its own element — a feature bullet, a card badge, a
- * standalone mark — so `display: block` is the right default. Inline matters
- * only when the icon genuinely sits in a run of text, and forcing it on
- * everybody meant every other use had to work around it.
+ * Hover colours (I-01, I-02): the icon colour and the background, per device,
+ * through the shared Hover. On `:hover`, and on `:focus-visible` for a linked
+ * icon a keyboard user reaches, as on the Button. Real declarations under
+ * those states, important, so they beat core's colour classes.
  */
-$wrapper_attributes = get_block_wrapper_attributes(
-	empty( $attributes['isInline'] ) ? array() : array( 'class' => 'is-inline' )
+$responsive = Block_Render::responsive(
+	isset( $attributes['style'] ) ? $attributes['style'] : array(),
+	'zealblocks',
+	Hover::properties( '--zealblocks-icon-hover-', array( ':hover', ':focus-visible' ) ),
+	'zealblocks-icon-'
 );
 
+$wrapper_classes = array_filter(
+	array(
+		$responsive['class'],
+		// `is-inline` is opt-in. An icon is usually its own element — a feature
+		// bullet, a card badge — so block-level is the right default.
+		empty( $attributes['isInline'] ) ? '' : 'is-inline',
+		// Opt-in mirroring for directional icons (I-03); style.scss gates it on [dir=rtl].
+		empty( $attributes['flipForRTL'] ) ? '' : 'has-rtl-flip',
+		...Hover::classes( $responsive['rules'] ),
+	)
+);
+
+$extra_attributes = $wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array();
+
+if ( $link_attributes ) {
+	$icon_data = Icon_Library::get( $icon_name );
+
+	$extra_attributes = array_merge(
+		$extra_attributes,
+		$link_attributes,
+		array( 'aria-label' => '' !== $label ? $label : (string) ( $icon_data['label'] ?? $icon_name ) )
+	);
+}
+
+$wrapper_attributes = get_block_wrapper_attributes( $extra_attributes );
+
+// To core's style engine, as the Button's rules go. See button/render.php.
+Block_Render::store_rules( $responsive['rules'] );
+
 printf(
-	'<div %1$s>%2$s</div>',
+	'<%1$s %2$s>%3$s</%1$s>',
+	$link_attributes ? 'a' : 'div',
 	$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); the string is attribute markup, so escaping it again would corrupt it.
 	$svg // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built by Icon_Library::render(), which esc_attr()s every interpolated value, then rewritten by WP_HTML_Tag_Processor. An unknown slug returns '' and is refused above.
 );

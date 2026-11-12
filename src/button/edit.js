@@ -12,16 +12,9 @@ import {
 	useBlockProps,
 	RichText,
 	InspectorControls,
-	BlockControls,
-	__experimentalLinkControl as LinkControl,
 } from '@wordpress/block-editor';
-import {
-	PanelBody,
-	TextControl,
-	ToolbarButton,
-	Popover,
-} from '@wordpress/components';
-import { useState, useMemo } from '@wordpress/element';
+import { PanelBody, TextControl } from '@wordpress/components';
+import { useMemo } from '@wordpress/element';
 
 import IconControl, { useIcon, Icon } from '@/ui/icon-library';
 import ResponsiveWidthControl from './responsive-width';
@@ -29,6 +22,7 @@ import { useStyleState } from './responsive-width/use-style-state';
 import { getResolvedValue } from './responsive-width/style-value';
 import { ICON_SIZE_KEY, CSS_VARS } from './responsive-width/constants';
 import { HoverControls } from '../shared/hover';
+import { LinkToolbar } from '../shared/link';
 import { getStylePreview } from './preview';
 import {
 	ButtonColorControls,
@@ -37,35 +31,6 @@ import {
 } from './style-controls';
 import { getIconClasses, getIconProps, hidesText } from './icon-options';
 import { HoverIconPanel, IconTextSettings, SideControl } from './icon-settings';
-
-const NEW_TAB_TARGET = '_blank';
-
-/*
- * Renamed from NOFOLLOW_REL, which was simply wrong: these are the
- * reverse-tabnabbing guards, and neither is `nofollow`. Core calls the same
- * pair NEW_TAB_REL.
- */
-const NEW_TAB_REL = [ 'noreferrer', 'noopener' ];
-
-/**
- * Adds or removes the new-tab rel tokens, leaving every other token alone.
- *
- * The old code ASSIGNED rel wholesale on each LinkControl change, so an author
- * who had typed `sponsored` into "Link rel" lost it the next time they edited
- * the URL — and unchecking "open in new tab" cleared the field entirely.
- * Managing only the two tokens this control owns keeps the author's intent.
- *
- * @param {string}  rel           Current rel attribute.
- * @param {boolean} opensInNewTab Whether the link opens in a new tab.
- * @return {string} The updated rel attribute.
- */
-function withNewTabRel( rel, opensInNewTab ) {
-	const kept = ( rel || '' )
-		.split( /\s+/ )
-		.filter( ( token ) => token && ! NEW_TAB_REL.includes( token ) );
-
-	return ( opensInNewTab ? [ ...kept, ...NEW_TAB_REL ] : kept ).join( ' ' );
-}
 
 export default function Edit( {
 	attributes,
@@ -96,8 +61,6 @@ export default function Edit( {
 	const iconData = useIcon( icon );
 	const hoverIconData = useIcon( showIconOnHover ? hoverIcon : '' );
 	const isIconOnly = hidesText( { icon, showText } );
-
-	const [ isEditingLink, setIsEditingLink ] = useState( false );
 
 	// Which viewport state the inspector is editing, and the probe that makes
 	// the answer knowable at all. See responsive-width/use-style-state.js.
@@ -194,32 +157,16 @@ export default function Edit( {
 		device,
 	};
 
-	const unlink = () => {
-		setAttributes( { url: '', linkTarget: '', rel: '' } );
-		setIsEditingLink( false );
-	};
-
 	return (
 		<>
-			<BlockControls group="block">
-				{ ! url && (
-					<ToolbarButton
-						name="link"
-						icon="admin-links"
-						title={ __( 'Link', 'zealblocks' ) }
-						onClick={ () => setIsEditingLink( true ) }
-					/>
-				) }
-				{ !! url && (
-					<ToolbarButton
-						name="unlink"
-						icon="editor-unlink"
-						title={ __( 'Unlink', 'zealblocks' ) }
-						onClick={ unlink }
-						isActive
-					/>
-				) }
-			</BlockControls>
+			{ /* Link and Unlink, and the link popover: shared with the Icon. */ }
+			<LinkToolbar
+				url={ url }
+				linkTarget={ linkTarget }
+				rel={ rel }
+				setAttributes={ setAttributes }
+				isSelected={ isSelected }
+			/>
 
 			<Probes />
 
@@ -342,35 +289,6 @@ export default function Edit( {
 					) }
 				/>
 			</span>
-
-			{ isSelected && isEditingLink && (
-				<Popover
-					placement="bottom"
-					onClose={ () => setIsEditingLink( false ) }
-					focusOnMount="firstElement"
-				>
-					<LinkControl
-						value={ {
-							url,
-							opensInNewTab: linkTarget === NEW_TAB_TARGET,
-						} }
-						onChange={ ( {
-							url: newUrl = '',
-							opensInNewTab: newOpensInNewTab,
-						} ) => {
-							setAttributes( {
-								url: newUrl,
-								linkTarget: newOpensInNewTab
-									? NEW_TAB_TARGET
-									: '',
-								rel: withNewTabRel( rel, newOpensInNewTab ),
-							} );
-						} }
-						onRemove={ unlink }
-						forceIsEditingLink={ ! url }
-					/>
-				</Popover>
-			) }
 		</>
 	);
 }

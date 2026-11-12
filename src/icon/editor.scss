@@ -5,6 +5,14 @@
  * affordances belong here.
  */
 
+@use "../shared/hover/hover";
+
+/*
+ * Hover preview for the previewed device (I-01, I-02). The front end gets
+ * real per-band rules instead; see src/shared/hover/_hover.scss.
+ */
+@include hover.preview(".wp-block-zealblocks-icon", "--zealblocks-icon-hover-");
+
 /*
  * THE EMPTY STATE IS NOT AN ICON, SO IT MUST NOT BE SIZED LIKE ONE.
  *

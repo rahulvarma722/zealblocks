@@ -158,14 +158,17 @@ with it.
 $processor = new WP_HTML_Tag_Processor( $svg );
 if ( $processor->next_tag( 'svg' ) ) {
 	$processor->add_class( 'is-flip-horizontal' );
-	$processor->set_attribute( 'style', sprintf( 'rotate:%ddeg;', $rotation ) );
+	$processor->add_class( 'has-rotation' );
+	$processor->set_attribute( 'style', sprintf( '--zealblocks-icon-rotation:%ddeg;', $rotation ) );
 }
 ```
 
 `WP_HTML_Tag_Processor` parses properly, so adding a class cannot corrupt an
 attribute the way `str_replace` on `'<svg'` could.
 
-Rotation is `(int)` then `% 360`, normalised to 0–359. A cast cannot produce
+Rotation goes through `Block_Render::angle()`, normalised to 0–359, and is
+printed as a custom property that `style.scss` spends, so the RTL mirror can
+negate it (see [../blocks/icon.md](../blocks/icon.md)). A cast cannot produce
 anything but an integer, so there is no string to escape into the style
 attribute.
 

@@ -137,6 +137,101 @@ final class Render {
 	}
 
 	/**
+	 * The `target` values a browser gives meaning to.
+	 *
+	 * An allow-list rather than esc_attr() alone, because an unrecognised
+	 * target is treated as a NAMED BROWSING CONTEXT: a stray value silently
+	 * opens the link in a new window named after it and keeps reusing that
+	 * window, which is neither what the author asked for nor visible in the UI.
+	 *
+	 * @var string[]
+	 */
+	const LINK_TARGETS = array( '_blank', '_self', '_parent', '_top' );
+
+	/**
+	 * The `rel` tokens a link may carry: the HTML link-type registry.
+	 *
+	 * @var string[]
+	 */
+	const REL_TOKENS = array(
+		'alternate',
+		'author',
+		'bookmark',
+		'external',
+		'help',
+		'license',
+		'me',
+		'next',
+		'nofollow',
+		'noopener',
+		'noreferrer',
+		'opener',
+		'prev',
+		'privacy-policy',
+		'search',
+		'sponsored',
+		'tag',
+		'terms-of-service',
+		'ugc',
+	);
+
+	/**
+	 * `href`, `target` and `rel` for a block's link, validated.
+	 *
+	 * Returns an empty array when the URL is unusable, which is what to branch
+	 * on: see url() for why a hostile URL comes back empty. Escaping is left to
+	 * get_block_wrapper_attributes(), which esc_attr()s every value.
+	 *
+	 * `target="_blank"` always gets `noreferrer noopener`, ADDED to the
+	 * author's tokens rather than used only when there are none. Without
+	 * noopener the opened page can reach back through window.opener. The guard
+	 * used to fire only when `rel` was empty, so an author who typed
+	 * `nofollow` got `<a target="_blank" rel="nofollow">`: exactly the
+	 * reverse-tabnabbing case the guard exists for.
+	 *
+	 * @param array  $attributes Block attributes.
+	 * @param string $url_key    Attribute holding the URL.
+	 * @param string $target_key Attribute holding the target.
+	 * @param string $rel_key    Attribute holding the rel tokens.
+	 * @return array<string, string> `href`, then `target` and `rel` when set.
+	 */
+	public static function link( $attributes, $url_key = 'url', $target_key = 'linkTarget', $rel_key = 'rel' ) {
+		$url = self::url( self::text( $attributes, $url_key ) );
+
+		if ( '' === $url ) {
+			return array();
+		}
+
+		$link   = array( 'href' => $url );
+		$target = self::one_of( self::text( $attributes, $target_key ), self::LINK_TARGETS );
+		$rel    = self::tokens( self::text( $attributes, $rel_key ), self::REL_TOKENS );
+
+		if ( '' !== $target ) {
+			$link['target'] = $target;
+
+			// tokens() has already lowercased, allow-listed and de-duplicated
+			// $rel, so it is safe to split and re-join without re-validating.
+			if ( '_blank' === $target ) {
+				$tokens = '' === $rel ? array() : explode( ' ', $rel );
+
+				foreach ( array( 'noreferrer', 'noopener' ) as $required ) {
+					if ( ! in_array( $required, $tokens, true ) ) {
+						$tokens[] = $required;
+					}
+				}
+
+				$rel = implode( ' ', $tokens );
+			}
+		}
+
+		if ( '' !== $rel ) {
+			$link['rel'] = $rel;
+		}
+
+		return $link;
+	}
+
+	/**
 	 * Pseudo-states a responsive() property may apply in.
 	 *
 	 * An allow-list, because the state is concatenated into a selector: a

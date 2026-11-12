@@ -7,6 +7,8 @@
  * `color` block support work at all.
  */
 
+@use "../shared/hover/hover";
+
 .wp-block-zealblocks-icon {
 	// Without this the wrapper keeps a text line-box and the icon appears to
 	// have unexplained space beneath it.
@@ -92,11 +94,16 @@
 	 * any background, border and padding with it, and the user asked to rotate
 	 * the icon, not the box.
 	 *
-	 * `rotate` is set inline by render.php because it is a free numeric value.
-	 * Flips are classes because there are only two of them, and a class
-	 * composes with the rotation without either overwriting the other — which
-	 * a single `transform` shorthand would not.
+	 * The rotation is a free numeric value, so render.php sets it as a custom
+	 * property on the SVG and this rule spends it; the RTL rule below needs to
+	 * read it. Flips are classes because there are only two of them. `rotate`
+	 * and `scale` are separate properties, so they compose without either
+	 * overwriting the other — which a single `transform` shorthand would not.
 	 */
+	svg.has-rotation {
+		rotate: var(--zealblocks-icon-rotation);
+	}
+
 	svg.is-flip-horizontal {
 		scale: -1 1;
 	}
@@ -110,3 +117,56 @@
 	}
 }
 
+/*
+ * A LINKED ICON KEEPS ITS OWN COLOUR (I-04). The wrapper becomes an <a>, and a
+ * theme's link colour would otherwise repaint the icon, on hover too, while
+ * the canvas (no link there) shows the colour the author chose. Inherit, as
+ * an unlinked icon does. A colour set on the block still wins: core writes it
+ * inline or as an important preset class, and the hover colours are important.
+ */
+a.wp-block-zealblocks-icon,
+a.wp-block-zealblocks-icon:hover,
+a.wp-block-zealblocks-icon:focus {
+	color: inherit;
+}
+
+/*
+ * Hover transition (I-01, I-02). The prefix MUST match render.php's. See
+ * src/shared/hover/_hover.scss.
+ */
+@include hover.transition(".wp-block-zealblocks-icon", "--zealblocks-icon-hover-");
+
+/*
+ * RTL MIRRORING (I-03), opt-in per block: an arrow should flip, a heart must
+ * not. Costs nothing in LTR, where the rules cannot match.
+ *
+ * A mirror of the whole icon as drawn in LTR: the horizontal scale toggles,
+ * and the rotation runs the other way. Flipping alone would turn an arrow
+ * rotated to point down and right into one pointing up and left; with the
+ * rotation negated it points down and left. `rotate` applies after `scale`,
+ * which is why the angle has to change rather than just the scale.
+ *
+ * `/*rtl:ignore*\/` is load-bearing: RTLCSS would otherwise rewrite
+ * `[dir="rtl"]` as `[dir="ltr"]`. See docs/icons/frontend.md.
+ */
+
+/*rtl:ignore*/
+[dir="rtl"] .wp-block-zealblocks-icon.has-rtl-flip svg {
+	scale: -1 1;
+	rotate: calc(var(--zealblocks-icon-rotation, 0deg) * -1);
+}
+
+/*rtl:ignore*/
+[dir="rtl"] .wp-block-zealblocks-icon.has-rtl-flip svg.is-flip-horizontal {
+	scale: 1 1;
+}
+
+/*rtl:ignore*/
+[dir="rtl"] .wp-block-zealblocks-icon.has-rtl-flip svg.is-flip-vertical {
+	scale: -1 -1;
+}
+
+/*rtl:ignore*/
+[dir="rtl"] .wp-block-zealblocks-icon.has-rtl-flip svg.is-flip-horizontal.is-flip-vertical {
+	scale: 1 -1;
+}

@@ -6,7 +6,7 @@
 	"title": "Icon",
 	"category": "zealblocks",
 	"icon": "star-filled",
-	"description": "An SVG icon from the WordPress icon library, with flip and rotation controls.",
+	"description": "An icon from the built-in icon library, with flip, rotation, hover colours and an optional link.",
 	"keywords": [
 		"svg",
 		"symbol",
@@ -36,6 +36,22 @@
 			"default": 0
 		},
 		"label": {
+			"type": "string",
+			"default": ""
+		},
+		"flipForRTL": {
+			"type": "boolean",
+			"default": false
+		},
+		"url": {
+			"type": "string",
+			"default": ""
+		},
+		"linkTarget": {
+			"type": "string",
+			"default": ""
+		},
+		"rel": {
 			"type": "string",
 			"default": ""
 		}

@@ -48,6 +48,10 @@ The guard used to fire only when `rel` was empty. An author who typed
 opener guard at all — the exact case the guard exists for. There is an
 integration test pinning this.
 
+The URL, target and rel handling lives in `Block_Render::link()`, shared with
+the Icon block, and the editor's link button and popover in
+`src/shared/link/`. Moving it there left the Button's output byte-identical.
+
 ## Icon position — `row-reverse`, not `order`
 
 ```scss

@@ -86,45 +86,7 @@ $text = Block_Render::text( $attributes, 'text' );
  * get_block_wrapper_attributes(), which esc_attr()s every value it is given
  * (wp-includes/class-wp-block-supports.php:265).
  */
-$safe_url = Block_Render::url( Block_Render::text( $attributes, 'url' ) );
-
-/*
- * `target` has exactly four meaningful values. An allow-list rather than
- * esc_attr() alone, because an unrecognised target is treated by browsers as a
- * NAMED BROWSING CONTEXT — so a stray value silently opens the link in a new
- * window named after it and keeps reusing that window, which is neither what
- * the editor asked for nor something the user can see in the UI.
- */
-$link_target = Block_Render::one_of(
-	Block_Render::text( $attributes, 'linkTarget' ),
-	array( '_blank', '_self', '_parent', '_top' )
-);
-
-// `rel` is a token list from a fixed vocabulary — the HTML link-type registry.
-$rel = Block_Render::tokens(
-	Block_Render::text( $attributes, 'rel' ),
-	array(
-		'alternate',
-		'author',
-		'bookmark',
-		'external',
-		'help',
-		'license',
-		'me',
-		'next',
-		'nofollow',
-		'noopener',
-		'noreferrer',
-		'opener',
-		'prev',
-		'privacy-policy',
-		'search',
-		'sponsored',
-		'tag',
-		'terms-of-service',
-		'ugc',
-	)
-);
+$link_attributes = Block_Render::link( $attributes );
 
 /*
  * A plain-text tooltip: strip tags and control characters, keep the text.
@@ -145,53 +107,16 @@ $link_title = sanitize_text_field( Block_Render::text( $attributes, 'title' ) );
  */
 $tag_name = Block_Render::one_of( Block_Render::text( $attributes, 'tagName' ), array( 'a', 'button' ), 'a' );
 
-if ( '' === $safe_url ) {
+if ( ! $link_attributes ) {
 	$tag_name = 'button';
 }
 
-$extra_attributes = array();
-
-if ( 'a' === $tag_name ) {
-	$extra_attributes['href'] = $safe_url;
-
-	if ( '' !== $link_target ) {
-		$extra_attributes['target'] = $link_target;
-
-		/*
-		 * target="_blank" without noopener lets the opened page reach
-		 * back through window.opener. Modern browsers imply it, but the
-		 * attribute is still the portable guarantee.
-		 *
-		 * A UNION, not a fallback. This used to read `&& '' === $rel`, so an
-		 * author who typed anything at all into "Link rel" — `nofollow` is the
-		 * obvious one — silently lost the opener guard and got
-		 * `<a target="_blank" rel="nofollow">`: exactly the reverse-tabnabbing
-		 * case the paragraph above says it prevents. The author's tokens are
-		 * kept and these two are added alongside.
-		 *
-		 * $rel has already been through Block_Render::tokens(), so it is
-		 * lowercased, allow-listed, de-duplicated whole tokens joined by single
-		 * spaces — safe to split and re-join without re-validating.
-		 */
-		if ( '_blank' === $link_target ) {
-			$rel_tokens = '' === $rel ? array() : explode( ' ', $rel );
-
-			foreach ( array( 'noreferrer', 'noopener' ) as $required_token ) {
-				if ( ! in_array( $required_token, $rel_tokens, true ) ) {
-					$rel_tokens[] = $required_token;
-				}
-			}
-
-			$rel = implode( ' ', $rel_tokens );
-		}
-	}
-
-	if ( '' !== $rel ) {
-		$extra_attributes['rel'] = $rel;
-	}
-} else {
-	$extra_attributes['type'] = 'button';
-}
+/*
+ * href, target and rel arrive validated from Block_Render::link(), which also
+ * keeps the author's rel tokens and adds the opener guard to a new-tab link
+ * (shared with the Icon block). A <button> takes none of them.
+ */
+$extra_attributes = 'a' === $tag_name ? $link_attributes : array( 'type' => 'button' );
 
 if ( '' !== $link_title ) {
 	$extra_attributes['title'] = $link_title;

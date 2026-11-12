@@ -10,6 +10,7 @@ import {
 } from '@wordpress/block-editor';
 import {
 	Button,
+	Notice,
 	ToggleControl,
 	RangeControl,
 	TextControl,
@@ -21,13 +22,40 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 
-import { useState } from '@wordpress/element';
+import { useMemo, useState } from '@wordpress/element';
 
 import IconControl, { IconPicker, useIcon, Icon } from '@/ui/icon-library';
+import { useStyleState } from '../button/responsive-width/use-style-state';
+import { HoverControls, getHoverPreview } from '../shared/hover';
+import { LinkToolbar } from '../shared/link';
+import { HOVER_VAR_PREFIX } from './constants';
+import { getSvgProps } from './svg-props';
 
-export default function Edit( { attributes, setAttributes, clientId } ) {
-	const { icon, isInline, flipHorizontal, flipVertical, rotation, label } =
-		attributes;
+export default function Edit( {
+	attributes,
+	setAttributes,
+	clientId,
+	isSelected,
+} ) {
+	const {
+		icon,
+		isInline,
+		flipHorizontal,
+		flipVertical,
+		rotation,
+		label,
+		flipForRTL,
+		url,
+		linkTarget,
+		rel,
+		style,
+	} = attributes;
+
+	// Which viewport state the inspector is editing; see use-style-state.js.
+	const { device, stateKey, Probes } = useStyleState();
+
+	// The block element, so the link popover opens beside the icon.
+	const [ anchor, setAnchor ] = useState( null );
 
 	/*
 	 * One slug, not a list. The old hook fetched all 88 registered icons over
@@ -50,7 +78,19 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	 */
 	const hasIcon = !! icon;
 
+	/*
+	 * The hover colours for the previewed device (I-01, I-02), as custom
+	 * properties the editor stylesheet spends on :hover. render.php emits real
+	 * per-band rules instead; see src/shared/hover/_hover.scss.
+	 */
+	const hoverPreview = useMemo(
+		() => getHoverPreview( style, device, HOVER_VAR_PREFIX ),
+		[ style, device ]
+	);
+
 	const blockProps = useBlockProps( {
+		ref: setAnchor,
+		style: hoverPreview.style,
 		className: [
 			! hasIcon ? 'is-placeholder' : '',
 			/*
@@ -63,6 +103,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			 * regardless of the setting.
 			 */
 			hasIcon && isInline ? 'is-inline' : '',
+			// Mirrors render.php (I-03).
+			flipForRTL ? 'has-rtl-flip' : '',
+			...hoverPreview.classes,
 		]
 			.filter( Boolean )
 			.join( ' ' ),
@@ -76,13 +119,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	 * selector cannot match — so flipping did nothing in the canvas while
 	 * working perfectly once published.
 	 */
-	const svgClasses = [
-		'wp-block-zealblocks-icon__svg',
-		flipHorizontal ? 'is-flip-horizontal' : '',
-		flipVertical ? 'is-flip-vertical' : '',
-	]
-		.filter( Boolean )
-		.join( ' ' );
+	const svgProps = getSvgProps( { flipHorizontal, flipVertical, rotation } );
 
 	const setIcon = ( value ) => setAttributes( { icon: value } );
 
@@ -103,159 +140,237 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	);
 
 	const toolbar = (
-		<BlockControls group="block">
-			<ToolbarGroup>
-				<ToolbarButton
-					icon="star-filled"
-					label={ __( 'Select an icon', 'zealblocks' ) }
-					onClick={ () => setIsPickerOpen( true ) }
-					aria-haspopup="dialog"
-				/>
-			</ToolbarGroup>
-		</BlockControls>
+		<>
+			<BlockControls group="block">
+				<ToolbarGroup>
+					<ToolbarButton
+						icon="star-filled"
+						label={ __( 'Select an icon', 'zealblocks' ) }
+						onClick={ () => setIsPickerOpen( true ) }
+						aria-haspopup="dialog"
+					/>
+				</ToolbarGroup>
+			</BlockControls>
+
+			{ /* The link (I-04): shared with the Button. */ }
+			<LinkToolbar
+				url={ url }
+				linkTarget={ linkTarget }
+				rel={ rel }
+				setAttributes={ setAttributes }
+				isSelected={ isSelected }
+				anchor={ anchor }
+			/>
+		</>
 	);
 
 	const controls = (
-		<InspectorControls group="settings">
-			<ToolsPanel
-				label={ __( 'Icon', 'zealblocks' ) }
-				resetAll={ () =>
-					setAttributes( {
-						isInline: false,
-						flipHorizontal: false,
-						flipVertical: false,
-						rotation: 0,
-						label: '',
-					} )
-				}
-				panelId={ clientId }
-			>
-				<ToolsPanelItem
-					hasValue={ () => !! icon }
+		<>
+			<Probes />
+
+			{ /* Icon hover and background hover, per device, in Color. */ }
+			<HoverControls
+				clientId={ clientId }
+				style={ style }
+				setAttributes={ setAttributes }
+				stateKey={ stateKey }
+				device={ device }
+				textLabel={ __( 'Icon hover', 'zealblocks' ) }
+			/>
+
+			<InspectorControls group="settings">
+				<ToolsPanel
 					label={ __( 'Icon', 'zealblocks' ) }
-					onDeselect={ () => setAttributes( { icon: '' } ) }
-					isShownByDefault
-					panelId={ clientId }
-				>
-					{ /*
-					 * The same control the button block uses. Two blocks
-					 * rendering their own idea of an icon field is how they
-					 * drift.
-					 */ }
-					<IconControl value={ icon } onChange={ setIcon } />
-				</ToolsPanelItem>
-
-				<ToolsPanelItem
-					hasValue={ () => !! isInline }
-					label={ __( 'Inline', 'zealblocks' ) }
-					onDeselect={ () => setAttributes( { isInline: false } ) }
-					isShownByDefault
-					panelId={ clientId }
-				>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={ __( 'Display inline', 'zealblocks' ) }
-						checked={ !! isInline }
-						onChange={ ( value ) =>
-							setAttributes( { isInline: value } )
-						}
-						help={
-							isInline
-								? __(
-										'The icon flows with surrounding text.',
-										'zealblocks'
-								  )
-								: __(
-										'The icon sits on its own line.',
-										'zealblocks'
-								  )
-						}
-					/>
-				</ToolsPanelItem>
-
-				<ToolsPanelItem
-					hasValue={ () => flipHorizontal || flipVertical }
-					label={ __( 'Flip', 'zealblocks' ) }
-					onDeselect={ () =>
+					resetAll={ () =>
 						setAttributes( {
+							isInline: false,
 							flipHorizontal: false,
 							flipVertical: false,
+							rotation: 0,
+							label: '',
+							flipForRTL: false,
 						} )
 					}
-					isShownByDefault
 					panelId={ clientId }
 				>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={ __( 'Flip horizontally', 'zealblocks' ) }
-						checked={ !! flipHorizontal }
-						onChange={ ( value ) =>
-							setAttributes( { flipHorizontal: value } )
-						}
-					/>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={ __( 'Flip vertically', 'zealblocks' ) }
-						checked={ !! flipVertical }
-						onChange={ ( value ) =>
-							setAttributes( { flipVertical: value } )
-						}
-					/>
-				</ToolsPanelItem>
+					<ToolsPanelItem
+						hasValue={ () => !! icon }
+						label={ __( 'Icon', 'zealblocks' ) }
+						onDeselect={ () => setAttributes( { icon: '' } ) }
+						isShownByDefault
+						panelId={ clientId }
+					>
+						{ /*
+						 * The same control the button block uses. Two blocks
+						 * rendering their own idea of an icon field is how they
+						 * drift.
+						 */ }
+						<IconControl
+							value={ icon }
+							onChange={ setIcon }
+							flipForRTL={ flipForRTL }
+							onFlipForRTLChange={ ( value ) =>
+								setAttributes( { flipForRTL: value } )
+							}
+						/>
+					</ToolsPanelItem>
 
-				<ToolsPanelItem
-					hasValue={ () => !! rotation }
-					label={ __( 'Rotation', 'zealblocks' ) }
-					onDeselect={ () => setAttributes( { rotation: 0 } ) }
-					panelId={ clientId }
-				>
-					<RangeControl
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
+					<ToolsPanelItem
+						hasValue={ () => !! isInline }
+						label={ __( 'Inline', 'zealblocks' ) }
+						onDeselect={ () =>
+							setAttributes( { isInline: false } )
+						}
+						isShownByDefault
+						panelId={ clientId }
+					>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __( 'Display inline', 'zealblocks' ) }
+							checked={ !! isInline }
+							onChange={ ( value ) =>
+								setAttributes( { isInline: value } )
+							}
+							help={
+								isInline
+									? __(
+											'The icon flows with surrounding text.',
+											'zealblocks'
+									  )
+									: __(
+											'The icon sits on its own line.',
+											'zealblocks'
+									  )
+							}
+						/>
+					</ToolsPanelItem>
+
+					<ToolsPanelItem
+						hasValue={ () => flipHorizontal || flipVertical }
+						label={ __( 'Flip', 'zealblocks' ) }
+						onDeselect={ () =>
+							setAttributes( {
+								flipHorizontal: false,
+								flipVertical: false,
+							} )
+						}
+						isShownByDefault
+						panelId={ clientId }
+					>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __( 'Flip horizontally', 'zealblocks' ) }
+							checked={ !! flipHorizontal }
+							onChange={ ( value ) =>
+								setAttributes( { flipHorizontal: value } )
+							}
+						/>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __( 'Flip vertically', 'zealblocks' ) }
+							checked={ !! flipVertical }
+							onChange={ ( value ) =>
+								setAttributes( { flipVertical: value } )
+							}
+						/>
+					</ToolsPanelItem>
+
+					<ToolsPanelItem
+						hasValue={ () => !! rotation }
 						label={ __( 'Rotation', 'zealblocks' ) }
-						value={ rotation }
-						onChange={ ( value ) =>
-							setAttributes( { rotation: value ?? 0 } )
-						}
-						min={ 0 }
-						max={ 359 }
-						step={ 1 }
-						/*
-						 * The quarter turns cover almost every real use, but a
-						 * free range is what makes the control worth having
-						 * over four preset buttons.
-						 */
-						marks={ [
-							{ value: 0, label: '0°' },
-							{ value: 90, label: '90°' },
-							{ value: 180, label: '180°' },
-							{ value: 270, label: '270°' },
-						] }
-					/>
-				</ToolsPanelItem>
+						onDeselect={ () => setAttributes( { rotation: 0 } ) }
+						panelId={ clientId }
+					>
+						<RangeControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							label={ __( 'Rotation', 'zealblocks' ) }
+							value={ rotation }
+							onChange={ ( value ) =>
+								setAttributes( { rotation: value ?? 0 } )
+							}
+							min={ 0 }
+							max={ 359 }
+							step={ 1 }
+							/*
+							 * The quarter turns cover almost every real use, but a
+							 * free range is what makes the control worth having
+							 * over four preset buttons.
+							 */
+							marks={ [
+								{ value: 0, label: '0°' },
+								{ value: 90, label: '90°' },
+								{ value: 180, label: '180°' },
+								{ value: 270, label: '270°' },
+							] }
+						/>
+					</ToolsPanelItem>
 
-				<ToolsPanelItem
-					hasValue={ () => !! label }
-					label={ __( 'Alternative text', 'zealblocks' ) }
-					onDeselect={ () => setAttributes( { label: '' } ) }
-					panelId={ clientId }
-				>
-					<TextControl
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
+					<ToolsPanelItem
+						hasValue={ () => !! label }
 						label={ __( 'Alternative text', 'zealblocks' ) }
-						value={ label }
-						onChange={ ( value ) =>
-							setAttributes( { label: value } )
-						}
-						help={ __(
-							'Describe the icon only if it carries meaning of its own. Leave empty for decoration, and it will be hidden from screen readers.',
-							'zealblocks'
+						onDeselect={ () => setAttributes( { label: '' } ) }
+						// A linked icon needs a name, so the field shows.
+						isShownByDefault={ !! url }
+						panelId={ clientId }
+					>
+						{ /*
+						 * Not in Spectra: a link around an unlabelled icon has no
+						 * accessible name of its own. render.php falls back to the
+						 * icon's name, which says what it shows, not where it goes.
+						 */ }
+						{ !! url && ! label && (
+							<Notice status="warning" isDismissible={ false }>
+								{ __(
+									'This icon is a link. Add alternative text that says where it goes. Until then, screen readers announce the icon’s name.',
+									'zealblocks'
+								) }
+							</Notice>
 						) }
-					/>
-				</ToolsPanelItem>
-			</ToolsPanel>
-		</InspectorControls>
+						<TextControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							label={ __( 'Alternative text', 'zealblocks' ) }
+							value={ label }
+							onChange={ ( value ) =>
+								setAttributes( { label: value } )
+							}
+							help={
+								url
+									? __(
+											'Names the link for screen readers.',
+											'zealblocks'
+									  )
+									: __(
+											'Describe the icon only if it carries meaning of its own. Leave empty for decoration, and it will be hidden from screen readers.',
+											'zealblocks'
+									  )
+							}
+						/>
+					</ToolsPanelItem>
+
+					{ !! url && (
+						<ToolsPanelItem
+							hasValue={ () => !! rel }
+							label={ __( 'Link rel', 'zealblocks' ) }
+							onDeselect={ () => setAttributes( { rel: '' } ) }
+							isShownByDefault
+							panelId={ clientId }
+						>
+							<TextControl
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+								label={ __( 'Link rel', 'zealblocks' ) }
+								value={ rel }
+								onChange={ ( value ) =>
+									setAttributes( { rel: value } )
+								}
+							/>
+						</ToolsPanelItem>
+					) }
+				</ToolsPanel>
+			</InspectorControls>
+		</>
 	);
 
 	// Nothing chosen yet.
@@ -327,13 +442,10 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				 */ }
 				<Icon
 					icon={ iconData }
-					className={ svgClasses }
+					{ ...svgProps }
+					// Linked, the label names the link on the front end; the
+					// canvas has no link, so it stays on the SVG here.
 					label={ label }
-					style={
-						rotation
-							? { rotate: `${ rotation % 360 }deg` }
-							: undefined
-					}
 				/>
 			</div>
 		</>

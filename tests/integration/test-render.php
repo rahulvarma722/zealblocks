@@ -239,12 +239,12 @@ $check( 'flip classes land on the svg', 1 === preg_match( '/<svg[^>]*is-flip-hor
 $check( 'flip classes are NOT on the wrapper', 1 !== preg_match( '/<div[^>]*is-flip-horizontal/', $flipped ) );
 
 $rotated = do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":90} /-->' );
-$check( 'rotation emitted on the svg', 1 === preg_match( '/<svg[^>]*rotate:90deg/', $rotated ) );
+$check( 'rotation emitted on the svg, as the variable style.scss spends', 1 === preg_match( '/<svg[^>]*--zealblocks-icon-rotation:90deg;/', $rotated ) );
 
 // Normalisation: a stored value outside 0-359 must not emit a meaningless
 // declaration, and a negative must resolve to its positive equivalent.
-$check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":720} /-->' ), 'rotate:' ) );
-$check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":-90} /-->' ), 'rotate:270deg' ) );
+$check( '720 normalises to no rotation', false === strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":720} /-->' ), 'rotation' ) );
+$check( '-90 normalises to 270deg', false !== strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"arrow-right","rotation":-90} /-->' ), '--zealblocks-icon-rotation:270deg;' ) );
 
 // ---------------------------------------------------------------------
 echo "\nIcon — block by default, inline on request\n";
@@ -300,6 +300,59 @@ $check( 'every unresolvable or hostile icon name renders nothing', $all_empty );
 
 $escaped = do_blocks( '<!-- wp:zealblocks/icon {"icon":"star","label":"\"><script>alert(1)</script>"} /-->' );
 $check( 'a hostile label cannot break out of the attribute', false === stripos( $escaped, '<script' ) );
+
+// ---------------------------------------------------------------------
+echo "\nIcon — hover colours, RTL flip and link (I-01 to I-04)\n";
+// ---------------------------------------------------------------------
+$icon_probe = static function ( $attrs ) {
+	WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+	$html = do_blocks( '<!-- wp:zealblocks/icon ' . wp_json_encode( array_merge( array( 'icon' => 'arrow-right' ), $attrs ) ) . ' /-->' );
+	preg_match( '/class="[^"]*(zealblocks-icon-[0-9a-f]{8})/', $html, $match );
+
+	return array(
+		'html'  => $html,
+		'css'   => wp_style_engine_get_stylesheet_from_context( 'zealblocks' ),
+		'class' => isset( $match[1] ) ? '.' . $match[1] : '',
+	);
+};
+
+$icon_hover = $icon_probe(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'textHover'       => '#ff0000',
+				'backgroundHover' => 'linear-gradient(90deg,#000 0%,#fff 100%)',
+			),
+			'@mobile'    => array( 'zealblocks' => array( 'textHover' => '#0000ff' ) ),
+		),
+	)
+);
+$check( 'icon hover colour on :hover and :focus-visible, important', '' !== $icon_hover['class'] && false !== strpos( $icon_hover['css'], $icon_hover['class'] . ':hover,' . $icon_hover['class'] . ':focus-visible{color:#ff0000 !important;' ) );
+$check( 'background hover takes a gradient', false !== strpos( $icon_hover['css'], 'background:linear-gradient(90deg,#000 0%,#fff 100%) !important;' ) );
+$check( 'icon hover is per device', 1 === preg_match( '/@media[^{]*\{' . preg_quote( $icon_hover['class'] . ':hover,' . $icon_hover['class'] . ':focus-visible{color:#0000ff !important;}', '/' ) . '\}/', $icon_hover['css'] ) );
+$check( 'has-hover switches the transition on', false !== strpos( $icon_hover['html'], 'has-hover' ) );
+
+$icon_hostile = $icon_probe( array( 'style' => array( 'zealblocks' => array( 'textHover' => 'red;}body{x', 'backgroundHover' => 'url(javascript:x)' ) ) ) );
+$check( 'hostile icon hover values leave no CSS, hash or class', '' === $icon_hostile['css'] && false === strpos( $icon_hostile['html'], 'zealblocks-icon-' ) && false === strpos( $icon_hostile['html'], 'has-hover' ) );
+
+$check( 'flipForRTL adds has-rtl-flip to the wrapper', false !== strpos( $icon_probe( array( 'flipForRTL' => true ) )['html'], 'has-rtl-flip' ) );
+$check( 'and nothing without it', false === strpos( $icon_probe( array() )['html'], 'has-rtl-flip' ) );
+
+$icon_linked = $icon_probe( array( 'url' => 'https://example.org/?a=1&b=2', 'linkTarget' => '_blank', 'rel' => 'nofollow', 'label' => 'Pricing' ) );
+$check( 'a linked icon is an <a> wrapper with href', 1 === preg_match( '#^<a [^>]*href="https://example.org/\?a=1&\#038;b=2"#', trim( $icon_linked['html'] ) ) && false !== strpos( $icon_linked['html'], '</a>' ) );
+$check( 'new tab keeps the author\'s rel and adds the opener guard', false !== strpos( $icon_linked['html'], 'target="_blank"' ) && false !== strpos( $icon_linked['html'], 'rel="nofollow noreferrer noopener"' ) );
+$check( 'the alternative text names the link, the SVG is hidden', false !== strpos( $icon_linked['html'], 'aria-label="Pricing"' ) && false !== strpos( $icon_linked['html'], 'aria-hidden="true"' ) && false === strpos( $icon_linked['html'], 'role="img"' ) );
+
+$icon_nameless = $icon_probe( array( 'url' => 'https://example.org/' ) );
+$icon_entry    = Zealblocks\Icon_Handler\Library::get( 'arrow-right' );
+$check( 'an unlabelled linked icon is named after the icon', '' !== (string) ( $icon_entry['label'] ?? '' ) && false !== strpos( $icon_nameless['html'], 'aria-label="' . esc_attr( $icon_entry['label'] ) . '"' ) );
+
+$icon_js = $icon_probe( array( 'url' => 'javascript:alert(1)', 'linkTarget' => '_blank' ) );
+$check( 'an unusable URL leaves a plain <div>, no href or target', 0 === strpos( trim( $icon_js['html'] ), '<div' ) && false === strpos( $icon_js['html'], 'href' ) && false === strpos( $icon_js['html'], 'target=' ) );
+$check( 'an unlinked labelled icon keeps role="img" on the SVG', false !== strpos( $icon_probe( array( 'label' => 'Rating' ) )['html'], 'role="img" aria-label="Rating"' ) );
+
+$check( 'Render::link() drops unknown targets and rel tokens', array( 'href' => 'https://ex.org', 'rel' => 'nofollow sponsored' ) === Zealblocks\Block\Render::link( array( 'url' => 'https://ex.org', 'linkTarget' => 'evil', 'rel' => 'NoFollow  sponsored bogus' ) ) );
+$check( 'and returns nothing for an unusable URL', array() === Zealblocks\Block\Render::link( array( 'url' => 'data:text/html,x', 'linkTarget' => '_blank' ) ) );
 
 // ---------------------------------------------------------------------
 echo "\nText — visual presets\n";
