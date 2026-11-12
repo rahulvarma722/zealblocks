@@ -97,16 +97,10 @@ there: the five attributes in `block.json`, `Animation::wrapper()` in
 
 ## Display conditions
 
-`Block\Display_Conditions` decides on the server; a hidden block renders
-nothing, so its text is not in the page source. Conditions are ORed. Browser
-and OS come from the user agent, the day from the site timezone.
-
-A full-page cache stores one visitor's result for everyone. The editor says so
-under the browser, OS and day controls. In the canvas a block with conditions
-gets a dashed outline rather than being hidden.
-
-Per-device hiding is not here — core's block visibility (7.0+) already does
-it for every block.
+Shared with every block that has them, so documented once in
+[../display-conditions.md](../display-conditions.md), including the page-cache
+limitation. Text's `render.php` checks them first, before any other work, so a
+hidden Text block leaves no markup, CSS rule or script behind.
 
 ## Per-device styles
 

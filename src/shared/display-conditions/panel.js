@@ -1,10 +1,9 @@
 /**
- * Text — the Display conditions panel, in the Settings tab.
+ * Display conditions — the Settings-tab panel, for every block that opts in.
  *
- * Not per viewport, so these are ordinary attributes in an ordinary
- * Settings-tab panel. (Per-device hiding is not here: core's block visibility
- * already does it, from the block toolbar. The Animation panel is shared:
- * src/shared/animation/panel.js.)
+ * Not per viewport, so these are ordinary attributes in an ordinary panel.
+ * Per-device hiding is not here: core's block visibility already does it,
+ * from the block toolbar.
  */
 
 import { __ } from '@wordpress/i18n';
@@ -19,7 +18,7 @@ import {
 } from '@wordpress/components';
 
 import { BROWSER_OPTIONS, OS_OPTIONS, DAY_OPTIONS } from './constants';
-import { setCondition } from './style-values';
+import { setCondition } from './values';
 
 const CACHE_HELP = __(
 	'Checked when the page is generated. With a page cache, every visitor may see the same result.',

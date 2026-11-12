@@ -6,6 +6,7 @@
  */
 
 @use "../shared/animation/animation";
+@use "../shared/display-conditions/display-conditions";
 
 .wp-block-zealblocks-text {
 
@@ -30,16 +31,6 @@
 	&.has-hover-background:hover {
 		background: var(--zealblocks-text-hover-background) !important;
 	}
-
-	/*
-	 * A block with display conditions is shown in the editor, always — hiding
-	 * it would make it impossible to edit. A dashed outline marks that some
-	 * visitors will not see it.
-	 */
-	&.has-display-conditions {
-		outline: 1px dashed currentcolor;
-		outline-offset: 2px;
-	}
 }
 
 /*
@@ -47,3 +38,9 @@
  * useAnimationPreview(). See src/shared/animation/_animation.scss.
  */
 @include animation.preview(".wp-block-zealblocks-text");
+
+/*
+ * The dashed outline on a block with display conditions. See
+ * src/shared/display-conditions/_display-conditions.scss.
+ */
+@include display-conditions.marker(".wp-block-zealblocks-text");

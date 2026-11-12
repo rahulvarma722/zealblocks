@@ -29,25 +29,46 @@ defined( 'ABSPATH' ) || exit;
  * OS and day conditions follow whoever filled the cache. The editor says so
  * next to the controls; there is no way around it short of rendering in JS,
  * which would put the hidden content in the page source anyway.
+ *
+ * Shared by every block that opts in. A block declares self::ATTRIBUTES in
+ * its block.json, returns early from render.php when hides() says so, and
+ * uses the panel in src/shared/display-conditions/. See
+ * docs/display-conditions.md.
  */
 final class Display_Conditions implements Module {
 
 	/**
-	 * Browser values the editor offers. Mirrors constants.js.
+	 * The attribute a block with display conditions declares in its
+	 * block.json, exactly. BlockContractTest checks every such block.
+	 *
+	 * @var array<string, array>
+	 */
+	const ATTRIBUTES = array(
+		'displayConditions' => array(
+			'type'    => 'object',
+			'default' => array(),
+		),
+	);
+
+	/**
+	 * Browser values the editor offers. MUST match BROWSER_OPTIONS in
+	 * src/shared/display-conditions/constants.js; BlockContractTest compares.
 	 *
 	 * @var string[]
 	 */
 	const BROWSERS = array( 'chrome', 'firefox', 'safari', 'edge', 'opera' );
 
 	/**
-	 * Operating system values the editor offers. Mirrors constants.js.
+	 * Operating system values the editor offers. MUST match OS_OPTIONS in
+	 * src/shared/display-conditions/constants.js; BlockContractTest compares.
 	 *
 	 * @var string[]
 	 */
 	const SYSTEMS = array( 'ios', 'android', 'windows', 'mac_os', 'linux', 'open_bsd', 'sun_os' );
 
 	/**
-	 * Day values, as PHP's English `l` format lowercased.
+	 * Day values, as PHP's English `l` format lowercased. MUST match
+	 * DAY_OPTIONS in src/shared/display-conditions/constants.js.
 	 *
 	 * @var string[]
 	 */
@@ -79,7 +100,7 @@ final class Display_Conditions implements Module {
 	 *
 	 * Not routed through Editor_Settings: that only prints when the post
 	 * already contains one of our blocks, and the role list is needed the
-	 * moment the first Text block is inserted.
+	 * moment the first block with the panel is inserted.
 	 *
 	 * @return void
 	 */
@@ -121,7 +142,7 @@ final class Display_Conditions implements Module {
 	/**
 	 * Whether any condition is set at all.
 	 *
-	 * Lets render.php skip the visitor lookup for the common case of a block
+	 * Lets hides() skip the visitor lookup for the common case of a block
 	 * with no conditions.
 	 *
 	 * @param mixed $conditions The block's `displayConditions` attribute.

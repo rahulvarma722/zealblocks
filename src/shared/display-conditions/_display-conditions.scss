@@ -1,0 +1,20 @@
+/**
+ * Display conditions, shared by every block that opts in. Editor only.
+ *
+ *   @use "../shared/display-conditions/display-conditions";
+ *   // editor.scss
+ *   @include display-conditions.marker(".wp-block-zealblocks-text");
+ */
+
+/**
+ * A block with display conditions is shown in the editor, always — hiding
+ * it would make it impossible to edit. A dashed outline marks that some
+ * visitors will not see it. For a block's editor.scss, at the root.
+ */
+@mixin marker($block) {
+
+	#{$block}.has-display-conditions {
+		outline: 1px dashed currentcolor;
+		outline-offset: 2px;
+	}
+}

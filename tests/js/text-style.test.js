@@ -10,11 +10,7 @@
  */
 
 import { getPreview, hasAnyLayerValue } from '../../src/text/preview';
-import {
-	clearKeys,
-	setShadowValue,
-	setCondition,
-} from '../../src/text/style-values';
+import { clearKeys, setShadowValue } from '../../src/text/style-values';
 import {
 	KEYS,
 	SHADOW_KEYS,
@@ -192,23 +188,5 @@ describe( 'getPreview — position', () => {
 		expect( preview.style.position ).toBeUndefined();
 		expect( preview.style.zIndex ).toBeUndefined();
 		expect( preview.classes ).not.toContain( 'has-zealblocks-z-index' );
-	} );
-} );
-
-describe( 'setCondition', () => {
-	it( 'stores active conditions and drops inactive ones', () => {
-		let next = setCondition( {}, 'hideWhenLoggedIn', true );
-		next = setCondition( next, 'hideOnDays', [ 'monday' ] );
-
-		expect( next ).toEqual( {
-			hideWhenLoggedIn: true,
-			hideOnDays: [ 'monday' ],
-		} );
-
-		next = setCondition( next, 'hideWhenLoggedIn', false );
-		next = setCondition( next, 'hideOnDays', [] );
-		next = setCondition( next, 'hideForRole', '' );
-
-		expect( next ).toEqual( {} );
 	} );
 } );

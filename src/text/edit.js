@@ -23,6 +23,10 @@ import {
 	useAnimationPreview,
 	getAnimationProps,
 } from '../shared/animation';
+import {
+	DisplayConditionsPanel,
+	hasConditions as hasAnyCondition,
+} from '../shared/display-conditions';
 import { GroupedSelect } from '../shared/grouped-select';
 
 import {
@@ -39,7 +43,6 @@ import {
 	HoverControls,
 } from './style-controls';
 import { PositionControls } from './position-controls';
-import { DisplayConditionsPanel } from './settings-controls';
 
 export default function Edit( {
 	attributes,
@@ -82,8 +85,7 @@ export default function Edit( {
 	// Shared with every animated block: src/shared/animation/preview.js.
 	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
 
-	const hasConditions =
-		!! displayConditions && Object.keys( displayConditions ).length > 0;
+	const hasConditions = hasAnyCondition( displayConditions );
 
 	/*
 	 * Memoised for the same reason the Button memoises its block props: a fresh

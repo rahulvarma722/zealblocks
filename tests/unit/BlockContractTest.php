@@ -27,6 +27,7 @@ namespace Zealblocks\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Zealblocks\Block\Animation;
+use Zealblocks\Block\Display_Conditions;
 
 /**
  * @coversNothing
@@ -313,6 +314,64 @@ final class BlockContractTest extends TestCase {
 				'constants.js ANIMATION_DEFAULTS.' . $name . ' must be ' . $default
 			);
 		}
+	}
+
+	/**
+	 * Every block with display conditions declares the attribute exactly as
+	 * Display_Conditions::ATTRIBUTES does.
+	 *
+	 * @return void
+	 */
+	public function test_condition_blocks_declare_the_shared_attribute() {
+		$with_conditions = 0;
+
+		foreach ( self::blocks() as $slug => $block ) {
+			$attributes = isset( $block['json']['attributes'] ) ? $block['json']['attributes'] : array();
+
+			if ( ! array_intersect_key( $attributes, Display_Conditions::ATTRIBUTES ) ) {
+				continue;
+			}
+
+			++$with_conditions;
+
+			foreach ( Display_Conditions::ATTRIBUTES as $name => $definition ) {
+				$this->assertSame(
+					$definition,
+					$attributes[ $name ] ?? null,
+					$slug . ' block.json must declare ' . $name . ' exactly as Display_Conditions::ATTRIBUTES does'
+				);
+			}
+		}
+
+		$this->assertGreaterThan( 0, $with_conditions, 'no block with display conditions found, so this test checked nothing' );
+	}
+
+	/**
+	 * The browsers, systems and days the editor offers are exactly the ones
+	 * the server recognises.
+	 *
+	 * One the editor offers but the server does not know would be stored and
+	 * then never match, so the block would never hide. Nothing else reports
+	 * that.
+	 *
+	 * @return void
+	 */
+	public function test_condition_lists_match_between_php_and_js() {
+		$js = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/display-conditions/constants.js' );
+
+		$values = static function ( $from, $to ) use ( $js ) {
+			$start = strpos( $js, $from );
+			$end   = false === $to ? strlen( $js ) : strpos( $js, $to, (int) $start );
+			$part  = false === $start || false === $end ? '' : substr( $js, $start, $end - $start );
+
+			preg_match_all( "/value:\s*'([a-z_]+)'/", $part, $matches );
+
+			return $matches[1];
+		};
+
+		$this->assertSame( Display_Conditions::BROWSERS, $values( 'BROWSER_OPTIONS', 'OS_OPTIONS' ), 'BROWSER_OPTIONS must list Display_Conditions::BROWSERS, in order' );
+		$this->assertSame( Display_Conditions::SYSTEMS, $values( 'OS_OPTIONS', 'DAY_OPTIONS' ), 'OS_OPTIONS must list Display_Conditions::SYSTEMS, in order' );
+		$this->assertSame( Display_Conditions::DAYS, $values( 'DAY_OPTIONS', false ), 'DAY_OPTIONS must list Display_Conditions::DAYS, in order' );
 	}
 
 	/**

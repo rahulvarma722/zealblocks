@@ -421,6 +421,18 @@ $check( 'shown to logged-out visitors when only hidden for logged-in', false !==
 $today = strtolower( current_datetime()->format( 'l' ) );
 $check( 'hidden on today', '' === trim( do_blocks( '<!-- wp:zealblocks/text {"content":"X","displayConditions":{"hideOnDays":["' . $today . '"]}} /-->' ) ) );
 
+/*
+ * A hidden block must leave NOTHING behind, not just no markup: a CSS rule in
+ * the style-engine store or an enqueued script would still reach the page.
+ * The hover colour is unique to this check, so the store cannot already hold
+ * it from another one.
+ */
+wp_dequeue_script( Zealblocks\Block\Animation::handle() );
+$hidden_out = do_blocks( '<!-- wp:zealblocks/text {"content":"Hidden","animationType":"fade","style":{"zealblocks":{"textHover":"#0d0e0f"}},"displayConditions":{"hideWhenLoggedOut":true}} /-->' );
+$check( 'a hidden block renders no markup', '' === trim( $hidden_out ) );
+$check( 'a hidden block stores no CSS rule', false === strpos( wp_style_engine_get_stylesheet_from_context( 'zealblocks' ), '#0d0e0f' ) );
+$check( 'a hidden animated block enqueues no script', ! wp_script_is( Zealblocks\Block\Animation::handle(), 'enqueued' ) );
+
 // ---------------------------------------------------------------------
 echo "\nText — inline formats survive the front end\n";
 // ---------------------------------------------------------------------
