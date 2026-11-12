@@ -98,6 +98,54 @@ and consumed by the descendant:
 One indirection, and the icon becomes stylable per viewport — a media query only
 has to reassign the variable on the root.
 
+## Hover, focus, icon colours, gap and hover shadow
+
+Everything below is per device, stored under `style.zealblocks` like the width,
+and needs no `block.json` attribute.
+
+| control | panel | key(s) | front end |
+|---|---|---|---|
+| Text hover, Background hover (colour or gradient), Hover transition | Color | `textHover`, `backgroundHover`, `hoverDuration` | shared [Hover](../hover.md): real rules, `!important` |
+| Border hover | Color | `borderHover` | `border-color` under the same states; width and style stay the normal border's |
+| Icon, Icon hover (only with an icon) | Color | `iconColor`, `iconHover` | custom properties the icon reads |
+| Text-icon gap (only with an icon) | Dimensions | `iconGap` | custom property the `:has(icon)` rule reads, default `0.5em` |
+| Shadow hover: colour, X, Y, blur, spread | Border & Shadow | `shadowHover{X,Y,Blur,Spread,Color}` | five custom properties combined into one `box-shadow`, `!important` |
+
+**States: `:hover` and `:focus-visible`.** A keyboard user sees what a mouse
+user sees. This deliberately differs from Spectra's `:focus`: a mouse click
+focuses a `<button>`, and with `:focus` the hover styling would stay on until
+the visitor clicked elsewhere.
+
+**Why some are variables.** The icon is a child, so its colours and the gap use
+the same technique as the icon size: a custom property on the root, spent by
+`style.scss`, each with a fallback so a band that does not define it is
+unaffected. With no icon colour set, the icon simply follows the button's text
+colour, including the text hover colour while hovered. The gap has to be a
+variable for a second reason: the default `gap` sits on a `:has()` rule that
+would out-rank a plain per-instance declaration.
+
+**Shadow hover** is five variables rather than one value, so a tablet override
+of the colour alone keeps the desktop offsets. Adding a first part seeds the
+others with Spectra's default, `0 4px 8px 0 rgba(0, 0, 0, 0.2)`
+(`setShadowHoverValue()`). It is `!important` to beat the inline `box-shadow`
+that core's shadow support writes.
+
+`has-hover` (the transition) is on whenever any hover styling is, including a
+shadow or icon hover alone; `has-shadow-hover` switches the shadow rule on.
+
+Margin, padding on all four sides and writing mode are core supports
+(`block.json`). Writing mode shows only on themes that turn on
+`settings.typography.writingMode`; see [text.md](text.md).
+
+### Colours in `rgb()` / `hsl()` are printed as hex
+
+Core's style engine drops any declaration using `rgb()`, `rgba()`, `hsl()` or
+`hsla()` outside a gradient (`safecss_filter_attr()`). The drop is whole and
+silent. `Responsive_Styles::printable()` converts such colours to hex, keeping
+the alpha as a fourth byte, for every block. This is what fixed the Text
+block's default `rgba(0, 0, 0, 0.3)` shadow, which had been rendering
+colourless.
+
 ## No inline `<style>`
 
 Per-viewport CSS goes through the **style engine** under the `zealblocks`

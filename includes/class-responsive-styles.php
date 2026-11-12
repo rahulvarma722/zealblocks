@@ -232,6 +232,113 @@ final class Responsive_Styles {
 	}
 
 	/**
+	 * A validated value in the form core's style engine will actually print.
+	 *
+	 * The engine runs every declaration through safecss_filter_attr()
+	 * (wp-includes/kses.php), which allows var(), calc() and friends but NOT
+	 * rgb(), rgba(), hsl() or hsla() outside a gradient. A declaration using
+	 * one is dropped whole and silently: a shadow seeded with
+	 * `rgba(0, 0, 0, 0.3)` rendered on the front end with no colour at all,
+	 * while the editor, which never meets that filter, showed it.
+	 *
+	 * So a colour in one of those notations is printed as hex instead, with
+	 * the alpha kept as a fourth byte (`#0000004d`). Gradients are left alone:
+	 * the filter allows colour functions inside them.
+	 *
+	 * @param string $value A value that passed is_safe_value().
+	 * @param string $type  Its type.
+	 * @return string
+	 */
+	public static function printable( $value, $type ) {
+		if ( 'color' !== $type && 'background' !== $type ) {
+			return $value;
+		}
+
+		$hex = self::to_hex( $value );
+
+		return null === $hex ? $value : $hex;
+	}
+
+	/**
+	 * An rgb()/rgba()/hsl()/hsla() colour as hex, or null for anything else.
+	 *
+	 * Reads both syntaxes the picker and themes produce: legacy commas
+	 * (`rgba(0, 0, 0, 0.3)`) and modern spaces with a slash before the alpha
+	 * (`rgb(0 0 0 / 30%)`). Channels may be numbers or percentages, the hue a
+	 * number or degrees. Values out of range are clamped, as a browser would.
+	 *
+	 * @param string $value Candidate colour.
+	 * @return string|null `#rrggbb`, `#rrggbbaa` when not opaque, or null.
+	 */
+	public static function to_hex( $value ) {
+		if ( 1 !== preg_match( '/^(rgba?|hsla?)\(\s*([^()]*)\)$/', strtolower( trim( (string) $value ) ), $match ) ) {
+			return null;
+		}
+
+		$parts = preg_split( '/[\s,\/]+/', trim( $match[2] ), -1, PREG_SPLIT_NO_EMPTY );
+
+		if ( count( $parts ) < 3 || count( $parts ) > 4 ) {
+			return null;
+		}
+
+		$number = static function ( $part ) {
+			return (float) rtrim( $part, '%deg' );
+		};
+
+		$alpha = 1.0;
+
+		if ( isset( $parts[3] ) ) {
+			$alpha = str_ends_with( $parts[3], '%' ) ? $number( $parts[3] ) / 100 : $number( $parts[3] );
+			$alpha = max( 0.0, min( 1.0, $alpha ) );
+		}
+
+		if ( 'r' === $match[1][0] ) {
+			$channels = array_map(
+				static function ( $part ) use ( $number ) {
+					$value = str_ends_with( $part, '%' ) ? $number( $part ) * 2.55 : $number( $part );
+
+					return (int) round( max( 0, min( 255, $value ) ) );
+				},
+				array_slice( $parts, 0, 3 )
+			);
+		} else {
+			$hue        = fmod( fmod( $number( $parts[0] ), 360 ) + 360, 360 ) / 360;
+			$saturation = max( 0, min( 100, $number( $parts[1] ) ) ) / 100;
+			$lightness  = max( 0, min( 100, $number( $parts[2] ) ) ) / 100;
+
+			$q = $lightness < 0.5 ? $lightness * ( 1 + $saturation ) : $lightness + $saturation - $lightness * $saturation;
+			$p = 2 * $lightness - $q;
+
+			$channel = static function ( $t ) use ( $p, $q ) {
+				$t = $t < 0 ? $t + 1 : ( $t > 1 ? $t - 1 : $t );
+
+				if ( $t < 1 / 6 ) {
+					return $p + ( $q - $p ) * 6 * $t;
+				}
+				if ( $t < 1 / 2 ) {
+					return $q;
+				}
+				if ( $t < 2 / 3 ) {
+					return $p + ( $q - $p ) * ( 2 / 3 - $t ) * 6;
+				}
+
+				return $p;
+			};
+
+			$channels = array_map(
+				static function ( $t ) use ( $channel ) {
+					return (int) round( $channel( $t ) * 255 );
+				},
+				array( $hue + 1 / 3, $hue, $hue - 1 / 3 )
+			);
+		}
+
+		$hex = vsprintf( '#%02x%02x%02x', $channels );
+
+		return $alpha < 1 ? $hex . sprintf( '%02x', (int) round( $alpha * 255 ) ) : $hex;
+	}
+
+	/**
 	 * Build style-engine rules for one property across the base and viewport states.
 	 *
 	 * Returns RULES rather than a CSS string, in the shape
@@ -282,7 +389,7 @@ final class Responsive_Styles {
 		if ( '' !== $base && self::is_safe_value( $base, $type ) ) {
 			$rules[] = array(
 				'selector'     => $selector,
-				'declarations' => array( $css_prop => $base ),
+				'declarations' => array( $css_prop => self::printable( $base, $type ) ),
 			);
 		}
 
@@ -301,7 +408,7 @@ final class Responsive_Styles {
 
 			$rules[] = array(
 				'selector'     => $selector,
-				'declarations' => array( $css_prop => $value ),
+				'declarations' => array( $css_prop => self::printable( $value, $type ) ),
 				'rules_group'  => $media_query,
 			);
 		}

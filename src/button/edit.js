@@ -30,6 +30,13 @@ import ResponsiveWidthControl from './responsive-width';
 import { useStyleState } from './responsive-width/use-style-state';
 import { getResolvedValue } from './responsive-width/style-value';
 import { ICON_SIZE_KEY, CSS_VARS } from './responsive-width/constants';
+import { HoverControls } from '../shared/hover';
+import { getStylePreview } from './preview';
+import {
+	ButtonColorControls,
+	IconGapControl,
+	ShadowHoverControl,
+} from './style-controls';
 
 const NEW_TAB_TARGET = '_blank';
 
@@ -120,7 +127,9 @@ export default function Edit( {
 	 * means the identity only changes when the previewed width actually does.
 	 */
 	const extraBlockProps = useMemo( () => {
-		const inline = {};
+		// Hover, icon colours, gap and shadow hover: see preview.js.
+		const preview = getStylePreview( style, device );
+		const inline = { ...preview.style };
 
 		if ( previewWidth ) {
 			inline.width = previewWidth;
@@ -134,16 +143,34 @@ export default function Edit( {
 		const classes = [
 			icon && 'left' === iconPosition ? 'has-icon-left' : '',
 			icon && flipForRTL ? 'has-rtl-flip' : '',
+			...preview.classes,
 		].filter( Boolean );
 
 		return {
 			...( Object.keys( inline ).length ? { style: inline } : {} ),
 			...( classes.length ? { className: classes.join( ' ' ) } : {} ),
 		};
-	}, [ previewWidth, previewIconSize, icon, iconPosition, flipForRTL ] );
+	}, [
+		style,
+		device,
+		previewWidth,
+		previewIconSize,
+		icon,
+		iconPosition,
+		flipForRTL,
+	] );
 
 	// The block root. render.php puts the same classes on its <a>.
 	const blockProps = useBlockProps( extraBlockProps );
+
+	// What every per-viewport style control needs.
+	const styleControlProps = {
+		clientId,
+		style,
+		setAttributes,
+		stateKey,
+		device,
+	};
 
 	const unlink = () => {
 		setAttributes( { url: '', linkTarget: '', rel: '' } );
@@ -182,6 +209,11 @@ export default function Edit( {
 				stateKey={ stateKey }
 				diagnostics={ diagnostics }
 			/>
+
+			<HoverControls { ...styleControlProps } />
+			<ButtonColorControls { ...styleControlProps } hasIcon={ !! icon } />
+			<IconGapControl { ...styleControlProps } hasIcon={ !! icon } />
+			<ShadowHoverControl { ...styleControlProps } />
 
 			<InspectorControls>
 				<PanelBody title={ __( 'Settings', 'zealblocks' ) }>

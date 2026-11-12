@@ -16,11 +16,14 @@
  * are per-instance rules from render.php; this only smooths the change, and
  * only on blocks that have a hover state, so a theme's own transitions
  * elsewhere are untouched. For a block's style.scss, at the root.
+ *
+ * `$properties` lists what the block's hover changes; Text's default is its
+ * colour and background, a Button adds its border colour and shadow.
  */
-@mixin transition($block, $prefix) {
+@mixin transition($block, $prefix, $properties: (color, background)) {
 
 	#{$block}.has-hover {
-		transition-property: color, background;
+		transition-property: $properties;
 		transition-duration: var(#{$prefix}duration, 0.2s);
 		transition-timing-function: ease;
 

@@ -6,9 +6,22 @@
  * affordances belong here.
  */
 
+@use "../shared/hover/hover";
+
 .wp-block-zealblocks-button {
 
 	[data-rich-text-placeholder] {
 		opacity: 0.6;
 	}
+}
+
+/*
+ * Hover preview for the previewed device: text and background through the
+ * shared mixin, border here. The front end gets real per-band rules instead;
+ * see src/shared/hover/_hover.scss for why the canvas uses variables.
+ */
+@include hover.preview(".wp-block-zealblocks-button", "--zealblocks-button-hover-");
+
+.wp-block-zealblocks-button.has-hover-border:hover {
+	border-color: var(--zealblocks-button-hover-border) !important;
 }

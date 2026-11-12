@@ -321,4 +321,74 @@ final class ResponsiveStylesTest extends TestCase {
 		$this->assertTrue( Responsive_Styles::is_safe_value( 'hidden', 'overflow' ) );
 		$this->assertFalse( Responsive_Styles::is_safe_value( 'scroll;x', 'overflow' ) );
 	}
+
+	/**
+	 * Colour functions become hex, because core's style engine drops any
+	 * declaration using rgb(), rgba(), hsl() or hsla() outside a gradient.
+	 *
+	 * @return void
+	 */
+	public function test_colour_functions_convert_to_hex() {
+		$cases = array(
+			'rgba(0, 0, 0, 0.3)'        => '#0000004d',
+			'rgba(0,0,0,0.2)'           => '#00000033',
+			'rgb(255, 255, 255)'        => '#ffffff',
+			'RGB(10, 20, 30)'           => '#0a141e',
+			'rgb(255 0 0 / 50%)'        => '#ff000080',
+			'rgb(100%, 0%, 0%)'         => '#ff0000',
+			'rgba(300, -5, 0, 2)'       => '#ff0000',
+			'hsl(0, 100%, 50%)'         => '#ff0000',
+			'hsl(120deg 100% 25%)'      => '#008000',
+			'hsla(240, 100%, 50%, 0.5)' => '#0000ff80',
+			'hsl(-120, 100%, 50%)'      => '#0000ff',
+			'hsl(0, 0%, 100%)'          => '#ffffff',
+		);
+
+		foreach ( $cases as $input => $expected ) {
+			$this->assertSame( $expected, Responsive_Styles::to_hex( $input ), $input );
+		}
+
+		foreach ( array( '#abc', 'var(--x)', 'transparent', 'rgb(1, 2)', 'rgb(1, 2, 3, 4, 5)', 'linear-gradient(90deg,rgb(0,0,0) 0%,#fff 100%)' ) as $other ) {
+			$this->assertNull( Responsive_Styles::to_hex( $other ), $other );
+		}
+	}
+
+	/**
+	 * Only colour and background values are converted, and a gradient keeps its
+	 * colour functions, which the style engine allows inside one.
+	 *
+	 * @return void
+	 */
+	public function test_printable_converts_only_plain_colours() {
+		$this->assertSame( '#0000004d', Responsive_Styles::printable( 'rgba(0, 0, 0, 0.3)', 'color' ) );
+		$this->assertSame( '#0000004d', Responsive_Styles::printable( 'rgba(0, 0, 0, 0.3)', 'background' ) );
+		$this->assertSame( '#f00', Responsive_Styles::printable( '#f00', 'color' ) );
+		$this->assertSame( 'var(--ast-global-color-0)', Responsive_Styles::printable( 'var(--ast-global-color-0)', 'color' ) );
+
+		$gradient = 'linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%)';
+		$this->assertSame( $gradient, Responsive_Styles::printable( $gradient, 'background' ) );
+		$this->assertSame( '4px', Responsive_Styles::printable( '4px', 'length' ) );
+	}
+
+	/**
+	 * build_rules() emits the converted value, at every layer.
+	 *
+	 * @return void
+	 */
+	public function test_build_rules_prints_colour_functions_as_hex() {
+		$rules = Responsive_Styles::build_rules(
+			array(
+				'zealblocks' => array( 'c' => 'rgba(0, 0, 0, 0.3)' ),
+				'@mobile'    => array( 'zealblocks' => array( 'c' => 'hsl(0, 100%, 50%)' ) ),
+			),
+			'.x',
+			'zealblocks',
+			'c',
+			'--c',
+			'color'
+		);
+
+		$this->assertSame( array( '--c' => '#0000004d' ), $rules[0]['declarations'] );
+		$this->assertSame( array( '--c' => '#ff0000' ), $rules[1]['declarations'] );
+	}
 }

@@ -37,6 +37,7 @@ defined( 'ABSPATH' ) || exit;
  * inside Block_Render now, and importing a name this file no longer uses would
  * be a lie about its dependencies.
  */
+use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Icon_Handler\Library as Icon_Library;
 
@@ -238,17 +239,71 @@ $icon_markup   = Icon_Library::render( $icon_key, array( 'class' => 'wp-block-ze
  * style.scss then spends the variable on `.wp-block-zealblocks-button__icon`. The
  * media queries stay on the root, so the icon becomes per-viewport without a
  * single descendant selector being generated here.
+ *
+ * Hover and focus styling (B-01 to B-06), on the same per-viewport path.
+ *
+ * States: `:hover`, and `:focus-visible` so a keyboard user sees what a mouse
+ * user sees. Not `:focus`, which Spectra uses: a mouse click focuses a
+ * <button>, and the hover colours would then stay on until the visitor
+ * clicked somewhere else.
+ *
+ *   - Text and background hover: shared Hover, real declarations under the
+ *     states, important (see includes/block/class-hover.php).
+ *   - Border hover: the same, as `border-color`. Width and style stay the
+ *     normal border's, as in Spectra.
+ *   - Icon colour, icon hover colour and the text-icon gap: CUSTOM PROPERTIES
+ *     on the root, for the same reason as the icon size — the icon is a child.
+ *     style.scss spends them, each with a fallback, so a band that does not
+ *     define one is unaffected.
+ *   - Shadow hover: five custom properties combined into one `box-shadow` by
+ *     style.scss under the states, so a tablet override of the colour alone
+ *     keeps the desktop offsets.
  */
+$button_states = array( ':hover', ':focus-visible' );
+
 $responsive = Block_Render::responsive(
 	isset( $attributes['style'] ) ? $attributes['style'] : array(),
 	'zealblocks',
 	array(
 		// style key => CSS property emitted.
-		'width'    => 'width',
-		'iconSize' => '--zealblocks-button-icon-size',
+		'width'             => 'width',
+		'iconSize'          => '--zealblocks-button-icon-size',
+		'iconGap'           => '--zealblocks-button-icon-gap',
+		'iconColor'         => array( '--zealblocks-button-icon-color', 'color' ),
+		'iconHover'         => array( '--zealblocks-button-icon-hover-color', 'color' ),
+		...Hover::properties( '--zealblocks-button-hover-', $button_states ),
+		'borderHover'       => array( 'border-color', 'color', $button_states ),
+		'shadowHoverX'      => array( '--zealblocks-button-shadow-hover-x', 'signed-length' ),
+		'shadowHoverY'      => array( '--zealblocks-button-shadow-hover-y', 'signed-length' ),
+		'shadowHoverBlur'   => array( '--zealblocks-button-shadow-hover-blur', 'length' ),
+		'shadowHoverSpread' => array( '--zealblocks-button-shadow-hover-spread', 'signed-length' ),
+		'shadowHoverColor'  => array( '--zealblocks-button-shadow-hover-color', 'color' ),
 	),
 	'zealblocks-btn-'
 );
+
+/*
+ * Feature classes, from the rules that SURVIVED validation (never from the
+ * stored values), and from every band together: each is needed in every band
+ * once any band uses it.
+ */
+$has_shadow_hover = false;
+$has_icon_hover   = false;
+
+foreach ( $responsive['rules'] as $rule ) {
+	foreach ( array_keys( $rule['declarations'] ) as $property ) {
+		$has_shadow_hover = $has_shadow_hover || str_starts_with( $property, '--zealblocks-button-shadow-hover-' );
+		$has_icon_hover   = $has_icon_hover || '--zealblocks-button-icon-hover-color' === $property;
+	}
+}
+
+// `has-hover` switches the transition on. Shared Hover sets it for the colour
+// rules; a shadow or icon hover alone needs it too, or it would snap.
+$hover_classes = Hover::classes( $responsive['rules'] );
+
+if ( ! $hover_classes && ( $has_shadow_hover || $has_icon_hover ) ) {
+	$hover_classes = array( Hover::CLASS_NAME );
+}
 
 $wrapper_classes = array_filter(
 	array(
@@ -257,6 +312,8 @@ $wrapper_classes = array_filter(
 		'' !== $icon_markup && 'left' === $icon_position ? 'has-icon-left' : '',
 		// Opt-in mirroring for directional icons; style.scss gates it on [dir=rtl].
 		'' !== $icon_markup && ! empty( $attributes['flipForRTL'] ) ? 'has-rtl-flip' : '',
+		...$hover_classes,
+		$has_shadow_hover ? 'has-shadow-hover' : '',
 	)
 );
 
@@ -283,7 +340,9 @@ $wrapper_attributes = get_block_wrapper_attributes(
 );
 
 /*
- * The rules are handed to core's style engine, not printed here.
+ * The rules are handed to core's style engine, not printed here, through
+ * Block_Render::store_rules(), which also turns the hover rules' important flag
+ * into `!important` (the engine's rule array has no such field).
  *
  * `context` names a store. Core flushes every store in
  * wp_enqueue_stored_styles() — hooked to wp_enqueue_scripts and wp_footer —
@@ -301,15 +360,7 @@ $wrapper_attributes = get_block_wrapper_attributes(
  * The store de-duplicates by selector: two buttons with identical values, which
  * already share a hash class, share one rule.
  */
-if ( $responsive['rules'] ) {
-	wp_style_engine_get_stylesheet_from_css_rules(
-		$responsive['rules'],
-		array(
-			'context'  => 'zealblocks',
-			'prettify' => false,
-		)
-	);
-}
+Block_Render::store_rules( $responsive['rules'] );
 
 printf(
 	'<%1$s %2$s><span class="wp-block-zealblocks-button__text">%3$s</span>%4$s</%1$s>',

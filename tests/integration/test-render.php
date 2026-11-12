@@ -414,6 +414,127 @@ $check( 'view script loaded for an animated block', wp_script_is( $animation_han
 $check( 'unknown animation type ignored', false === strpos( do_blocks( '<!-- wp:zealblocks/text {"content":"X","animationType":"explode"} /-->' ), 'data-zealblocks-animation' ) );
 
 // ---------------------------------------------------------------------
+echo "\nButton — hover, icon, gap and shadow styling (B-01 to B-07)\n";
+// ---------------------------------------------------------------------
+/*
+ * Each probe renders one button into an empty style store, so every assertion
+ * reads only that button's CSS.
+ */
+$button_probe = static function ( $style, $extra = array() ) {
+	WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+
+	$html = do_blocks(
+		serialize_blocks(
+			array(
+				array(
+					'blockName'    => 'zealblocks/button',
+					'attrs'        => array_merge(
+						array(
+							'text'  => 'Go',
+							'icon'  => 'arrow-right',
+							'style' => $style,
+						),
+						$extra
+					),
+					'innerBlocks'  => array(),
+					'innerHTML'    => '',
+					'innerContent' => array(),
+				),
+			)
+		)
+	);
+
+	preg_match( '/class="(zealblocks-btn-[0-9a-f]{8})/', $html, $match );
+
+	return array(
+		'html'  => $html,
+		'css'   => wp_style_engine_get_stylesheet_from_context( 'zealblocks' ),
+		'class' => isset( $match[1] ) ? '.' . $match[1] : '',
+	);
+};
+
+$hover = $button_probe(
+	array(
+		'zealblocks' => array(
+			'textHover'       => '#ff0000',
+			'backgroundHover' => '#00ff00',
+			'borderHover'     => '#0000ff',
+			'hoverDuration'   => '400ms',
+		),
+	)
+);
+$hover_states = $hover['class'] . ':hover,' . $hover['class'] . ':focus-visible{';
+
+$check( 'text, background and border hover share one :hover,:focus-visible rule', false !== strpos( $hover['css'], $hover_states . 'color:#ff0000 !important;background:#00ff00 !important;border-color:#0000ff !important;}' ) );
+$check( 'hover duration is a plain custom property', false !== strpos( $hover['css'], $hover['class'] . '{--zealblocks-button-hover-duration:400ms;}' ) );
+$check( 'has-hover switches the transition on', false !== strpos( $hover['html'], 'has-hover' ) );
+$check( 'no :focus state, which would keep colours on after a click', false === strpos( $hover['css'], ':focus{' ) && false === strpos( $hover['css'], ':focus,' ) );
+
+$icon = $button_probe(
+	array(
+		'zealblocks' => array(
+			'iconColor' => '#111111',
+			'iconHover' => '#222222',
+			'iconGap'   => '1em',
+		),
+		'@mobile'    => array( 'zealblocks' => array( 'iconGap' => '0.25em' ) ),
+	)
+);
+
+$check( 'icon colour, icon hover and gap are variables on the root', false !== strpos( $icon['css'], $icon['class'] . '{--zealblocks-button-icon-gap:1em;--zealblocks-button-icon-color:#111111;--zealblocks-button-icon-hover-color:#222222;}' ) );
+$check( 'the gap is per viewport', 1 === preg_match( '/@media[^{]*\{' . preg_quote( $icon['class'] . '{--zealblocks-button-icon-gap:0.25em;}', '/' ) . '\}/', $icon['css'] ) );
+$check( 'an icon hover alone still switches the transition on', false !== strpos( $icon['html'], 'has-hover' ) );
+
+$shadow = $button_probe(
+	array(
+		'zealblocks' => array(
+			'shadowHoverX'      => '0px',
+			'shadowHoverY'      => '6px',
+			'shadowHoverBlur'   => '12px',
+			'shadowHoverSpread' => '-2px',
+			'shadowHoverColor'  => 'rgba(0, 0, 0, 0.3)',
+		),
+	)
+);
+
+$check( 'shadow hover parts are variables on the root', false !== strpos( $shadow['css'], '--zealblocks-button-shadow-hover-y:6px;' ) && false !== strpos( $shadow['css'], '--zealblocks-button-shadow-hover-spread:-2px;' ) );
+$check( 'an rgba() shadow colour reaches the page, as hex', false !== strpos( $shadow['css'], '--zealblocks-button-shadow-hover-color:#0000004d;' ) );
+$check( 'has-shadow-hover and has-hover on the button', false !== strpos( $shadow['html'], 'has-shadow-hover' ) && false !== strpos( $shadow['html'], 'has-hover' ) );
+
+$hostile_button = $button_probe(
+	array(
+		'zealblocks' => array(
+			'borderHover'     => 'red;}body{display:none',
+			'iconColor'       => 'url(x)',
+			'iconGap'         => '-1em',
+			'shadowHoverBlur' => '-3px',
+			'textHover'       => 'expression(alert(1))',
+		),
+	)
+);
+
+$check( 'hostile hover, icon, gap and shadow values all dropped', '' === $hostile_button['css'] );
+$check( 'and leave no hash or feature class behind', false === strpos( $hostile_button['html'], 'zealblocks-btn-' ) && false === strpos( $hostile_button['html'], 'has-hover' ) && false === strpos( $hostile_button['html'], 'has-shadow-hover' ) );
+
+$block_supports = WP_Block_Type_Registry::get_instance()->get_registered( 'zealblocks/button' )->supports;
+$check( 'margin, four-sided padding and writing mode are supported (B-11 to B-13)', true === ( $block_supports['spacing']['margin'] ?? null ) && true === ( $block_supports['spacing']['padding'] ?? null ) && true === ( $block_supports['typography']['__experimentalWritingMode'] ?? null ) );
+
+// ---------------------------------------------------------------------
+echo "\nColour functions reach the page\n";
+// ---------------------------------------------------------------------
+/*
+ * Core's style engine drops any declaration using rgb(), rgba(), hsl() or
+ * hsla() outside a gradient (safecss_filter_attr()). Text seeded its shadow
+ * with rgba(0, 0, 0, 0.3), so the default shadow had no colour on the page.
+ */
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+do_blocks( '<!-- wp:zealblocks/text {"content":"S","style":{"zealblocks":{"textShadowX":"1px","textShadowY":"1px","textShadowBlur":"2px","textShadowColor":"rgba(0, 0, 0, 0.3)","textHover":"hsl(0, 100%, 50%)"}}} /-->' );
+$colour_css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+
+$check( 'Text\'s default rgba() shadow colour is printed, as hex', false !== strpos( $colour_css, '--zealblocks-text-shadow-color:#0000004d;' ) );
+$check( 'an hsl() hover colour is printed, as hex', false !== strpos( $colour_css, 'color:#ff0000 !important;' ) );
+
+// ---------------------------------------------------------------------
 echo "\nShared hover — states through the real style engine\n";
 // ---------------------------------------------------------------------
 /*

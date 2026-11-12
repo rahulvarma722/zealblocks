@@ -76,15 +76,14 @@
 			"__experimentalTextTransform": true,
 			"__experimentalTextDecoration": true,
 			"__experimentalLetterSpacing": true,
+			"__experimentalWritingMode": true,
 			"__experimentalDefaultControls": {
 				"fontSize": true
 			}
 		},
 		"spacing": {
-			"padding": [
-				"horizontal",
-				"vertical"
-			],
+			"padding": true,
+			"margin": true,
 			"__experimentalDefaultControls": {
 				"padding": true
 			}

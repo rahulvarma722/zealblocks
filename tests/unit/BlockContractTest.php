@@ -423,6 +423,19 @@ final class BlockContractTest extends TestCase {
 		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $text . 'constants.js' ) );
 		$this->assertStringContainsString( 'hover.transition(".wp-block-zealblocks-text", "' . $prefix . '")', (string) file_get_contents( $text . 'style.scss' ) );
 		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-text", "' . $prefix . '")', (string) file_get_contents( $text . 'editor.scss' ) );
+
+		// The Button's prefix, in the same four places. Its transition call
+		// spans lines, so whitespace is collapsed before matching.
+		$prefix = '--zealblocks-button-hover-';
+		$button = ZEALBLOCKS_PATH . 'src/button/';
+		$flat   = static function ( $file ) {
+			return (string) preg_replace( '/\s+/', ' ', (string) file_get_contents( $file ) );
+		};
+
+		$this->assertStringContainsString( "Hover::properties( '" . $prefix . "'", (string) file_get_contents( $button . 'render.php' ) );
+		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $button . 'constants.js' ) );
+		$this->assertStringContainsString( '".wp-block-zealblocks-button", "' . $prefix . '",', $flat( $button . 'style.scss' ) );
+		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-button", "' . $prefix . '")', (string) file_get_contents( $button . 'editor.scss' ) );
 	}
 
 	/**

@@ -7,6 +7,8 @@
  * !important, so anything stronger here would defeat them.
  */
 
+@use "../shared/hover/hover";
+
 .wp-block-zealblocks-button {
 	display: inline-block;
 	box-sizing: border-box;
@@ -68,13 +70,52 @@
 	&:has(.wp-block-zealblocks-button__icon) {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5em;
+		// Text-icon gap, per viewport through the variable (B-07).
+		gap: var(--zealblocks-button-icon-gap, 0.5em);
 	}
 
+	/*
+	 * Icon colour and icon hover colour (B-03, B-04), by the same variable
+	 * technique. The SVG fills with `currentColor`, so `color` paints it, and
+	 * the fallbacks make an unset variable inherit the button's text colour.
+	 * That is also why, with no icon colour set, the icon follows the text
+	 * hover colour: it simply inherits the root's colour while hovered.
+	 */
 	&__icon {
 		flex: none;
 		width: var(--zealblocks-button-icon-size, 1em);
 		height: var(--zealblocks-button-icon-size, 1em);
+		color: var(--zealblocks-button-icon-color, currentcolor);
+	}
+
+	&:hover &__icon,
+	&:focus-visible &__icon {
+		color: var(--zealblocks-button-icon-hover-color, var(--zealblocks-button-icon-color, currentcolor));
+	}
+
+	/*
+	 * Shadow hover (B-06): five variables, combined here so a tablet override
+	 * of one part keeps the others. The fallbacks are Spectra's default hover
+	 * shadow. Important, to beat the inline `box-shadow` core's shadow support
+	 * writes on the same element.
+	 */
+	&.has-shadow-hover:hover,
+	&.has-shadow-hover:focus-visible {
+		box-shadow:
+			var(--zealblocks-button-shadow-hover-x, 0)
+			var(--zealblocks-button-shadow-hover-y, 4px)
+			var(--zealblocks-button-shadow-hover-blur, 8px)
+			var(--zealblocks-button-shadow-hover-spread, 0)
+			var(--zealblocks-button-shadow-hover-color, rgba(0, 0, 0, 0.2)) !important;
+	}
+
+	// The icon's colour change keeps time with the root's.
+	&.has-hover &__icon {
+		transition: color var(--zealblocks-button-hover-duration, 0.2s) ease;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition-duration: 0s;
+		}
 	}
 
 	// `row-reverse` rather than `order`, so the DOM keeps text-then-icon and the
@@ -101,6 +142,16 @@
  * reverse of the intent. RTL sites load only the generated file, so there
  * would be nothing left to notice the mistake.
  */
+
+/*
+ * Hover transition, for every property the hover styling changes. The prefix
+ * MUST match render.php's. See src/shared/hover/_hover.scss.
+ */
+@include hover.transition(
+	".wp-block-zealblocks-button",
+	"--zealblocks-button-hover-",
+	(color, background, border-color, box-shadow)
+);
 
 /*rtl:ignore*/
 [dir="rtl"] .wp-block-zealblocks-button.has-rtl-flip .wp-block-zealblocks-button__icon {
