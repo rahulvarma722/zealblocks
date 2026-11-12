@@ -18,6 +18,7 @@
  */
 
 @use "../shared/animation/animation";
+@use "../shared/z-index/z-index";
 
 /*
  * Fallback sizes, hoisted so each font-size declaration stays on one readable
@@ -185,21 +186,13 @@ $fallback-h3: clamp(1.5rem, 2.5vw, 1.875rem);
 		display: table;
 		padding-top: 14px;
 	}
-
-	/*
-	 * Z-index needs a positioned box. `:where()` keeps this at zero
-	 * specificity, so a position chosen in the inspector — a per-instance class
-	 * rule — always wins over it.
-	 *
-	 * Namespaced, unlike the other feature classes: Spectra ships a global
-	 * `.has-z-index.has-z-index { z-index: var(--spectra-z-index, auto)
-	 * !important }`, which flattened our z-index to `auto` on any site running
-	 * both plugins.
-	 */
-	&:where(.has-zealblocks-z-index) {
-		position: relative;
-	}
 }
+
+/*
+ * `position: relative` for a block with a z-index and no position of its own.
+ * See src/shared/z-index/_z-index.scss.
+ */
+@include z-index.base(".wp-block-zealblocks-text");
 
 /*
  * Entrance animation: hidden start, play, start states and keyframes, scoped to

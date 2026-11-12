@@ -16,6 +16,7 @@ import {
 	getResolvedValue,
 } from '../button/responsive-width/style-value';
 
+import { Z_INDEX_CLASS } from '../shared/z-index/constants';
 import { KEYS, SHADOW_KEYS, POSITION_KEYS, CSS_VARS } from './constants';
 
 /**
@@ -125,7 +126,7 @@ export function getPreview( style, device, { previewPosition = true } = {} ) {
 		// The same zero-specificity `position: relative` the front end gets,
 		// so a z-index alone takes effect here too.
 		if ( hasAnyLayerValue( style, [ KEYS.zIndex ] ) ) {
-			classes.push( 'has-zealblocks-z-index' );
+			classes.push( Z_INDEX_CLASS );
 		}
 	}
 

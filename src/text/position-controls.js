@@ -7,12 +7,11 @@
  * turns them into real declarations per band.
  */
 
-import { __, sprintf } from '@wordpress/i18n';
+import { __ } from '@wordpress/i18n';
 import { InspectorControls } from '@wordpress/block-editor';
 import {
 	BaseControl,
 	Flex,
-	RangeControl,
 	SelectControl,
 	ToggleControl,
 	__experimentalToolsPanelItem as ToolsPanelItem,
@@ -24,6 +23,8 @@ import {
 	getStateValue,
 	setStateValue,
 } from '../button/responsive-width/style-value';
+import { withDevice } from '../shared/device-label';
+import { ZIndexItem } from '../shared/z-index';
 
 import {
 	KEYS,
@@ -32,28 +33,8 @@ import {
 	POSITION_KEYS,
 	POSITION_OPTIONS,
 	OVERFLOW_OPTIONS,
-	Z_INDEX_RANGE,
 } from './constants';
 import { clearKeys } from './style-values';
-
-/**
- * A label naming the device being edited. Same as style-controls.js.
- *
- * @param {string}  label    Base label.
- * @param {?string} stateKey Layer being edited.
- * @param {string}  device   Core device name.
- * @return {string} The label.
- */
-function withDevice( label, stateKey, device ) {
-	return stateKey
-		? sprintf(
-				/* translators: 1: control label, 2: device name, e.g. Tablet. */
-				__( '%1$s (%2$s)', 'zealblocks' ),
-				label,
-				device
-		  )
-		: label;
-}
 
 const OFFSET_LABELS = {
 	[ KEYS.top ]: __( 'Top', 'zealblocks' ),
@@ -103,16 +84,10 @@ export function PositionControls( {
 		} );
 
 	const position = value( KEYS.position ) || '';
-	const zIndex = value( KEYS.zIndex );
 	const overflow = value( KEYS.overflow ) || '';
 
 	const positionLabel = withDevice(
 		__( 'Position', 'zealblocks' ),
-		stateKey,
-		device
-	);
-	const zIndexLabel = withDevice(
-		__( 'Z-index', 'zealblocks' ),
 		stateKey,
 		device
 	);
@@ -215,38 +190,13 @@ export function PositionControls( {
 				</Flex>
 			</ToolsPanelItem>
 
-			<ToolsPanelItem
-				hasValue={ () => undefined !== zIndex }
-				label={ zIndexLabel }
-				onDeselect={ () => set( KEYS.zIndex, undefined ) }
-				resetAllFilter={ reset( KEYS.zIndex ) }
-				panelId={ clientId }
-			>
-				<RangeControl
-					__next40pxDefaultSize
-					__nextHasNoMarginBottom
-					label={ zIndexLabel }
-					value={
-						undefined === zIndex ? undefined : Number( zIndex )
-					}
-					onChange={ ( next ) =>
-						set(
-							KEYS.zIndex,
-							undefined === next || Number.isNaN( next )
-								? undefined
-								: String( Math.round( next ) )
-						)
-					}
-					min={ Z_INDEX_RANGE.min }
-					max={ Z_INDEX_RANGE.max }
-					initialPosition={ 0 }
-					allowReset
-					help={ __(
-						'Stacking order against overlapping blocks. Higher sits on top.',
-						'zealblocks'
-					) }
-				/>
-			</ToolsPanelItem>
+			<ZIndexItem
+				clientId={ clientId }
+				style={ style }
+				setAttributes={ setAttributes }
+				stateKey={ stateKey }
+				device={ device }
+			/>
 
 			<ToolsPanelItem
 				hasValue={ () => undefined !== value( KEYS.overflow ) }

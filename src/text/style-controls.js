@@ -19,7 +19,7 @@
  * ToolsPanelItems: the panel heading is already there.
  */
 
-import { __, sprintf, isRTL } from '@wordpress/i18n';
+import { __, isRTL } from '@wordpress/i18n';
 import {
 	InspectorControls,
 	useSettings,
@@ -42,6 +42,7 @@ import {
 	setStateValue,
 } from '../button/responsive-width/style-value';
 
+import { withDevice } from '../shared/device-label';
 import { KEYS, SHADOW_KEYS, GAP_UNITS, DROP_CAP_TAGS } from './constants';
 import { clearKeys, setShadowValue } from './style-values';
 
@@ -55,26 +56,6 @@ function toNumber( value ) {
 	const number = parseFloat( value );
 
 	return Number.isFinite( number ) ? number : undefined;
-}
-
-/**
- * A label that names the device when a viewport layer is being edited, so the
- * author can see which layer a value is going into.
- *
- * @param {string}  label    Base label.
- * @param {?string} stateKey Layer being edited.
- * @param {string}  device   Core device name.
- * @return {string} The label.
- */
-function withDevice( label, stateKey, device ) {
-	return stateKey
-		? sprintf(
-				/* translators: 1: control label, 2: device name, e.g. Tablet. */
-				__( '%1$s (%2$s)', 'zealblocks' ),
-				label,
-				device
-		  )
-		: label;
 }
 
 /**

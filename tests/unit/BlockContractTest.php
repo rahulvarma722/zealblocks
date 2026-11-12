@@ -28,6 +28,7 @@ namespace Zealblocks\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
+use Zealblocks\Block\Z_Index;
 
 /**
  * @coversNothing
@@ -372,6 +373,25 @@ final class BlockContractTest extends TestCase {
 		$this->assertSame( Display_Conditions::BROWSERS, $values( 'BROWSER_OPTIONS', 'OS_OPTIONS' ), 'BROWSER_OPTIONS must list Display_Conditions::BROWSERS, in order' );
 		$this->assertSame( Display_Conditions::SYSTEMS, $values( 'OS_OPTIONS', 'DAY_OPTIONS' ), 'OS_OPTIONS must list Display_Conditions::SYSTEMS, in order' );
 		$this->assertSame( Display_Conditions::DAYS, $values( 'DAY_OPTIONS', false ), 'DAY_OPTIONS must list Display_Conditions::DAYS, in order' );
+	}
+
+	/**
+	 * The z-index key, range and class agree between PHP, the editor and the
+	 * stylesheet.
+	 *
+	 * A class name that differs between Z_Index and the SCSS mixin would leave
+	 * every z-index on a static block doing nothing, with no error anywhere.
+	 *
+	 * @return void
+	 */
+	public function test_z_index_values_match_across_php_js_and_scss() {
+		$js   = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/z-index/constants.js' );
+		$scss = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/z-index/_z-index.scss' );
+
+		$this->assertStringContainsString( "Z_INDEX_KEY = '" . Z_Index::KEY . "'", $js );
+		$this->assertStringContainsString( 'Z_INDEX_RANGE = { min: ' . Z_Index::MIN . ', max: ' . Z_Index::MAX . ' }', $js );
+		$this->assertStringContainsString( "Z_INDEX_CLASS = '" . Z_Index::CLASS_NAME . "'", $js );
+		$this->assertStringContainsString( ':where(.' . Z_Index::CLASS_NAME . ')', $scss, 'the base() mixin must target Z_Index::CLASS_NAME' );
 	}
 
 	/**

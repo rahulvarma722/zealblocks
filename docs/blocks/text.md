@@ -137,9 +137,10 @@ writes it inline. Hover colours become custom properties with a class that
 exists only when that device has a value — the editor-only rule is in
 `editor.scss`.
 
-The z-index class is namespaced (`has-zealblocks-z-index`) because Spectra
-ships a global `.has-z-index.has-z-index { z-index: … !important }` that
-flattened ours to `auto` with both plugins active.
+Z-index is shared with the blocks that have no Position panel; its control,
+class and `position: relative` rule are documented once in
+[../z-index.md](../z-index.md). Text renders it as an item in its own Position
+fill (`ZIndexItem`) and previews it with position, behind "Preview in editor".
 
 ## `content` has no `source` — and that is load-bearing
 

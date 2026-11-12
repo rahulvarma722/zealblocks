@@ -1,0 +1,26 @@
+/**
+ * Z-index, shared by every block that opts in.
+ *
+ *   @use "../shared/z-index/z-index";
+ *   @include z-index.base(".wp-block-zealblocks-text");  // style.scss
+ */
+
+/**
+ * A z-index needs a positioned box, so a block with one and no position of its
+ * own becomes `position: relative`, as in Spectra Free. For a block's
+ * style.scss, at the root.
+ *
+ * `:where()` adds no specificity, so a position chosen in the inspector (a
+ * per-instance class rule) always wins over this one.
+ *
+ * Namespaced, unlike the other feature classes: Spectra ships a global
+ * `.has-z-index.has-z-index { z-index: var(--spectra-z-index, auto)
+ * !important }`, which flattened a generic class to `auto` on any site running
+ * both plugins. The class MUST match Z_Index::CLASS_NAME.
+ */
+@mixin base($block) {
+
+	#{$block}:where(.has-zealblocks-z-index) {
+		position: relative;
+	}
+}

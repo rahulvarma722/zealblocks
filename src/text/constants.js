@@ -228,5 +228,3 @@ export const OVERFLOW_OPTIONS = [
 	{ value: 'auto', label: __( 'Auto (scroll when needed)', 'zealblocks' ) },
 	{ value: 'clip', label: __( 'Clip', 'zealblocks' ) },
 ];
-
-export const Z_INDEX_RANGE = { min: -100, max: 1000 };

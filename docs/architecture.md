@@ -38,6 +38,7 @@ block API.** Not code that merely gets used by blocks.
 | `Block\Render` | yes | Render-template plumbing — `get_block_wrapper_attributes()`, attributes |
 | `Block\Animation` | yes | Block wrapper markup and the view script for entrance animation ([animation.md](animation.md)) |
 | `Block\Display_Conditions` | yes | Whether a block renders for this visitor; the editor's role list ([display-conditions.md](display-conditions.md)) |
+| `Block\Z_Index` | yes | The z-index property map entry and wrapper class ([z-index.md](z-index.md)) |
 | `Responsive_Styles` | no | Generates CSS. Knows nothing about the block API |
 | `Helper` | no | Environment queries |
 | `Plugin`, `Autoloader`, `Module` | no | Plugin infrastructure |
@@ -59,6 +60,7 @@ Zealblocks\Block\Registrar     includes/block/class-registrar.php
 Zealblocks\Block\Render        includes/block/class-render.php
 Zealblocks\Block\Animation     includes/block/class-animation.php
 Zealblocks\Block\Display_Conditions  includes/block/class-display-conditions.php
+Zealblocks\Block\Z_Index       includes/block/class-z-index.php
 Zealblocks\Responsive_Styles   includes/class-responsive-styles.php
 ```
 

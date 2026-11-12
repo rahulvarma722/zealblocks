@@ -22,6 +22,7 @@ defined( 'ABSPATH' ) || exit;
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Render as Block_Render;
+use Zealblocks\Block\Z_Index;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -163,7 +164,7 @@ $responsive = Block_Render::responsive(
 		'hoverDuration'   => array( '--zealblocks-text-hover-duration', 'time' ),
 		'textHover'       => array( 'color', 'color', ':hover' ),
 		'backgroundHover' => array( 'background', 'background', ':hover' ),
-		'zIndex'          => array( 'z-index', 'integer' ),
+		Z_Index::KEY      => Z_Index::PROPERTY,
 		'position'        => array( 'position', 'position' ),
 		'positionTop'     => array( 'top', 'signed-length' ),
 		'positionRight'   => array( 'right', 'signed-length' ),
@@ -183,12 +184,10 @@ $responsive = Block_Render::responsive(
  */
 $has_text_shadow = false;
 $has_hover       = false;
-$has_z_index     = false;
 
 foreach ( $responsive['rules'] as $rule ) {
 	foreach ( array_keys( $rule['declarations'] ) as $property ) {
 		$has_text_shadow = $has_text_shadow || str_starts_with( $property, '--zealblocks-text-shadow-' );
-		$has_z_index     = $has_z_index || 'z-index' === $property;
 	}
 
 	$has_hover = $has_hover || str_ends_with( $rule['selector'], ':hover' );
@@ -227,7 +226,7 @@ $wrapper_classes = array_filter(
 		$responsive['class'],
 		$has_text_shadow ? 'has-text-shadow' : '',
 		$has_hover ? 'has-hover' : '',
-		$has_z_index ? 'has-zealblocks-z-index' : '',
+		...Z_Index::classes( $responsive['rules'] ),
 		...$animation['classes'],
 	)
 );
