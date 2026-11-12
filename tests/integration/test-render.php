@@ -414,6 +414,32 @@ $check( 'view script loaded for an animated block', wp_script_is( $animation_han
 $check( 'unknown animation type ignored', false === strpos( do_blocks( '<!-- wp:zealblocks/text {"content":"X","animationType":"explode"} /-->' ), 'data-zealblocks-animation' ) );
 
 // ---------------------------------------------------------------------
+echo "\nShared hover — states through the real style engine\n";
+// ---------------------------------------------------------------------
+/*
+ * Text uses `:hover` alone; Button, Icon and Buttons will add a focus state.
+ * The unit suite proves the selector list is built; this proves core's style
+ * engine prints it intact, inside a per-band media query too, and keeps the
+ * important flag. The colours are unique to this check.
+ */
+$hover_result = Zealblocks\Block\Render::responsive(
+	array(
+		'zealblocks' => array( 'textHover' => '#0a0b0c' ),
+		'@mobile'    => array( 'zealblocks' => array( 'backgroundHover' => '#0c0b0a' ) ),
+	),
+	'zealblocks',
+	Zealblocks\Block\Hover::properties( '--zealblocks-probe-hover-', array( ':hover', ':focus-within' ) ),
+	'zealblocks-probe-'
+);
+Zealblocks\Block\Render::store_rules( $hover_result['rules'] );
+$hover_css   = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$hover_class = '.' . $hover_result['class'];
+
+$check( 'hover + focus-within printed as one selector list', false !== strpos( $hover_css, $hover_class . ':hover,' . $hover_class . ':focus-within{color:#0a0b0c !important;}' ) );
+$check( 'the same list inside the mobile band', 1 === preg_match( '/@media[^{]*\{' . preg_quote( $hover_class . ':hover,' . $hover_class . ':focus-within{background:#0c0b0a !important;}', '/' ) . '\}/', $hover_css ) );
+$check( 'Hover::classes() switches the transition on', array( 'has-hover' ) === Zealblocks\Block\Hover::classes( $hover_result['rules'] ) );
+
+// ---------------------------------------------------------------------
 echo "\nText — display conditions\n";
 // ---------------------------------------------------------------------
 $check( 'hidden from logged-out visitors', '' === trim( do_blocks( '<!-- wp:zealblocks/text {"content":"Secret","displayConditions":{"hideWhenLoggedOut":true}} /-->' ) ) );

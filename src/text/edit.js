@@ -28,6 +28,7 @@ import {
 	hasConditions as hasAnyCondition,
 } from '../shared/display-conditions';
 import { GroupedSelect } from '../shared/grouped-select';
+import { HoverControls } from '../shared/hover';
 
 import {
 	STYLE_PRESETS,
@@ -37,11 +38,7 @@ import {
 	DROP_CAP_TAGS,
 } from './constants';
 import { getPreview } from './preview';
-import {
-	TypographyControls,
-	TextShadowControl,
-	HoverControls,
-} from './style-controls';
+import { TypographyControls, TextShadowControl } from './style-controls';
 import { PositionControls } from './position-controls';
 
 export default function Edit( {

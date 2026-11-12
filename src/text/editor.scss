@@ -7,31 +7,19 @@
 
 @use "../shared/animation/animation";
 @use "../shared/display-conditions/display-conditions";
+@use "../shared/hover/hover";
 
 .wp-block-zealblocks-text {
 
 	[data-rich-text-placeholder] {
 		opacity: 0.6;
 	}
-
-	/*
-	 * Hover preview.
-	 *
-	 * The front end gets real per-band `:hover` rules from render.php. The
-	 * canvas cannot — it has no stylesheet of ours per instance — so edit.js
-	 * resolves the value for the PREVIEWED device and writes it as a custom
-	 * property, adding the class only when that device has a value. Gating by
-	 * class is what keeps an unresolved variable from resetting the colour on
-	 * hover, the failure render.php avoids by not using variables at all.
-	 */
-	&.has-hover-color:hover {
-		color: var(--zealblocks-text-hover-color) !important;
-	}
-
-	&.has-hover-background:hover {
-		background: var(--zealblocks-text-hover-background) !important;
-	}
 }
+
+/*
+ * Hover preview for the previewed device. See src/shared/hover/_hover.scss.
+ */
+@include hover.preview(".wp-block-zealblocks-text", "--zealblocks-text-hover-");
 
 /*
  * Animation preview: one play of the front end's keyframes, started by

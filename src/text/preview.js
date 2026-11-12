@@ -16,8 +16,15 @@ import {
 	getResolvedValue,
 } from '../button/responsive-width/style-value';
 
+import { getHoverPreview } from '../shared/hover/preview';
 import { Z_INDEX_CLASS } from '../shared/z-index/constants';
-import { KEYS, SHADOW_KEYS, POSITION_KEYS, CSS_VARS } from './constants';
+import {
+	KEYS,
+	SHADOW_KEYS,
+	POSITION_KEYS,
+	CSS_VARS,
+	HOVER_VAR_PREFIX,
+} from './constants';
 
 /**
  * Inline style property for each position key — what render.php's rules
@@ -84,7 +91,7 @@ export function getPreview( style, device, { previewPosition = true } = {} ) {
 	// Resolved per KEY, not per shadow: a tablet override of the colour alone
 	// keeps the desktop offsets, which is what the cascade does on the front
 	// end where each key is its own custom property.
-	[ ...SHADOW_KEYS, KEYS.hoverDuration ].forEach( ( key ) => {
+	SHADOW_KEYS.forEach( ( key ) => {
 		const value = getResolvedValue( style, device, key );
 
 		if ( value ) {
@@ -92,27 +99,10 @@ export function getPreview( style, device, { previewPosition = true } = {} ) {
 		}
 	} );
 
-	if ( hasAnyLayerValue( style, [ KEYS.textHover, KEYS.backgroundHover ] ) ) {
-		classes.push( 'has-hover' );
-	}
-
-	const textHover = getResolvedValue( style, device, KEYS.textHover );
-
-	if ( textHover ) {
-		inline[ CSS_VARS[ KEYS.textHover ] ] = textHover;
-		classes.push( 'has-hover-color' );
-	}
-
-	const backgroundHover = getResolvedValue(
-		style,
-		device,
-		KEYS.backgroundHover
-	);
-
-	if ( backgroundHover ) {
-		inline[ CSS_VARS[ KEYS.backgroundHover ] ] = backgroundHover;
-		classes.push( 'has-hover-background' );
-	}
+	// Shared with every block that has hover colours: src/shared/hover.
+	const hover = getHoverPreview( style, device, HOVER_VAR_PREFIX );
+	Object.assign( inline, hover.style );
+	classes.push( ...hover.classes );
 
 	if ( previewPosition ) {
 		[ KEYS.zIndex, ...POSITION_KEYS ].forEach( ( key ) => {

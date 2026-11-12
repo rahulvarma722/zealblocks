@@ -28,6 +28,7 @@ namespace Zealblocks\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
+use Zealblocks\Block\Hover;
 use Zealblocks\Block\Z_Index;
 
 /**
@@ -392,6 +393,36 @@ final class BlockContractTest extends TestCase {
 		$this->assertStringContainsString( 'Z_INDEX_RANGE = { min: ' . Z_Index::MIN . ', max: ' . Z_Index::MAX . ' }', $js );
 		$this->assertStringContainsString( "Z_INDEX_CLASS = '" . Z_Index::CLASS_NAME . "'", $js );
 		$this->assertStringContainsString( ':where(.' . Z_Index::CLASS_NAME . ')', $scss, 'the base() mixin must target Z_Index::CLASS_NAME' );
+	}
+
+	/**
+	 * The hover keys and class agree between PHP, the editor and the
+	 * stylesheet, and Text's variable prefix is the same in all four places
+	 * it is written.
+	 *
+	 * A prefix that differed between render.php and style.scss would leave the
+	 * transition reading a variable nothing sets, so a chosen duration would
+	 * silently do nothing.
+	 *
+	 * @return void
+	 */
+	public function test_hover_values_match_across_php_js_and_scss() {
+		$js   = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/hover/constants.js' );
+		$scss = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/hover/_hover.scss' );
+
+		$this->assertStringContainsString( "text: '" . Hover::TEXT . "'", $js );
+		$this->assertStringContainsString( "background: '" . Hover::BACKGROUND . "'", $js );
+		$this->assertStringContainsString( "duration: '" . Hover::DURATION . "'", $js );
+		$this->assertStringContainsString( "HOVER_CLASS = '" . Hover::CLASS_NAME . "'", $js );
+		$this->assertStringContainsString( '#{$block}.' . Hover::CLASS_NAME . ' {', $scss, 'the transition() mixin must target Hover::CLASS_NAME' );
+
+		$prefix = '--zealblocks-text-hover-';
+		$text   = ZEALBLOCKS_PATH . 'src/text/';
+
+		$this->assertStringContainsString( "Hover::properties( '" . $prefix . "'", (string) file_get_contents( $text . 'render.php' ) );
+		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $text . 'constants.js' ) );
+		$this->assertStringContainsString( 'hover.transition(".wp-block-zealblocks-text", "' . $prefix . '")', (string) file_get_contents( $text . 'style.scss' ) );
+		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-text", "' . $prefix . '")', (string) file_get_contents( $text . 'editor.scss' ) );
 	}
 
 	/**

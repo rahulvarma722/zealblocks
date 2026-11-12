@@ -204,4 +204,52 @@ final class BlockRenderTest extends TestCase {
 		$this->assertSame( '.' . $result['class'], $result['rules'][0]['selector'] );
 		$this->assertArrayNotHasKey( 'important', $result['rules'][0] );
 	}
+
+	/**
+	 * A list of states becomes a selector list, so a hover colour can also
+	 * apply on keyboard focus. Unknown states in the list are dropped, the
+	 * known ones kept, and repeats collapse.
+	 *
+	 * @return void
+	 */
+	public function test_responsive_accepts_a_list_of_states() {
+		$result = Block_Render::responsive(
+			array( 'zealblocks' => array( 'c' => '#fff' ) ),
+			'zealblocks',
+			array( 'c' => array( 'color', 'color', array( ':hover', ':focus', ' , body { x', ':hover', array( ':focus' ) ) ) ),
+			'zealblocks-'
+		);
+
+		$base = '.' . $result['class'];
+
+		$this->assertSame( $base . ':hover,' . $base . ':focus', $result['rules'][0]['selector'] );
+		$this->assertTrue( $result['rules'][0]['important'] );
+
+		$within = Block_Render::responsive(
+			array( 'zealblocks' => array( 'c' => '#fff' ) ),
+			'zealblocks',
+			array( 'c' => array( 'background', 'background', array( ':hover', ':focus-within' ) ) ),
+			'zealblocks-'
+		);
+
+		$this->assertSame( '.' . $within['class'] . ':hover,.' . $within['class'] . ':focus-within', $within['rules'][0]['selector'] );
+	}
+
+	/**
+	 * A list holding nothing valid applies the value with no state, exactly
+	 * like a single unknown state does.
+	 *
+	 * @return void
+	 */
+	public function test_responsive_list_of_unknown_states_falls_back_to_no_state() {
+		$result = Block_Render::responsive(
+			array( 'zealblocks' => array( 'c' => '#fff' ) ),
+			'zealblocks',
+			array( 'c' => array( 'color', 'color', array( ':visited', '::before' ) ) ),
+			'zealblocks-'
+		);
+
+		$this->assertSame( '.' . $result['class'], $result['rules'][0]['selector'] );
+		$this->assertArrayNotHasKey( 'important', $result['rules'][0] );
+	}
 }

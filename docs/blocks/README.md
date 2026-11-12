@@ -72,7 +72,7 @@ use Zealblocks\Icon_Handler\Library as Icon_Library;
 | `one_of( $value, $allowed, $fallback )` | validates against a fixed list |
 | `tokens( $value, $allowed )` | validates a space-separated set |
 | `url( $url )` | `esc_url()` with the protocol allow-list |
-| `responsive( … )` | per-viewport CSS through the style engine |
+| `responsive( … )` | per-viewport CSS through the style engine; a property can apply in pseudo-states from `PSEUDO_STATES`, one or a list (see [../hover.md](../hover.md)) |
 
 `one_of()` matters wherever a stored value lands in a **structural** position —
 an element name, a class that must have a rule behind it. A value in an element

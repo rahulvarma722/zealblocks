@@ -117,6 +117,53 @@ final class Render {
 	}
 
 	/**
+	 * Pseudo-states a responsive() property may apply in.
+	 *
+	 * An allow-list, because the state is concatenated into a selector: a
+	 * stored `' , body { x'` would otherwise style the whole page. Hover
+	 * colours use `:hover` and, for keyboard users, a focus state: `:focus` on
+	 * a link or button, `:focus-within` on a container whose child takes focus.
+	 *
+	 * @var string[]
+	 */
+	const PSEUDO_STATES = array( ':hover', ':focus', ':focus-visible', ':focus-within' );
+
+	/**
+	 * A selector for a base selector in one or more pseudo-states.
+	 *
+	 * For example:
+	 *
+	 *     state_selector( '.x', ':hover' )                    // .x:hover
+	 *     state_selector( '.x', array( ':hover', ':focus' ) ) // .x:hover,.x:focus
+	 *
+	 * States not in PSEUDO_STATES are dropped, and with none left the base
+	 * selector comes back unchanged, so the value applies with no state rather
+	 * than to a selector nobody wrote.
+	 *
+	 * @param string          $base   Base selector.
+	 * @param string|string[] $states One state or a list.
+	 * @return string
+	 */
+	private static function state_selector( $base, $states ) {
+		$states = array_filter( (array) $states, 'is_string' );
+		$valid  = array_values( array_unique( array_intersect( $states, self::PSEUDO_STATES ) ) );
+
+		if ( ! $valid ) {
+			return $base;
+		}
+
+		return implode(
+			',',
+			array_map(
+				static function ( $state ) use ( $base ) {
+					return $base . $state;
+				},
+				$valid
+			)
+		);
+	}
+
+	/**
 	 * Builds per-instance style-engine rules for namespaced per-viewport values.
 	 *
 	 * Returns the scoping class and the rules together, because neither is
@@ -133,10 +180,12 @@ final class Render {
 	 * @param string $namespace_key   Namespace key inside each layer.
 	 * @param array  $properties  Map of style key => CSS property to emit, or
 	 *                            style key => array( CSS property, value type,
-	 *                            pseudo-state ) where the type is one
+	 *                            pseudo-states ) where the type is one
 	 *                            Responsive_Styles::is_safe_value() knows and the
-	 *                            optional pseudo-state is `:hover`. A bare
-	 *                            string means a non-negative length.
+	 *                            optional pseudo-states are one of
+	 *                            self::PSEUDO_STATES or a list of them, e.g.
+	 *                            array( ':hover', ':focus' ). A bare string
+	 *                            means a non-negative length.
 	 * @param string $class_prefix Prefix for the generated class name.
 	 * The rules are in the shape wp_style_engine_get_stylesheet_from_css_rules()
 	 * accepts; the caller hands them to the engine, which is what routes them
@@ -178,9 +227,10 @@ final class Render {
 			$target       = is_array( $target ) ? $target : array( $target );
 			$css_property = $target[0];
 			$type         = isset( $target[1] ) ? $target[1] : 'length';
-			$pseudo       = isset( $target[2] ) ? self::one_of( $target[2], array( ':hover' ) ) : '';
+			$selector     = self::state_selector( '.' . $class, isset( $target[2] ) ? $target[2] : array() );
+			$is_state     = '.' . $class !== $selector;
 
-			$property_rules = Responsive_Styles::build_rules( $style, '.' . $class . $pseudo, $namespace_key, $property_key, $css_property, $type );
+			$property_rules = Responsive_Styles::build_rules( $style, $selector, $namespace_key, $property_key, $css_property, $type );
 
 			/*
 			 * A pseudo-state rule is marked important, as core marks its own
@@ -189,7 +239,7 @@ final class Render {
 			 * class core puts on the same element. The flag travels as data;
 			 * engine_rules() turns it into the style engine's `important` option.
 			 */
-			if ( '' !== $pseudo ) {
+			if ( $is_state ) {
 				foreach ( $property_rules as $index => $rule ) {
 					$property_rules[ $index ]['important'] = true;
 				}

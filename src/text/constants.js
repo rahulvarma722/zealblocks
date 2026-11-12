@@ -166,12 +166,6 @@ export const SHADOW_KEYS = [
 	KEYS.shadowColor,
 ];
 
-export const HOVER_KEYS = [
-	KEYS.textHover,
-	KEYS.backgroundHover,
-	KEYS.hoverDuration,
-];
-
 /**
  * What a shadow starts as when one is first added.
  *
@@ -187,6 +181,13 @@ export const SHADOW_DEFAULTS = {
 };
 
 /**
+ * Prefix of Text's hover variables. MUST match the prefix render.php passes
+ * to Hover::properties() and the one style.scss and editor.scss pass to the
+ * hover mixins.
+ */
+export const HOVER_VAR_PREFIX = '--zealblocks-text-hover-';
+
+/**
  * Custom properties the root carries. render.php writes the same names.
  */
 export const CSS_VARS = {
@@ -194,10 +195,10 @@ export const CSS_VARS = {
 	[ KEYS.shadowY ]: '--zealblocks-text-shadow-y',
 	[ KEYS.shadowBlur ]: '--zealblocks-text-shadow-blur',
 	[ KEYS.shadowColor ]: '--zealblocks-text-shadow-color',
-	[ KEYS.hoverDuration ]: '--zealblocks-text-hover-duration',
+	[ KEYS.hoverDuration ]: `${ HOVER_VAR_PREFIX }duration`,
 	// Editor only: the front end emits real `:hover` rules instead.
-	[ KEYS.textHover ]: '--zealblocks-text-hover-color',
-	[ KEYS.backgroundHover ]: '--zealblocks-text-hover-background',
+	[ KEYS.textHover ]: `${ HOVER_VAR_PREFIX }color`,
+	[ KEYS.backgroundHover ]: `${ HOVER_VAR_PREFIX }background`,
 };
 
 /**

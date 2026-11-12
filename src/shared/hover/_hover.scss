@@ -1,0 +1,56 @@
+/**
+ * Hover colours, shared by every block that opts in.
+ *
+ *   @use "../shared/hover/hover";
+ *   $block: ".wp-block-zealblocks-text";
+ *   $prefix: "--zealblocks-text-hover-";
+ *   @include hover.transition($block, $prefix);  // style.scss
+ *   @include hover.preview($block, $prefix);     // editor.scss
+ *
+ * The prefix is the block's, and MUST be the one its render.php passes to
+ * Hover::properties() and its edit.js to getHoverPreview().
+ */
+
+/**
+ * The transition, front end and editor canvas. The hover colours themselves
+ * are per-instance rules from render.php; this only smooths the change, and
+ * only on blocks that have a hover state, so a theme's own transitions
+ * elsewhere are untouched. For a block's style.scss, at the root.
+ */
+@mixin transition($block, $prefix) {
+
+	#{$block}.has-hover {
+		transition-property: color, background;
+		transition-duration: var(#{$prefix}duration, 0.2s);
+		transition-timing-function: ease;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition-duration: 0s;
+		}
+	}
+}
+
+/**
+ * Editor only: the hover preview. For a block's editor.scss, at the root.
+ *
+ * The front end gets real per-band rules from render.php. The canvas cannot,
+ * since it has no stylesheet of ours per instance, so getHoverPreview()
+ * resolves the value for the PREVIEWED device into a custom property and adds
+ * the class only when that device has a value. Gating by class is what keeps
+ * an unresolved variable from resetting the colour on hover, the failure
+ * render.php avoids by not using variables at all.
+ *
+ * `:hover` only, even for a block whose front end also uses a focus state:
+ * in the editor the block takes focus to be edited, and showing hover colours
+ * while typing would be wrong.
+ */
+@mixin preview($block, $prefix) {
+
+	#{$block}.has-hover-color:hover {
+		color: var(#{$prefix}color) !important;
+	}
+
+	#{$block}.has-hover-background:hover {
+		background: var(#{$prefix}background) !important;
+	}
+}

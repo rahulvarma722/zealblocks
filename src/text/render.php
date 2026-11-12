@@ -21,6 +21,7 @@ defined( 'ABSPATH' ) || exit;
  */
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
+use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Block\Z_Index;
 
@@ -161,9 +162,7 @@ $responsive = Block_Render::responsive(
 		'textShadowY'     => array( '--zealblocks-text-shadow-y', 'signed-length' ),
 		'textShadowBlur'  => array( '--zealblocks-text-shadow-blur', 'length' ),
 		'textShadowColor' => array( '--zealblocks-text-shadow-color', 'color' ),
-		'hoverDuration'   => array( '--zealblocks-text-hover-duration', 'time' ),
-		'textHover'       => array( 'color', 'color', ':hover' ),
-		'backgroundHover' => array( 'background', 'background', ':hover' ),
+		...Hover::properties( '--zealblocks-text-hover-', ':hover' ),
 		Z_Index::KEY      => Z_Index::PROPERTY,
 		'position'        => array( 'position', 'position' ),
 		'positionTop'     => array( 'top', 'signed-length' ),
@@ -183,14 +182,11 @@ $responsive = Block_Render::responsive(
  * why they come from the rules of all bands together.
  */
 $has_text_shadow = false;
-$has_hover       = false;
 
 foreach ( $responsive['rules'] as $rule ) {
 	foreach ( array_keys( $rule['declarations'] ) as $property ) {
 		$has_text_shadow = $has_text_shadow || str_starts_with( $property, '--zealblocks-text-shadow-' );
 	}
-
-	$has_hover = $has_hover || str_ends_with( $rule['selector'], ':hover' );
 }
 
 /*
@@ -225,7 +221,7 @@ $wrapper_classes = array_filter(
 		$has_drop_cap ? 'has-drop-cap' : '',
 		$responsive['class'],
 		$has_text_shadow ? 'has-text-shadow' : '',
-		$has_hover ? 'has-hover' : '',
+		...Hover::classes( $responsive['rules'] ),
 		...Z_Index::classes( $responsive['rules'] ),
 		...$animation['classes'],
 	)

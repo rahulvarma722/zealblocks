@@ -18,6 +18,7 @@
  */
 
 @use "../shared/animation/animation";
+@use "../shared/hover/hover";
 @use "../shared/z-index/z-index";
 
 /*
@@ -147,21 +148,6 @@ $fallback-h3: clamp(1.5rem, 2.5vw, 1.875rem);
 	}
 
 	/*
-	 * Hover transition. The hover colours themselves are per-instance rules
-	 * from render.php; this only smooths the change, and only on blocks that
-	 * have a hover state, so a theme's own transitions elsewhere are untouched.
-	 */
-	&.has-hover {
-		transition-property: color, background;
-		transition-duration: var(--zealblocks-text-hover-duration, 0.2s);
-		transition-timing-function: ease;
-
-		@media (prefers-reduced-motion: reduce) {
-			transition-duration: 0s;
-		}
-	}
-
-	/*
 	 * Drop cap — core/paragraph's rule, scoped to this block.
 	 *
 	 * Core's `.has-drop-cap` rule ships in the paragraph block's stylesheet,
@@ -187,6 +173,12 @@ $fallback-h3: clamp(1.5rem, 2.5vw, 1.875rem);
 		padding-top: 14px;
 	}
 }
+
+/*
+ * Hover transition, on blocks that have a hover colour. The prefix MUST match
+ * HOVER_VAR_PREFIX and render.php's. See src/shared/hover/_hover.scss.
+ */
+@include hover.transition(".wp-block-zealblocks-text", "--zealblocks-text-hover-");
 
 /*
  * `position: relative` for a block with a z-index and no position of its own.

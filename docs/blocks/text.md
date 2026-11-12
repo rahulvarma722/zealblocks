@@ -115,7 +115,7 @@ Three output strategies, chosen per property:
 |---|---|---|
 | column gap | real `column-gap` on the root | the root is the element it styles |
 | text shadow | four custom properties, combined in `style.scss` | a Tablet colour alone inherits the Desktop offsets through the cascade |
-| hover colours | real `:hover` rules, `!important`, per band | a variable undefined in the active band would reset the colour on hover |
+| hover colours | real `:hover` rules, `!important`, per band (shared: [../hover.md](../hover.md)) | a variable undefined in the active band would reset the colour on hover |
 | position, offsets, z-index, overflow | real declarations on the root | `:where(.has-zealblocks-z-index)` adds a zero-specificity `position: relative` so a z-index alone works |
 
 The shadow's stylesheet fallbacks draw nothing, so a Mobile-only shadow leaves
