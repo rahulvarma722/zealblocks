@@ -20,9 +20,95 @@
 			"default": "",
 			"role": "content"
 		},
+		"tagName": {
+			"type": "string",
+			"enum": [
+				"p",
+				"h1",
+				"h2",
+				"h3",
+				"h4",
+				"h5",
+				"h6",
+				"div",
+				"span",
+				"blockquote",
+				"address",
+				"cite",
+				"time",
+				"label",
+				"figcaption",
+				"caption",
+				"legend",
+				"dt",
+				"dd",
+				"li",
+				"summary",
+				"pre",
+				"strong",
+				"em",
+				"small",
+				"mark",
+				"del",
+				"ins",
+				"sub",
+				"sup",
+				"abbr",
+				"code",
+				"kbd",
+				"samp",
+				"var",
+				"output",
+				"q",
+				"s",
+				"dfn",
+				"bdi",
+				"bdo"
+			],
+			"default": "p"
+		},
 		"styleAs": {
 			"type": "string",
 			"default": ""
+		},
+		"dropCap": {
+			"type": "boolean",
+			"default": false
+		},
+		"animationType": {
+			"type": "string",
+			"default": ""
+		},
+		"animationDuration": {
+			"type": "number",
+			"default": 400
+		},
+		"animationDelay": {
+			"type": "number",
+			"default": 0
+		},
+		"animationEasing": {
+			"type": "string",
+			"enum": [
+				"ease",
+				"ease-in",
+				"ease-out",
+				"ease-in-out",
+				"linear"
+			],
+			"default": "ease"
+		},
+		"animationRepeat": {
+			"type": "boolean",
+			"default": false
+		},
+		"displayConditions": {
+			"type": "object",
+			"default": {}
+		},
+		"positionPreview": {
+			"type": "boolean",
+			"default": true
 		},
 		"placeholder": {
 			"type": "string"
@@ -91,5 +177,6 @@
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",
 	"editorStyle": "file:./index.css",
+	"viewScript": "file:./view.js",
 	"render": "file:./render.php"
 }

@@ -21,6 +21,19 @@ defined( 'ABSPATH' ) || exit;
 final class Registrar implements Module {
 
 	/**
+	 * Blocks whose view script render.php enqueues itself, only when needed.
+	 *
+	 * Core loads a block's `viewScript` on every page the block appears on.
+	 * The Text block's script exists only for entrance animations, which most
+	 * Text blocks do not have, so it is removed from the block type here and
+	 * render.php enqueues the still-registered handle when a block is
+	 * animated.
+	 *
+	 * @var string[]
+	 */
+	const ON_DEMAND_VIEW_SCRIPTS = array( 'zealblocks/text' );
+
+	/**
 	 * Adds the module's hooks.
 	 *
 	 * @return void
@@ -28,6 +41,26 @@ final class Registrar implements Module {
 	public function register() {
 		add_action( 'init', array( $this, 'register_blocks' ) );
 		add_filter( 'block_categories_all', array( $this, 'register_category' ) );
+		add_filter( 'block_type_metadata_settings', array( $this, 'defer_view_scripts' ), 10, 2 );
+	}
+
+	/**
+	 * Detaches the view script of an ON_DEMAND_VIEW_SCRIPTS block.
+	 *
+	 * Runs after core has registered the handle from block.json, so the
+	 * script stays registered and enqueueable; only the automatic enqueue on
+	 * render goes away.
+	 *
+	 * @param array $settings Block type settings.
+	 * @param array $metadata Block metadata from block.json.
+	 * @return array
+	 */
+	public function defer_view_scripts( $settings, $metadata ) {
+		if ( isset( $metadata['name'] ) && in_array( $metadata['name'], self::ON_DEMAND_VIEW_SCRIPTS, true ) ) {
+			$settings['view_script_handles'] = array();
+		}
+
+		return $settings;
 	}
 
 	/**

@@ -17,6 +17,8 @@
  * stronger here would defeat a user setting a font size in the inspector.
  */
 
+@use "sass:list";
+
 /*
  * Fallback sizes, hoisted so each font-size declaration stays on one readable
  * line. These apply ONLY when the active theme declares no matching font-size
@@ -122,5 +124,153 @@ $fallback-h3: clamp(1.5rem, 2.5vw, 1.875rem);
 	 */
 	&[class*="has-style-"] {
 		margin-block: 0;
+	}
+
+	/*
+	 * Text shadow, assembled from four per-viewport custom properties that
+	 * render.php writes on the root.
+	 *
+	 * The fallbacks draw NOTHING — zero offsets, zero blur, transparent. That
+	 * matters because the class is present in every band once any band has a
+	 * shadow: a shadow set for Mobile only must leave Desktop untouched, and
+	 * Desktop then has none of the properties defined. The editor seeds visible
+	 * defaults when a shadow is first added, so an author never meets the
+	 * invisible case.
+	 */
+	&.has-text-shadow {
+		text-shadow:
+			var(--zealblocks-text-shadow-x, 0)
+			var(--zealblocks-text-shadow-y, 0)
+			var(--zealblocks-text-shadow-blur, 0)
+			var(--zealblocks-text-shadow-color, transparent);
+	}
+
+	/*
+	 * Hover transition. The hover colours themselves are per-instance rules
+	 * from render.php; this only smooths the change, and only on blocks that
+	 * have a hover state, so a theme's own transitions elsewhere are untouched.
+	 */
+	&.has-hover {
+		transition-property: color, background;
+		transition-duration: var(--zealblocks-text-hover-duration, 0.2s);
+		transition-timing-function: ease;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition-duration: 0s;
+		}
+	}
+
+	/*
+	 * Drop cap — core/paragraph's rule, scoped to this block.
+	 *
+	 * Core's `.has-drop-cap` rule ships in the paragraph block's stylesheet,
+	 * which is only loaded on a page that has a paragraph, so relying on it
+	 * would make the drop cap appear or not depending on unrelated content.
+	 * `:not(:focus)` hides it while editing, as core does, because a floated
+	 * first letter fights the caret.
+	 */
+	&.has-drop-cap:not(:focus)::first-letter {
+		float: left;
+		font-size: 8.4em;
+		font-style: normal;
+		font-weight: 100;
+		line-height: 0.68;
+		margin: 0.05em 0.1em 0 0;
+		text-transform: uppercase;
+	}
+
+	&.has-drop-cap:not(:focus)::after {
+		clear: both;
+		content: "";
+		display: table;
+		padding-top: 14px;
+	}
+
+	/*
+	 * Z-index needs a positioned box. `:where()` keeps this at zero
+	 * specificity, so a position chosen in the inspector — a per-instance class
+	 * rule — always wins over it.
+	 *
+	 * Namespaced, unlike the other feature classes: Spectra ships a global
+	 * `.has-z-index.has-z-index { z-index: var(--spectra-z-index, auto)
+	 * !important }`, which flattened our z-index to `auto` on any site running
+	 * both plugins.
+	 */
+	&:where(.has-zealblocks-z-index) {
+		position: relative;
+	}
+
+	/*
+	 * Entrance animation.
+	 *
+	 * Before view.js adds `is-animated`, the block is transparent and nothing
+	 * else: it is NOT moved, because the observer measures the transformed box
+	 * and a block parked off-screen would never be seen to enter. The movement
+	 * is all in the keyframes, from the type's start state to rest.
+	 *
+	 * Both halves sit behind `scripting: enabled` and no reduced-motion
+	 * preference, so text is never hidden for a visitor without JavaScript and
+	 * never moves for one who asked it not to.
+	 */
+	@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+
+		&.has-animation:not(.is-animated) {
+			opacity: 0;
+		}
+
+		&.has-animation.is-animated {
+			animation: zealblocks-text-enter var(--zealblocks-animation-duration, 400ms) var(--zealblocks-animation-easing, ease) var(--zealblocks-animation-delay, 0ms) both;
+		}
+	}
+}
+
+/*
+ * Start state per type, as two custom properties the keyframes read. The
+ * values are AOS's, which Spectra uses, so an animation looks the same moved
+ * across. Flips and slides keep full opacity there too.
+ */
+$animation-starts: (
+	"fade": (0, none),
+	"fade-up": (0, translate3d(0, 100px, 0)),
+	"fade-down": (0, translate3d(0, -100px, 0)),
+	"fade-left": (0, translate3d(100px, 0, 0)),
+	"fade-right": (0, translate3d(-100px, 0, 0)),
+	"flip-up": (1, perspective(2500px) rotateX(-100deg)),
+	"flip-down": (1, perspective(2500px) rotateX(100deg)),
+	"flip-left": (1, perspective(2500px) rotateY(-100deg)),
+	"flip-right": (1, perspective(2500px) rotateY(100deg)),
+	"slide-up": (1, translate3d(0, 100%, 0)),
+	"slide-down": (1, translate3d(0, -100%, 0)),
+	"slide-left": (1, translate3d(100%, 0, 0)),
+	"slide-right": (1, translate3d(-100%, 0, 0)),
+	"zoom-in": (0, scale(0.6)),
+	"zoom-in-up": (0, translate3d(0, 100px, 0) scale(0.6)),
+	"zoom-in-down": (0, translate3d(0, -100px, 0) scale(0.6)),
+	"zoom-in-left": (0, translate3d(100px, 0, 0) scale(0.6)),
+	"zoom-in-right": (0, translate3d(-100px, 0, 0) scale(0.6)),
+	"zoom-out": (0, scale(1.2)),
+	"zoom-out-up": (0, translate3d(0, 100px, 0) scale(1.2)),
+	"zoom-out-down": (0, translate3d(0, -100px, 0) scale(1.2)),
+	"zoom-out-left": (0, translate3d(100px, 0, 0) scale(1.2)),
+	"zoom-out-right": (0, translate3d(-100px, 0, 0) scale(1.2)),
+);
+
+@each $type, $start in $animation-starts {
+	.wp-block-zealblocks-text[data-zealblocks-animation="#{$type}"] {
+		--zealblocks-animation-from-opacity: #{list.nth($start, 1)};
+		--zealblocks-animation-from: #{list.nth($start, 2)};
+	}
+}
+
+@keyframes zealblocks-text-enter {
+
+	from {
+		opacity: var(--zealblocks-animation-from-opacity, 0);
+		transform: var(--zealblocks-animation-from, none);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
 	}
 }

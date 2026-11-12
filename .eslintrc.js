@@ -33,6 +33,12 @@ module.exports = {
 				'@wordpress/block-editor': [
 					// Link editing popover used by the toolbar's Link button.
 					'__experimentalLinkControl',
+					// Text hover / Background hover in core's Color panel. The
+					// dropdown is what core's own colour rows are built from;
+					// the hook supplies the theme + default + custom palettes
+					// and gradients it expects.
+					'__experimentalColorGradientSettingsDropdown',
+					'__experimentalUseMultipleOriginColorsAndGradients',
 				],
 				'@wordpress/components': [
 					// Icon position (Left / Right) segmented control.

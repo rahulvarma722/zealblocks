@@ -131,7 +131,12 @@ final class Render {
 	 *
 	 * @param array  $style       The block's `style` attribute.
 	 * @param string $namespace_key   Namespace key inside each layer.
-	 * @param array  $properties  Map of style key => CSS property to emit.
+	 * @param array  $properties  Map of style key => CSS property to emit, or
+	 *                            style key => array( CSS property, value type,
+	 *                            pseudo-state ) where the type is one
+	 *                            Responsive_Styles::is_safe_value() knows and the
+	 *                            optional pseudo-state is `:hover`. A bare
+	 *                            string means a non-negative length.
 	 * @param string $class_prefix Prefix for the generated class name.
 	 * The rules are in the shape wp_style_engine_get_stylesheet_from_css_rules()
 	 * accepts; the caller hands them to the engine, which is what routes them
@@ -166,11 +171,31 @@ final class Render {
 		$class = $class_prefix . substr( md5( (string) wp_json_encode( $stored ) ), 0, 8 );
 		$rules = array();
 
-		foreach ( $properties as $property_key => $css_property ) {
-			$rules = array_merge(
-				$rules,
-				Responsive_Styles::build_rules( $style, '.' . $class, $namespace_key, $property_key, $css_property )
-			);
+		foreach ( $properties as $property_key => $target ) {
+			// A bare string is a CSS property holding a length — the shape every
+			// caller used before value types existed. An array adds the type,
+			// and optionally a pseudo-state.
+			$target       = is_array( $target ) ? $target : array( $target );
+			$css_property = $target[0];
+			$type         = isset( $target[1] ) ? $target[1] : 'length';
+			$pseudo       = isset( $target[2] ) ? self::one_of( $target[2], array( ':hover' ) ) : '';
+
+			$property_rules = Responsive_Styles::build_rules( $style, '.' . $class . $pseudo, $namespace_key, $property_key, $css_property, $type );
+
+			/*
+			 * A pseudo-state rule is marked important, as core marks its own
+			 * state rules (block-supports/states.php): a hover colour has to beat
+			 * the inline `color` and the `.has-x-color { … !important }` preset
+			 * class core puts on the same element. The flag travels as data;
+			 * engine_rules() turns it into the style engine's `important` option.
+			 */
+			if ( '' !== $pseudo ) {
+				foreach ( $property_rules as $index => $rule ) {
+					$property_rules[ $index ]['important'] = true;
+				}
+			}
+
+			$rules = array_merge( $rules, $property_rules );
 		}
 
 		// Values that failed is_safe_length() produce no rules. Without this the
@@ -182,6 +207,50 @@ final class Render {
 		return array(
 			'class' => $class,
 			'rules' => $rules,
+		);
+	}
+
+	/**
+	 * Hands responsive() rules to the style engine, honouring `important`.
+	 *
+	 * The engine only appends `!important` through a declarations object's
+	 * `important` option — the same route core's states support takes — so a
+	 * rule flagged important is rebuilt as one. The flag is not something the
+	 * engine's rule array understands, so it is removed either way.
+	 *
+	 * Lives apart from responsive() because it needs WordPress loaded, while
+	 * responsive() stays pure and unit-testable.
+	 *
+	 * @param array $rules Rules from responsive().
+	 * @return void
+	 */
+	public static function store_rules( $rules ) {
+		if ( ! $rules ) {
+			return;
+		}
+
+		foreach ( $rules as $index => $rule ) {
+			if ( empty( $rule['important'] ) ) {
+				unset( $rules[ $index ]['important'] );
+				continue;
+			}
+
+			$declarations = new \WP_Style_Engine_CSS_Declarations();
+
+			foreach ( $rule['declarations'] as $property => $value ) {
+				$declarations->add_declaration( $property, $value, array( 'important' => true ) );
+			}
+
+			$rules[ $index ]['declarations'] = $declarations;
+			unset( $rules[ $index ]['important'] );
+		}
+
+		wp_style_engine_get_stylesheet_from_css_rules(
+			array_values( $rules ),
+			array(
+				'context'  => 'zealblocks',
+				'prettify' => false,
+			)
 		);
 	}
 
@@ -200,9 +269,13 @@ final class Render {
 	 *     wp_kses( $text, Block_Render::LABEL_HTML )
 	 *
 	 * Note what is absent. wp_kses_post() is the filter for post BODIES, so it
-	 * permits <img>, <iframe> and <a> — none of which belong in a button or
-	 * heading label, and a nested <a> inside a link is invalid HTML that
-	 * browsers recover from unpredictably.
+	 * permits <img> and <a> — neither belongs in a button label, and a nested
+	 * <a> inside a link is invalid HTML that browsers recover from
+	 * unpredictably.
+	 *
+	 * The Text block is body text, so it uses wp_kses_post() instead. Running
+	 * it through this list stripped links, highlights and inline images from
+	 * the front end (see src/text/render.php).
 	 *
 	 * A block whose RichText sets `allowedFormats={ [] }` cannot produce any
 	 * markup here at all; this list is what survives if that is ever relaxed to

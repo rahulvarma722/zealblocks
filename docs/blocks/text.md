@@ -1,11 +1,37 @@
 # Text — `zealblocks/text`
 
-A paragraph with a **visual style preset** chosen independently of the theme's
-default sizing.
+Text with a **visual style preset** chosen independently of its HTML tag.
 
-| control | attribute |
-|---|---|
-| **Style as** — Display / H1–H6 / Lead / Body / Caption / Eyebrow | `styleAs` |
+| control | panel | stored as | per device |
+|---|---|---|---|
+| **HTML tag** — Spectra's 41 tags, grouped; the toolbar offers the common ten | Settings | `tagName` | no |
+| **Style as** — Display / H1–H6 / Lead / Body / Caption / Eyebrow | Settings | `styleAs` | no |
+| **Drop cap** | Typography | `dropCap` | no |
+| **Column gap** | Typography | `style.zealblocks.columnGap` | yes |
+| **Text shadow** — colour, X, Y, blur | Border & Shadow | `style.zealblocks.textShadow{X,Y,Blur,Color}` | yes, per part |
+| **Text hover / Background hover** (colour or gradient) | Color | `style.zealblocks.textHover`, `backgroundHover` | yes |
+| **Hover transition** (ms) | Color | `style.zealblocks.hoverDuration` | yes |
+| **Position** — relative / absolute / fixed, four offsets | Dimensions | `style.zealblocks.position`, `positionTop/Right/Bottom/Left` | yes |
+| **Z-index** (−100 to 1000) | Dimensions | `style.zealblocks.zIndex` | yes |
+| **Overflow** | Dimensions | `style.zealblocks.overflow` | yes |
+| **Preview position in editor** | Dimensions | `positionPreview` | no |
+| **Entrance animation** — 23 types, duration, delay, easing, repeat | Settings → Animation | `animation*` | no |
+| **Display conditions** — logged in/out, role, browser, OS, days | Settings → Display conditions | `displayConditions` | no |
+
+Everything else — font, size, colours, spacing, border, box shadow, per-device
+values for those, hiding per device — is core's, through `supports` and
+WordPress 7.1 style states.
+
+**Writing mode appears only if the theme turns it on.** `block.json` declares
+`typography.__experimentalWritingMode`, but core shows the control (labelled
+**Orientation**, not "Writing mode") only when the theme sets
+`settings.typography.writingMode: true`. Core's own default is `false`. So:
+
+- **Twenty Twenty-Five** sets it to `true`, and the control shows.
+- **Astra** leaves it `false`, and the control is absent.
+
+This is not a Zealblocks bug, and Spectra's Text behaves the same way. The front
+end needs no opt-in: a stored value renders as `style="writing-mode:vertical-rl"`.
 
 ## The preset is a class, never an inline style
 
@@ -23,30 +49,115 @@ The value is validated against the same fixed list `style.scss` implements. An
 unknown preset is dropped rather than emitted, so the block never carries a
 class with no rule behind it.
 
-## The element is always `<p>` — for now
+## The HTML tag is an XSS boundary
 
-A configurable HTML tag is future scope, and its absence is **asserted** rather
-than assumed:
+The tag lands in an **element position**, so `render.php` validates it against
+an allow-list identical to the `block.json` enum and falls back to `p`. The
+integration suite asserts that `{"tagName":"script"}` renders a paragraph.
 
-```php
-zealblocks_check( 'a stray tagName attribute is ignored entirely', … );
-```
+`Style as` is independent of it: an `h2` styled as a caption keeps the document
+outline correct and still looks like a caption.
 
-When it returns, the validation belongs in `render.php` against an allow-list.
-The tag name lands in an **element position**, which makes it an XSS boundary
-rather than a styling preference — `<script>` or `<iframe>` reaching that line
-would be exploitable. That test failing is the reminder.
+## Content is filtered with `wp_kses_post()`, not `LABEL_HTML`
 
-Removed along with the tag control: the settings-backed vocabulary
-(`Text_Tags`, `Settings`), the `zealblocks_text_tags` /
-`zealblocks_enabled_text_tags` filters, the PHP→JS bridge that carried the
-enabled list, and the heading-outline guardrail, which had nothing left to check
-once the level could not be chosen.
+The `RichText` sets no `allowedFormats`, so the editor offers every core format:
+link, highlight and inline colour (`<mark>`), underline (`<span style>`), keyboard
+(`<kbd>`), language (`<bdo>`), inline image and inline math, besides bold and
+italic. The render must keep all of them, so it uses core's post-body list.
 
-**A consequence worth recording:** without the tag control there is no
-tag/visual-style decoupling, which was what distinguished this block from
-`core/paragraph` plus its typography supports. As it stands the differentiator
-is the preset scale itself.
+**This shipped as a bug.** The render used `Block_Render::LABEL_HTML`, the Button
+label list (`strong b em i s sub sup code br`). Links, highlights, kbd, language,
+underline and images showed in the editor and vanished on the page, and the
+Elements → Link colour control had nothing to colour. Post content was never
+affected, so the fix brought existing posts back without a re-save.
+
+`wp_kses_post()` still removes `<script>`, `<iframe>`, event handlers,
+`javascript:` / `data:` URLs and unsafe CSS (`expression()`, `behavior`,
+`url(javascript:…)`). Core allows an `https` `url()` in an inline background, as
+it does in any post. The "Text — inline formats survive the front end" section of
+the integration suite covers all of this.
+
+A block holding only an inline image is content, not empty, so it renders. A
+block holding only markup with no text and no image renders nothing.
+
+## Drop cap
+
+A `has-drop-cap` class with core/paragraph's rule copied into `style.scss`,
+scoped to this block — core's rule only loads on pages that contain a
+paragraph. Not emitted for `span` (`::first-letter` does nothing inline) or
+for text aligned center or to the end edge; the editor disables the toggle in
+the same cases. Respects the theme's `typography.dropCap` setting.
+
+## Entrance animation
+
+`render.php` writes `data-zealblocks-animation`, the `has-animation` class and
+the timing as custom properties, all validated (type against the list, times
+clamped to 0–5000 ms). `view.js` adds `is-animated` when a tenth of the block
+is in view; `style.scss` plays one keyframe animation from the type's start
+state (AOS's values, as Spectra uses).
+
+- The script loads only on pages with an animated block: the registrar removes
+  it from the block type (`Registrar::ON_DEMAND_VIEW_SCRIPTS`) and `render.php`
+  enqueues it.
+- Before it plays the block is only transparent, never moved — the observer
+  measures the transformed box, so a slid-away block would never "enter".
+- The hidden start state is behind `@media (scripting: enabled) and
+  (prefers-reduced-motion: no-preference)`: no JavaScript or reduced motion
+  means the text is just there.
+- The editor plays the same keyframes once when the type changes or Preview is
+  pressed.
+
+## Display conditions
+
+`Block\Display_Conditions` decides on the server; a hidden block renders
+nothing, so its text is not in the page source. Conditions are ORed. Browser
+and OS come from the user agent, the day from the site timezone.
+
+A full-page cache stores one visitor's result for everyone. The editor says so
+under the browser, OS and day controls. In the canvas a block with conditions
+gets a dashed outline rather than being hidden.
+
+Per-device hiding is not here — core's block visibility (7.0+) already does
+it for every block.
+
+## Per-device styles
+
+Stored in core's `style` attribute under `zealblocks`, in core's
+viewport-state shape, through the same helpers as the Button's width — see
+[styles.md](../styles.md). The controls fill core's `typography`, `color` and
+`border` groups, because those are among the seven the responsive view renders.
+
+Three output strategies, chosen per property:
+
+| value | front end | why |
+|---|---|---|
+| column gap | real `column-gap` on the root | the root is the element it styles |
+| text shadow | four custom properties, combined in `style.scss` | a Tablet colour alone inherits the Desktop offsets through the cascade |
+| hover colours | real `:hover` rules, `!important`, per band | a variable undefined in the active band would reset the colour on hover |
+| position, offsets, z-index, overflow | real declarations on the root | `:where(.has-zealblocks-z-index)` adds a zero-specificity `position: relative` so a z-index alone works |
+
+The shadow's stylesheet fallbacks draw nothing, so a Mobile-only shadow leaves
+Desktop untouched. The editor seeds `1px 1px 2px rgba(0,0,0,.3)` when a shadow
+is first added, so picking only a colour still shows something.
+
+Hover rules are important for the same reason core's state rules are: they must
+beat the inline `color` and the `.has-x-color { … !important }` preset class on
+the same element. `Render::store_rules()` passes the flag to the style engine.
+
+Values are validated by type before they reach the style engine
+(`Responsive_Styles::is_safe_value()`): lengths, signed lengths, colours,
+backgrounds (colour or gradient), times, integers (z-index) and the keyword
+lists for position and overflow (`Responsive_Styles::KEYWORDS`). Colours accept any bare
+`var(--name)`, because theme palettes such as Astra's are custom properties.
+
+In the canvas, `preview.js` resolves each value for the previewed device and
+writes it inline. Hover colours become custom properties with a class that
+exists only when that device has a value — the editor-only rule is in
+`editor.scss`.
+
+The z-index class is namespaced (`has-zealblocks-z-index`) because Spectra
+ships a global `.has-z-index.has-z-index { z-index: … !important }` that
+flattened ours to `auto` with both plugins active.
 
 ## `content` has no `source` — and that is load-bearing
 

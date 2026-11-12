@@ -221,4 +221,104 @@ final class ResponsiveStylesTest extends TestCase {
 			$this->assertSame( '.t', $rule['selector'], 'every state rule is scoped to the same selector' );
 		}
 	}
+
+	/**
+	 * Colours: what the picker produces passes, anything that could close the
+	 * declaration or load a resource does not.
+	 *
+	 * @return void
+	 */
+	public function test_is_safe_color_allow_list() {
+		foreach ( array( '#fff', '#A1B2C3', '#11223344', 'rgb(0, 0, 0)', 'rgba(0,0,0,0.3)', 'rgb(0 0 0 / 25%)', 'hsl(120deg 50% 50%)', 'var(--wp--preset--color--contrast)', 'var(--ast-global-color-0)', 'transparent', 'currentColor' ) as $ok ) {
+			$this->assertTrue( Responsive_Styles::is_safe_color( $ok ), $ok . ' should be allowed' );
+		}
+
+		foreach ( array( 'red; background: url(x)', 'url(evil)', 'expression(alert(1))', '#ggg', 'rgb(0,0,0);}', 'var(--x);}', 'var(--x, url(y))', 'red', '' ) as $bad ) {
+			$this->assertFalse( Responsive_Styles::is_safe_color( $bad ), $bad . ' should be refused' );
+		}
+	}
+
+	/**
+	 * Backgrounds add gradients — but the gradient character set would still
+	 * spell `url(x)`, so the words are refused outright.
+	 *
+	 * @return void
+	 */
+	public function test_is_safe_background_allows_gradients_not_urls() {
+		foreach ( array( '#000', 'linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%)', 'radial-gradient(rgba(0,0,0,0.5) 0%,#fff 100%)', 'var(--wp--preset--gradient--vivid)' ) as $ok ) {
+			$this->assertTrue( Responsive_Styles::is_safe_background( $ok ), $ok . ' should be allowed' );
+		}
+
+		foreach ( array( 'linear-gradient(url(x))', 'url(x)', 'linear-gradient(red, blue);}', 'image-set(x)', 'linear-gradient(expression(1))' ) as $bad ) {
+			$this->assertFalse( Responsive_Styles::is_safe_background( $bad ), $bad . ' should be refused' );
+		}
+	}
+
+	/**
+	 * Times: milliseconds or seconds, nothing else.
+	 *
+	 * @return void
+	 */
+	public function test_is_safe_time() {
+		$this->assertTrue( Responsive_Styles::is_safe_time( '200ms' ) );
+		$this->assertTrue( Responsive_Styles::is_safe_time( '0.3s' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_time( '200' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_time( '-1s' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_time( '1s;color:red' ) );
+	}
+
+	/**
+	 * The type picks the validator; an unknown type validates nothing.
+	 *
+	 * @return void
+	 */
+	public function test_is_safe_value_dispatches_on_type() {
+		$this->assertTrue( Responsive_Styles::is_safe_value( '-2px', 'signed-length' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_value( '-2px', 'length' ) );
+		$this->assertTrue( Responsive_Styles::is_safe_value( '#fff', 'color' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_value( '#fff', 'length' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_value( '#fff', 'colour' ), 'a typo in a property map drops the rule' );
+	}
+
+	/**
+	 * build_rules() validates with the type it is given.
+	 *
+	 * @return void
+	 */
+	public function test_build_rules_honours_the_type() {
+		$rules = Responsive_Styles::build_rules(
+			array(
+				'zealblocks' => array( 'x' => '-3px' ),
+				'@mobile'    => array( 'zealblocks' => array( 'x' => 'red' ) ),
+			),
+			'.t',
+			'zealblocks',
+			'x',
+			'--x',
+			'signed-length'
+		);
+
+		$this->assertCount( 1, $rules, 'the colour fails a length check and is dropped' );
+		$this->assertSame( array( '--x' => '-3px' ), $rules[0]['declarations'] );
+	}
+
+	/**
+	 * Z-index takes a bounded integer, position and overflow a fixed keyword.
+	 *
+	 * @return void
+	 */
+	public function test_integer_and_keyword_types() {
+		$this->assertTrue( Responsive_Styles::is_safe_value( '10', 'integer' ) );
+		$this->assertTrue( Responsive_Styles::is_safe_value( '-100', 'integer' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_value( '1.5', 'integer' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_value( '1234567', 'integer' ), 'capped at six digits' );
+		$this->assertFalse( Responsive_Styles::is_safe_value( '1;color:red', 'integer' ) );
+
+		$this->assertTrue( Responsive_Styles::is_safe_value( 'absolute', 'position' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_value( 'sticky', 'position' ), 'sticky is core\'s own support' );
+		$this->assertFalse( Responsive_Styles::is_safe_value( 'Absolute', 'position' ) );
+
+		$this->assertTrue( Responsive_Styles::is_safe_value( 'hidden', 'overflow' ) );
+		$this->assertFalse( Responsive_Styles::is_safe_value( 'scroll;x', 'overflow' ) );
+	}
 }

@@ -149,4 +149,59 @@ final class BlockRenderTest extends TestCase {
 			$this->assertSame( array( 'class' => '', 'rules' => array() ), $result );
 		}
 	}
+
+	/**
+	 * Typed properties validate with their type, and a pseudo-state property
+	 * gets a `:hover` selector and the important flag — the Text block's hover
+	 * colours depend on both.
+	 *
+	 * @return void
+	 */
+	public function test_responsive_typed_and_hover_properties() {
+		$result = Block_Render::responsive(
+			array(
+				'zealblocks' => array(
+					'textShadowX' => '-2px',
+					'textHover'   => '#f00',
+				),
+				'@mobile'    => array( 'zealblocks' => array( 'textHover' => 'url(x)' ) ),
+			),
+			'zealblocks',
+			array(
+				'textShadowX' => array( '--zealblocks-text-shadow-x', 'signed-length' ),
+				'textHover'   => array( 'color', 'color', ':hover' ),
+			),
+			'zealblocks-text-'
+		);
+
+		$this->assertCount( 2, $result['rules'], 'the unsafe mobile colour is dropped' );
+
+		list( $shadow, $hover ) = $result['rules'];
+
+		$this->assertSame( '.' . $result['class'], $shadow['selector'] );
+		$this->assertSame( array( '--zealblocks-text-shadow-x' => '-2px' ), $shadow['declarations'] );
+		$this->assertArrayNotHasKey( 'important', $shadow, 'only pseudo-state rules are important' );
+
+		$this->assertSame( '.' . $result['class'] . ':hover', $hover['selector'] );
+		$this->assertSame( array( 'color' => '#f00' ), $hover['declarations'] );
+		$this->assertTrue( $hover['important'] );
+	}
+
+	/**
+	 * Only `:hover` is accepted as a pseudo-state; anything else would be
+	 * concatenated into a selector.
+	 *
+	 * @return void
+	 */
+	public function test_responsive_refuses_unknown_pseudo_states() {
+		$result = Block_Render::responsive(
+			array( 'zealblocks' => array( 'c' => '#fff' ) ),
+			'zealblocks',
+			array( 'c' => array( 'color', 'color', ' , body { x' ) ),
+			'zealblocks-'
+		);
+
+		$this->assertSame( '.' . $result['class'], $result['rules'][0]['selector'] );
+		$this->assertArrayNotHasKey( 'important', $result['rules'][0] );
+	}
 }

@@ -33,3 +33,323 @@ export const STYLE_PRESETS = [
 	{ value: 'caption', label: __( 'Caption', 'zealblocks' ) },
 	{ value: 'eyebrow', label: __( 'Eyebrow', 'zealblocks' ) },
 ];
+
+/**
+ * HTML tags the block may render as, grouped for the picker.
+ *
+ * MUST match the enum in block.json and the allow-list in render.php. The tag
+ * lands in an element position on the front end, so render.php's list is the
+ * security boundary; this one only decides what the picker offers.
+ *
+ * Spectra's list. Some of these are only valid inside a particular parent —
+ * `li` in a list, `dt`/`dd` in a `dl`, `summary` in `details`, `caption` in a
+ * table, `legend` in a fieldset — which is why they sit in their own group.
+ */
+export const TAG_GROUPS = [
+	{
+		label: __( 'Common', 'zealblocks' ),
+		options: [
+			{ value: 'p', label: __( 'Paragraph', 'zealblocks' ) },
+			{ value: 'h1', label: __( 'Heading 1', 'zealblocks' ) },
+			{ value: 'h2', label: __( 'Heading 2', 'zealblocks' ) },
+			{ value: 'h3', label: __( 'Heading 3', 'zealblocks' ) },
+			{ value: 'h4', label: __( 'Heading 4', 'zealblocks' ) },
+			{ value: 'h5', label: __( 'Heading 5', 'zealblocks' ) },
+			{ value: 'h6', label: __( 'Heading 6', 'zealblocks' ) },
+			{ value: 'div', label: __( 'Div', 'zealblocks' ) },
+			{ value: 'span', label: __( 'Span', 'zealblocks' ) },
+			{ value: 'blockquote', label: __( 'Blockquote', 'zealblocks' ) },
+		],
+	},
+	{
+		label: __( 'Semantic', 'zealblocks' ),
+		options: [
+			{ value: 'address', label: __( 'Address', 'zealblocks' ) },
+			{ value: 'cite', label: __( 'Cite', 'zealblocks' ) },
+			{ value: 'time', label: __( 'Time', 'zealblocks' ) },
+			{ value: 'label', label: __( 'Label', 'zealblocks' ) },
+			{ value: 'figcaption', label: __( 'Figcaption', 'zealblocks' ) },
+			{ value: 'pre', label: __( 'Pre', 'zealblocks' ) },
+		],
+	},
+	{
+		label: __( 'Inline', 'zealblocks' ),
+		options: [
+			{ value: 'strong', label: __( 'Strong', 'zealblocks' ) },
+			{ value: 'em', label: __( 'Em', 'zealblocks' ) },
+			{ value: 'small', label: __( 'Small', 'zealblocks' ) },
+			{ value: 'mark', label: __( 'Mark', 'zealblocks' ) },
+			{ value: 'del', label: __( 'Del', 'zealblocks' ) },
+			{ value: 'ins', label: __( 'Ins', 'zealblocks' ) },
+			{ value: 'sub', label: __( 'Sub', 'zealblocks' ) },
+			{ value: 'sup', label: __( 'Sup', 'zealblocks' ) },
+			{ value: 'abbr', label: __( 'Abbr', 'zealblocks' ) },
+			{ value: 'code', label: __( 'Code', 'zealblocks' ) },
+			{ value: 'kbd', label: __( 'Kbd', 'zealblocks' ) },
+			{ value: 'samp', label: __( 'Samp', 'zealblocks' ) },
+			{ value: 'var', label: __( 'Var', 'zealblocks' ) },
+			{ value: 'output', label: __( 'Output', 'zealblocks' ) },
+			{ value: 'q', label: __( 'Q', 'zealblocks' ) },
+			{ value: 's', label: __( 'S', 'zealblocks' ) },
+			{ value: 'dfn', label: __( 'Dfn', 'zealblocks' ) },
+			{ value: 'bdi', label: __( 'Bdi', 'zealblocks' ) },
+			{ value: 'bdo', label: __( 'Bdo', 'zealblocks' ) },
+		],
+	},
+	{
+		label: __( 'Needs a specific parent', 'zealblocks' ),
+		options: [
+			{ value: 'li', label: __( 'LI', 'zealblocks' ) },
+			{ value: 'dt', label: __( 'DT', 'zealblocks' ) },
+			{ value: 'dd', label: __( 'DD', 'zealblocks' ) },
+			{ value: 'summary', label: __( 'Summary', 'zealblocks' ) },
+			{ value: 'caption', label: __( 'Caption', 'zealblocks' ) },
+			{ value: 'legend', label: __( 'Legend', 'zealblocks' ) },
+		],
+	},
+];
+
+/**
+ * The common tags only — what the toolbar menu offers. The full list is in
+ * the Settings panel; 41 entries in a toolbar dropdown would bury the ten
+ * anyone picks from there.
+ */
+export const TAG_OPTIONS = TAG_GROUPS[ 0 ].options;
+
+/**
+ * Every tag, flat.
+ */
+export const ALL_TAGS = TAG_GROUPS.flatMap( ( group ) =>
+	group.options.map( ( option ) => option.value )
+);
+
+export const DEFAULT_TAG = 'p';
+
+/**
+ * Tags a drop cap works on. `::first-letter` has no effect on an inline
+ * element, so span is excluded. Mirrors render.php.
+ */
+export const DROP_CAP_TAGS = [ 'p', 'div', 'blockquote' ];
+
+/**
+ * Keys under `style.zealblocks`, one per per-viewport value.
+ *
+ * Stored in core's viewport-state shape, exactly like the Button's width — see
+ * src/button/responsive-width/constants.js for why.
+ */
+export const KEYS = {
+	columnGap: 'columnGap',
+	shadowX: 'textShadowX',
+	shadowY: 'textShadowY',
+	shadowBlur: 'textShadowBlur',
+	shadowColor: 'textShadowColor',
+	textHover: 'textHover',
+	backgroundHover: 'backgroundHover',
+	hoverDuration: 'hoverDuration',
+	zIndex: 'zIndex',
+	position: 'position',
+	top: 'positionTop',
+	right: 'positionRight',
+	bottom: 'positionBottom',
+	left: 'positionLeft',
+	overflow: 'overflow',
+};
+
+export const OFFSET_KEYS = [ KEYS.top, KEYS.right, KEYS.bottom, KEYS.left ];
+
+export const POSITION_KEYS = [ KEYS.position, ...OFFSET_KEYS, KEYS.overflow ];
+
+export const SHADOW_KEYS = [
+	KEYS.shadowX,
+	KEYS.shadowY,
+	KEYS.shadowBlur,
+	KEYS.shadowColor,
+];
+
+export const HOVER_KEYS = [
+	KEYS.textHover,
+	KEYS.backgroundHover,
+	KEYS.hoverDuration,
+];
+
+/**
+ * What a shadow starts as when one is first added.
+ *
+ * The stylesheet's own fallbacks draw nothing, deliberately (see style.scss),
+ * so without seeding, picking only a colour would produce an invisible shadow.
+ * These are Spectra's "subtle" values.
+ */
+export const SHADOW_DEFAULTS = {
+	[ KEYS.shadowX ]: '1px',
+	[ KEYS.shadowY ]: '1px',
+	[ KEYS.shadowBlur ]: '2px',
+	[ KEYS.shadowColor ]: 'rgba(0, 0, 0, 0.3)',
+};
+
+/**
+ * Custom properties the root carries. render.php writes the same names.
+ */
+export const CSS_VARS = {
+	[ KEYS.shadowX ]: '--zealblocks-text-shadow-x',
+	[ KEYS.shadowY ]: '--zealblocks-text-shadow-y',
+	[ KEYS.shadowBlur ]: '--zealblocks-text-shadow-blur',
+	[ KEYS.shadowColor ]: '--zealblocks-text-shadow-color',
+	[ KEYS.hoverDuration ]: '--zealblocks-text-hover-duration',
+	// Editor only: the front end emits real `:hover` rules instead.
+	[ KEYS.textHover ]: '--zealblocks-text-hover-color',
+	[ KEYS.backgroundHover ]: '--zealblocks-text-hover-background',
+};
+
+/**
+ * Units for column gap. Each must pass Responsive_Styles::is_safe_length().
+ */
+export const GAP_UNITS = [ 'px', 'em', 'rem', '%', 'vw' ];
+
+/**
+ * Units for position offsets. Each must pass is_safe_length( $v, true ).
+ */
+export const OFFSET_UNITS = [ 'px', '%', 'em', 'rem', 'vw', 'vh' ];
+
+/**
+ * Position types. Mirrors Responsive_Styles::KEYWORDS — sticky is core's own
+ * position support, and leaving the value unset means static.
+ */
+export const POSITION_OPTIONS = [
+	{ value: '', label: __( 'Default', 'zealblocks' ) },
+	{ value: 'relative', label: __( 'Relative', 'zealblocks' ) },
+	{ value: 'absolute', label: __( 'Absolute', 'zealblocks' ) },
+	{ value: 'fixed', label: __( 'Fixed', 'zealblocks' ) },
+];
+
+export const OVERFLOW_OPTIONS = [
+	{ value: '', label: __( 'Default', 'zealblocks' ) },
+	{ value: 'visible', label: __( 'Visible', 'zealblocks' ) },
+	{ value: 'hidden', label: __( 'Hidden', 'zealblocks' ) },
+	{ value: 'auto', label: __( 'Auto (scroll when needed)', 'zealblocks' ) },
+	{ value: 'clip', label: __( 'Clip', 'zealblocks' ) },
+];
+
+export const Z_INDEX_RANGE = { min: -100, max: 1000 };
+
+/**
+ * Entrance animations, grouped for the picker. MUST match render.php's list
+ * and the start states in style.scss.
+ */
+export const ANIMATION_GROUPS = [
+	{
+		label: __( 'Fade', 'zealblocks' ),
+		options: [
+			{ value: 'fade', label: __( 'Fade', 'zealblocks' ) },
+			{ value: 'fade-up', label: __( 'Fade up', 'zealblocks' ) },
+			{ value: 'fade-down', label: __( 'Fade down', 'zealblocks' ) },
+			{ value: 'fade-left', label: __( 'Fade left', 'zealblocks' ) },
+			{ value: 'fade-right', label: __( 'Fade right', 'zealblocks' ) },
+		],
+	},
+	{
+		label: __( 'Flip', 'zealblocks' ),
+		options: [
+			{ value: 'flip-up', label: __( 'Flip up', 'zealblocks' ) },
+			{ value: 'flip-down', label: __( 'Flip down', 'zealblocks' ) },
+			{ value: 'flip-left', label: __( 'Flip left', 'zealblocks' ) },
+			{ value: 'flip-right', label: __( 'Flip right', 'zealblocks' ) },
+		],
+	},
+	{
+		label: __( 'Slide', 'zealblocks' ),
+		options: [
+			{ value: 'slide-up', label: __( 'Slide up', 'zealblocks' ) },
+			{ value: 'slide-down', label: __( 'Slide down', 'zealblocks' ) },
+			{ value: 'slide-left', label: __( 'Slide left', 'zealblocks' ) },
+			{ value: 'slide-right', label: __( 'Slide right', 'zealblocks' ) },
+		],
+	},
+	{
+		label: __( 'Zoom in', 'zealblocks' ),
+		options: [
+			{ value: 'zoom-in', label: __( 'Zoom in', 'zealblocks' ) },
+			{ value: 'zoom-in-up', label: __( 'Zoom in up', 'zealblocks' ) },
+			{
+				value: 'zoom-in-down',
+				label: __( 'Zoom in down', 'zealblocks' ),
+			},
+			{
+				value: 'zoom-in-left',
+				label: __( 'Zoom in left', 'zealblocks' ),
+			},
+			{
+				value: 'zoom-in-right',
+				label: __( 'Zoom in right', 'zealblocks' ),
+			},
+		],
+	},
+	{
+		label: __( 'Zoom out', 'zealblocks' ),
+		options: [
+			{ value: 'zoom-out', label: __( 'Zoom out', 'zealblocks' ) },
+			{ value: 'zoom-out-up', label: __( 'Zoom out up', 'zealblocks' ) },
+			{
+				value: 'zoom-out-down',
+				label: __( 'Zoom out down', 'zealblocks' ),
+			},
+			{
+				value: 'zoom-out-left',
+				label: __( 'Zoom out left', 'zealblocks' ),
+			},
+			{
+				value: 'zoom-out-right',
+				label: __( 'Zoom out right', 'zealblocks' ),
+			},
+		],
+	},
+];
+
+export const EASING_OPTIONS = [
+	{ value: 'ease', label: __( 'Ease', 'zealblocks' ) },
+	{ value: 'ease-in', label: __( 'Ease in', 'zealblocks' ) },
+	{ value: 'ease-out', label: __( 'Ease out', 'zealblocks' ) },
+	{ value: 'ease-in-out', label: __( 'Ease in-out', 'zealblocks' ) },
+	{ value: 'linear', label: __( 'Linear', 'zealblocks' ) },
+];
+
+export const ANIMATION_DEFAULTS = {
+	animationType: '',
+	animationDuration: 400,
+	animationDelay: 0,
+	animationEasing: 'ease',
+	animationRepeat: false,
+};
+
+/**
+ * Display condition choices. Values MUST match Display_Conditions::BROWSERS,
+ * ::SYSTEMS and ::DAYS.
+ */
+export const BROWSER_OPTIONS = [
+	{ value: '', label: __( 'None', 'zealblocks' ) },
+	{ value: 'chrome', label: 'Chrome' },
+	{ value: 'firefox', label: 'Firefox' },
+	{ value: 'safari', label: 'Safari' },
+	{ value: 'edge', label: 'Edge' },
+	{ value: 'opera', label: 'Opera' },
+];
+
+export const OS_OPTIONS = [
+	{ value: '', label: __( 'None', 'zealblocks' ) },
+	{ value: 'ios', label: 'iOS' },
+	{ value: 'android', label: 'Android' },
+	{ value: 'windows', label: 'Windows' },
+	{ value: 'mac_os', label: 'macOS' },
+	{ value: 'linux', label: 'Linux' },
+	{ value: 'open_bsd', label: 'OpenBSD' },
+	{ value: 'sun_os', label: 'SunOS' },
+];
+
+export const DAY_OPTIONS = [
+	{ value: 'monday', label: __( 'Monday', 'zealblocks' ) },
+	{ value: 'tuesday', label: __( 'Tuesday', 'zealblocks' ) },
+	{ value: 'wednesday', label: __( 'Wednesday', 'zealblocks' ) },
+	{ value: 'thursday', label: __( 'Thursday', 'zealblocks' ) },
+	{ value: 'friday', label: __( 'Friday', 'zealblocks' ) },
+	{ value: 'saturday', label: __( 'Saturday', 'zealblocks' ) },
+	{ value: 'sunday', label: __( 'Sunday', 'zealblocks' ) },
+];

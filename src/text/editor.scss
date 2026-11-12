@@ -10,4 +10,45 @@
 	[data-rich-text-placeholder] {
 		opacity: 0.6;
 	}
+
+	/*
+	 * Hover preview.
+	 *
+	 * The front end gets real per-band `:hover` rules from render.php. The
+	 * canvas cannot — it has no stylesheet of ours per instance — so edit.js
+	 * resolves the value for the PREVIEWED device and writes it as a custom
+	 * property, adding the class only when that device has a value. Gating by
+	 * class is what keeps an unresolved variable from resetting the colour on
+	 * hover, the failure render.php avoids by not using variables at all.
+	 */
+	&.has-hover-color:hover {
+		color: var(--zealblocks-text-hover-color) !important;
+	}
+
+	&.has-hover-background:hover {
+		background: var(--zealblocks-text-hover-background) !important;
+	}
+
+	/*
+	 * Animation preview: one play of the front end's keyframes, started by
+	 * edit.js adding the class. Not behind `scripting: enabled` like the
+	 * front end, since the editor always has JavaScript; still skipped under
+	 * reduced motion.
+	 */
+	@media (prefers-reduced-motion: no-preference) {
+
+		&.is-animation-preview {
+			animation: zealblocks-text-enter var(--zealblocks-animation-duration, 400ms) var(--zealblocks-animation-easing, ease) var(--zealblocks-animation-delay, 0ms) both;
+		}
+	}
+
+	/*
+	 * A block with display conditions is shown in the editor, always — hiding
+	 * it would make it impossible to edit. A dashed outline marks that some
+	 * visitors will not see it.
+	 */
+	&.has-display-conditions {
+		outline: 1px dashed currentcolor;
+		outline-offset: 2px;
+	}
 }

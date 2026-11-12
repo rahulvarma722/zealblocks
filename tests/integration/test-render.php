@@ -321,17 +321,229 @@ $check(
 	false === strpos( do_blocks( '<!-- wp:zealblocks/text {"styleAs":"nonsense","content":"X"} /-->' ), 'has-style-' )
 );
 
+// ---------------------------------------------------------------------
+echo "\nText — HTML tag\n";
+// ---------------------------------------------------------------------
 /*
- * A configurable HTML tag is out of scope for now, so the element is fixed.
- * Asserted rather than assumed: if a tag attribute is ever reintroduced, it
- * lands in an ELEMENT POSITION and becomes an XSS boundary, and this check
- * failing is the reminder to validate it against an allow-list.
+ * The tag lands in an ELEMENT POSITION, so it is an XSS boundary. render.php
+ * validates it against an allow-list; these pin that a hostile value falls back
+ * to a paragraph and a listed one is honoured.
  */
 $out = do_blocks( '<!-- wp:zealblocks/text {"tagName":"script","content":"X"} /-->' );
+$check( 'a tag outside the allow-list falls back to <p>', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
 
-$check( 'a stray tagName attribute is ignored entirely', false === stripos( $out, '<script' ) && false !== strpos( $out, '<p' ) );
+$out = do_blocks( '<!-- wp:zealblocks/text {"tagName":"h2","styleAs":"caption","content":"X"} /-->' );
+$check( 'an allowed tag is rendered', 0 === strpos( trim( $out ), '<h2' ) && false !== strpos( $out, '</h2>' ) );
+$check( 'the visual preset still applies on top of the tag', false !== strpos( $out, 'has-style-caption' ) );
 
 // ---------------------------------------------------------------------
+echo "\nText — drop cap\n";
+// ---------------------------------------------------------------------
+$check( 'drop cap class on a paragraph', false !== strpos( do_blocks( '<!-- wp:zealblocks/text {"dropCap":true,"content":"X"} /-->' ), 'has-drop-cap' ) );
+$check( 'no drop cap on a span', false === strpos( do_blocks( '<!-- wp:zealblocks/text {"dropCap":true,"tagName":"span","content":"X"} /-->' ), 'has-drop-cap' ) );
+$check( 'no drop cap on centred text', false === strpos( do_blocks( '<!-- wp:zealblocks/text {"dropCap":true,"style":{"typography":{"textAlign":"center"}},"content":"X"} /-->' ), 'has-drop-cap' ) );
+
+// ---------------------------------------------------------------------
+echo "\nText — per-viewport shadow, gap and hover\n";
+// ---------------------------------------------------------------------
+$out = do_blocks(
+	'<!-- wp:zealblocks/text {"content":"X","style":{"zealblocks":{"columnGap":"2em","textShadowX":"-2px",'
+	. '"textShadowColor":"rgba(0,0,0,0.3)","textHover":"#ff0000","backgroundHover":"linear-gradient(90deg,#000 0%,#fff 100%)"},'
+	. '"@mobile":{"zealblocks":{"textHover":"#00ff00","textShadowColor":"url(x)"}}}} /-->'
+);
+$css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+
+$check( 'scoping class on the text block', 1 === preg_match( '/class="[^"]*\bzealblocks-text-[0-9a-f]{8}\b/', $out ) );
+$check( 'shadow class switched on', false !== strpos( $out, 'has-text-shadow' ) );
+$check( 'hover class switched on', false !== strpos( $out, 'has-hover' ) );
+$check( 'no <style> element in the text output', false === stripos( $out, '<style' ) );
+$check( 'column gap emitted', 1 === preg_match( '/column-gap:\s*2em/', $css ) );
+$check( 'negative shadow offset emitted', false !== strpos( $css, '--zealblocks-text-shadow-x:-2px' ) || false !== strpos( $css, '--zealblocks-text-shadow-x: -2px' ) );
+$check( 'hover colour is an important :hover rule', 1 === preg_match( '/:hover\{[^}]*color:\s*#ff0000\s*!important/', $css ) );
+$check( 'gradient hover emitted as the background shorthand', 1 === preg_match( '/background:\s*linear-gradient\(90deg,#000 0%,#fff 100%\)\s*!important/', $css ) );
+$check( 'mobile hover colour emitted in its band', false !== strpos( $css, '#00ff00' ) );
+$check( 'an unsafe value is dropped, not printed', false === strpos( $css, 'url(x)' ) );
+
+// ---------------------------------------------------------------------
+echo "\nText — extended tags, position and z-index\n";
+// ---------------------------------------------------------------------
+$check( 'figcaption tag accepted', 0 === strpos( trim( do_blocks( '<!-- wp:zealblocks/text {"tagName":"figcaption","content":"X"} /-->' ) ), '<figcaption ' ) );
+$check( 'bdo tag accepted', 0 === strpos( trim( do_blocks( '<!-- wp:zealblocks/text {"tagName":"bdo","content":"X"} /-->' ) ), '<bdo ' ) );
+$check( 'iframe tag refused', 0 === strpos( trim( do_blocks( '<!-- wp:zealblocks/text {"tagName":"iframe","content":"X"} /-->' ) ), '<p ' ) );
+
+$out = do_blocks(
+	'<!-- wp:zealblocks/text {"content":"X","style":{"zealblocks":{"zIndex":"5","position":"absolute","positionTop":"-10px","overflow":"hidden"},'
+	. '"@tablet":{"zealblocks":{"position":"sticky","zIndex":"9;color:red"}}}} /-->'
+);
+$css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+
+$check( 'z-index class on the block', false !== strpos( $out, 'has-zealblocks-z-index' ) );
+$check( 'z-index emitted', 1 === preg_match( '/z-index:\s*5/', $css ) );
+$check( 'position and negative offset emitted', 1 === preg_match( '/position:\s*absolute/', $css ) && 1 === preg_match( '/top:\s*-10px/', $css ) );
+$check( 'overflow emitted', 1 === preg_match( '/overflow:\s*hidden/', $css ) );
+$check( 'sticky refused', false === strpos( $css, 'sticky' ) );
+$check( 'injected z-index refused', false === strpos( $css, 'color:red' ) );
+
+// ---------------------------------------------------------------------
+echo "\nText — entrance animation\n";
+// ---------------------------------------------------------------------
+wp_dequeue_script( 'zealblocks-text-view-script' );
+do_blocks( '<!-- wp:zealblocks/text {"content":"X"} /-->' );
+$check( 'view script NOT loaded for a plain text block', ! wp_script_is( 'zealblocks-text-view-script', 'enqueued' ) );
+$check( 'view script still registered', wp_script_is( 'zealblocks-text-view-script', 'registered' ) );
+
+$out = do_blocks( '<!-- wp:zealblocks/text {"content":"X","animationType":"zoom-in-up","animationDuration":99999,"animationDelay":-5,"animationEasing":"steps(1)","animationRepeat":true} /-->' );
+$check( 'animation data attribute', false !== strpos( $out, 'data-zealblocks-animation="zoom-in-up"' ) );
+$check( 'animation class', false !== strpos( $out, 'has-animation' ) );
+$check( 'duration clamped to 5000ms', false !== strpos( $out, '--zealblocks-animation-duration:5000ms' ) );
+$check( 'delay clamped to 0ms', false !== strpos( $out, '--zealblocks-animation-delay:0ms' ) );
+$check( 'unknown easing falls back to ease', 1 === preg_match( '/--zealblocks-animation-easing:ease[;"]/', $out ) && false === strpos( $out, 'steps' ) );
+$check( 'repeat flag', false !== strpos( $out, 'data-zealblocks-animation-repeat="true"' ) );
+$check( 'view script loaded for an animated block', wp_script_is( 'zealblocks-text-view-script', 'enqueued' ) );
+$check( 'unknown animation type ignored', false === strpos( do_blocks( '<!-- wp:zealblocks/text {"content":"X","animationType":"explode"} /-->' ), 'data-zealblocks-animation' ) );
+
+// ---------------------------------------------------------------------
+echo "\nText — display conditions\n";
+// ---------------------------------------------------------------------
+$check( 'hidden from logged-out visitors', '' === trim( do_blocks( '<!-- wp:zealblocks/text {"content":"Secret","displayConditions":{"hideWhenLoggedOut":true}} /-->' ) ) );
+$check( 'shown to logged-out visitors when only hidden for logged-in', false !== strpos( do_blocks( '<!-- wp:zealblocks/text {"content":"Public","displayConditions":{"hideWhenLoggedIn":true}} /-->' ), 'Public' ) );
+$today = strtolower( current_datetime()->format( 'l' ) );
+$check( 'hidden on today', '' === trim( do_blocks( '<!-- wp:zealblocks/text {"content":"X","displayConditions":{"hideOnDays":["' . $today . '"]}} /-->' ) ) );
+
+// ---------------------------------------------------------------------
+echo "\nText — inline formats survive the front end\n";
+// ---------------------------------------------------------------------
+/*
+ * Every format the Text block's RichText offers, written the way the editor
+ * saves it. The render used to filter through Block_Render::LABEL_HTML, a
+ * button-label list, so links, highlights, kbd, language, underline and inline
+ * images showed in the editor and vanished on the page.
+ *
+ * Serialised from attributes rather than hand-written, so the JSON escaping is
+ * the serializer's, as it is for a real post.
+ */
+$render_text = static function ( $content ) {
+	return do_blocks(
+		serialize_blocks(
+			array(
+				array(
+					'blockName'    => 'zealblocks/text',
+					'attrs'        => array( 'content' => $content ),
+					'innerBlocks'  => array(),
+					'innerHTML'    => '',
+					'innerContent' => array(),
+				),
+			)
+		)
+	);
+};
+
+$formats = $render_text(
+	'A <a href="https://example.org/docs" target="_blank" rel="noreferrer noopener">link</a>'
+	. ' B <mark style="background-color:rgba(0, 0, 0, 0);color:#cf2e2e" class="has-inline-color">red</mark>'
+	. ' C <span style="text-decoration: underline;">under</span>'
+	. ' D <kbd>Ctrl</kbd>'
+	. ' E <bdo lang="fr" dir="ltr">bonjour</bdo>'
+	. ' F <img class="wp-image-7" style="width: 20px;" src="https://example.org/a.png" alt="tiny">'
+	. ' G <math><mi>x</mi></math>'
+	. ' H <strong>b</strong> <em>i</em> <s>s</s> <code>c</code> <sub>2</sub> <sup>3</sup> line<br>break'
+);
+
+$check( 'link kept with its href', false !== strpos( $formats, '<a href="https://example.org/docs"' ) );
+$check( 'link keeps target and rel', false !== strpos( $formats, 'target="_blank"' ) && false !== strpos( $formats, 'rel="noreferrer noopener"' ) );
+$check( 'highlight / inline colour kept with its class', false !== strpos( $formats, '<mark' ) && false !== strpos( $formats, 'class="has-inline-color"' ) );
+$check( 'inline colour value kept', false !== strpos( $formats, 'color:#cf2e2e' ) );
+$check( 'underline kept', false !== strpos( $formats, 'text-decoration: underline' ) );
+$check( 'keyboard input kept', false !== strpos( $formats, '<kbd>Ctrl</kbd>' ) );
+$check( 'language kept with lang and dir', false !== strpos( $formats, '<bdo lang="fr" dir="ltr">' ) );
+$check( 'inline image kept with src and alt', false !== strpos( $formats, 'src="https://example.org/a.png"' ) && false !== strpos( $formats, 'alt="tiny"' ) );
+$check( 'inline image keeps its class and width', false !== strpos( $formats, 'wp-image-7' ) && false !== strpos( $formats, 'width: 20px' ) );
+$check( 'inline math kept', false !== strpos( $formats, '<math><mi>x</mi></math>' ) );
+$check(
+	'bold, italic, strikethrough, code, sub, sup and br still kept',
+	false !== strpos( $formats, '<strong>b</strong>' )
+	&& false !== strpos( $formats, '<em>i</em>' )
+	&& false !== strpos( $formats, '<s>s</s>' )
+	&& false !== strpos( $formats, '<code>c</code>' )
+	&& false !== strpos( $formats, '<sub>2</sub>' )
+	&& false !== strpos( $formats, '<sup>3</sup>' )
+	&& false !== strpos( $formats, '<br' )
+);
+
+$hostile_text = $render_text(
+	'X <script>alert(1)</script>'
+	. ' <a href="javascript:alert(1)">js</a>'
+	. ' <a href="data:text/html;base64,PHNjcmlwdD4=">data</a>'
+	. ' <a href="https://example.org" onclick="alert(1)">click</a>'
+	. ' <img src="https://example.org/b.png" onerror="alert(1)" alt="b">'
+	. ' <iframe src="https://example.org"></iframe>'
+	. ' <mark style="color:red;background:url(javascript:alert(1));width:expression(alert(1));behavior:url(x.htc)">bg</mark>'
+);
+
+$check( 'script element removed from text', false === stripos( $hostile_text, '<script' ) );
+$check( 'javascript: href removed from text', false === stripos( $hostile_text, 'javascript:' ) );
+$check( 'data: href removed from text', false === stripos( $hostile_text, 'data:text' ) );
+$check( 'event handlers removed from text', false === stripos( $hostile_text, 'onclick' ) && false === stripos( $hostile_text, 'onerror' ) );
+$check( 'iframe removed from text', false === stripos( $hostile_text, '<iframe' ) );
+// An https url() in a background is allowed in post content by core, by design;
+// these are the forms it must remove.
+$check(
+	'expression(), behavior and javascript: url() removed from an inline style',
+	false === stripos( $hostile_text, 'expression(' )
+	&& false === stripos( $hostile_text, 'behavior' )
+	&& false === stripos( $hostile_text, 'url(javascript' )
+);
+$check( 'the safe declaration in that style survives', false !== strpos( $hostile_text, 'style="color:red"' ) );
+$check( 'the safe link beside them survives', false !== strpos( $hostile_text, 'href="https://example.org"' ) );
+
+$check(
+	'a block holding only an inline image still renders',
+	false !== strpos( $render_text( '<img src="https://example.org/c.png" alt="only">' ), 'alt="only"' )
+);
+$check(
+	'a block holding only a line break renders nothing',
+	'' === trim( $render_text( '<br>' ) )
+);
+
+/*
+ * The post content always kept the formats; only the render dropped them. So a
+ * post saved before the fix shows them now, with no re-save.
+ */
+$formats_post_id = wp_insert_post(
+	array(
+		'post_title'   => 'Zealblocks integration probe (inline formats)',
+		'post_status'  => 'publish',
+		'post_type'    => 'post',
+		// wp_insert_post() unslashes its input, which would eat the backslashes
+		// in the serializer's < escapes. The editor saves through REST,
+		// which slashes first, so do the same.
+		'post_content' => wp_slash(
+			serialize_blocks(
+				array(
+					array(
+						'blockName'    => 'zealblocks/text',
+						'attrs'        => array( 'content' => 'Read the <a href="https://example.org/guide">guide</a> first.' ),
+						'innerBlocks'  => array(),
+						'innerHTML'    => '',
+						'innerContent' => array(),
+					),
+				)
+			)
+		),
+	)
+);
+
+if ( $formats_post_id && ! is_wp_error( $formats_post_id ) ) {
+	$check(
+		'a saved post shows its link through the_content',
+		false !== strpos( apply_filters( 'the_content', get_post( $formats_post_id )->post_content ), '<a href="https://example.org/guide">guide</a>' )
+	);
+
+	wp_delete_post( $formats_post_id, true );
+} else {
+	$check( 'could create the inline-formats probe post', false );
+}
+
 // ---------------------------------------------------------------------
 echo "\nText — content survives a save/load round trip\n";
 // ---------------------------------------------------------------------
