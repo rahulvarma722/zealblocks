@@ -26,6 +26,7 @@
 namespace Zealblocks\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Zealblocks\Block\Animation;
 
 /**
  * @coversNothing
@@ -235,6 +236,81 @@ final class BlockContractTest extends TestCase {
 				$plugin_version,
 				$block['json']['version'] ?? null,
 				$slug . ' block.json version must match the plugin version'
+			);
+		}
+	}
+
+	/**
+	 * Every block that declares any animation attribute declares all five,
+	 * exactly as Animation::ATTRIBUTES does.
+	 *
+	 * The attributes have to live in each block.json, because that is the
+	 * only place register_block_type() reads them from. This is what keeps
+	 * those copies from drifting, as a second animated block is added.
+	 *
+	 * @return void
+	 */
+	public function test_animated_blocks_declare_the_shared_attributes() {
+		$animated = 0;
+
+		foreach ( self::blocks() as $slug => $block ) {
+			$attributes = isset( $block['json']['attributes'] ) ? $block['json']['attributes'] : array();
+			$declared   = array_intersect_key( $attributes, Animation::ATTRIBUTES );
+
+			if ( ! $declared ) {
+				continue;
+			}
+
+			++$animated;
+
+			foreach ( Animation::ATTRIBUTES as $name => $definition ) {
+				$this->assertSame(
+					$definition,
+					$attributes[ $name ] ?? null,
+					$slug . ' block.json must declare ' . $name . ' exactly as Animation::ATTRIBUTES does'
+				);
+			}
+		}
+
+		$this->assertGreaterThan( 0, $animated, 'no animated block found, so this test checked nothing' );
+	}
+
+	/**
+	 * The animation types, easings and defaults agree across the three places
+	 * that must list them: PHP validation, the editor picker and the SCSS start
+	 * states.
+	 *
+	 * A type in the picker but not in PHP is dropped on save, silently. A type
+	 * in PHP but not in the SCSS map plays with no start state. Neither shows
+	 * up as an error anywhere else.
+	 *
+	 * @return void
+	 */
+	public function test_animation_lists_match_across_php_js_and_scss() {
+		$js   = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/animation/constants.js' );
+		$scss = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/animation/_animation.scss' );
+
+		$section = static function ( $source, $from, $to ) {
+			$start = strpos( $source, $from );
+			$end   = strpos( $source, $to, (int) $start );
+
+			return false === $start || false === $end ? '' : substr( $source, $start, $end - $start );
+		};
+
+		preg_match_all( "/value:\s*'([a-z-]+)'/", $section( $js, 'ANIMATION_GROUPS', 'EASING_OPTIONS' ), $js_types );
+		preg_match_all( "/value:\s*'([a-z-]+)'/", $section( $js, 'EASING_OPTIONS', 'ANIMATION_DEFAULTS' ), $js_easings );
+		preg_match_all( '/"([a-z-]+)":\s*\(/', $section( $scss, '$starts:', ');' ), $scss_types );
+
+		$this->assertSame( Animation::TYPES, $js_types[1], 'constants.js ANIMATION_GROUPS must list Animation::TYPES, in order' );
+		$this->assertSame( Animation::TYPES, $scss_types[1], '_animation.scss $starts must have a key per Animation::TYPES, in order' );
+		$this->assertSame( Animation::EASINGS, $js_easings[1], 'constants.js EASING_OPTIONS must list Animation::EASINGS, in order' );
+
+		foreach ( Animation::ATTRIBUTES as $name => $definition ) {
+			$default = var_export( $definition['default'], true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- builds the JS literal to look for.
+			$this->assertMatchesRegularExpression(
+				'/' . preg_quote( $name, '/' ) . ':\s*' . preg_quote( $default, '/' ) . ',/',
+				$section( $js, 'ANIMATION_DEFAULTS', '};' ),
+				'constants.js ANIMATION_DEFAULTS.' . $name . ' must be ' . $default
 			);
 		}
 	}

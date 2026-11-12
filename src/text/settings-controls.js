@@ -1,17 +1,16 @@
 /**
- * Text — the Animation and Display conditions panels, in the Settings tab.
+ * Text — the Display conditions panel, in the Settings tab.
  *
- * Neither is per viewport, so both are ordinary attributes and ordinary
- * Settings-tab panels. (Per-device hiding is not here: core's block
- * visibility already does it, from the block toolbar.)
+ * Not per viewport, so these are ordinary attributes in an ordinary
+ * Settings-tab panel. (Per-device hiding is not here: core's block visibility
+ * already does it, from the block toolbar. The Animation panel is shared:
+ * src/shared/animation/panel.js.)
  */
 
 import { __ } from '@wordpress/i18n';
 import { InspectorControls } from '@wordpress/block-editor';
 import {
-	Button,
 	CheckboxControl,
-	RangeControl,
 	SelectControl,
 	ToggleControl,
 	BaseControl,
@@ -19,214 +18,13 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 
-import {
-	ANIMATION_GROUPS,
-	ANIMATION_DEFAULTS,
-	EASING_OPTIONS,
-	BROWSER_OPTIONS,
-	OS_OPTIONS,
-	DAY_OPTIONS,
-} from './constants';
+import { BROWSER_OPTIONS, OS_OPTIONS, DAY_OPTIONS } from './constants';
 import { setCondition } from './style-values';
 
 const CACHE_HELP = __(
 	'Checked when the page is generated. With a page cache, every visitor may see the same result.',
 	'zealblocks'
 );
-
-/**
- * A SelectControl whose options are grouped.
- *
- * @param {Object}   props
- * @param {Object[]} props.groups `{ label, options }` groups.
- * @param {string}   [props.none] Label of an ungrouped empty option.
- * @param {Object}   props.rest   Remaining SelectControl props.
- * @return {Element} The control.
- */
-export function GroupedSelect( { groups, none, ...rest } ) {
-	return (
-		<SelectControl
-			__next40pxDefaultSize
-			__nextHasNoMarginBottom
-			{ ...rest }
-		>
-			{ none && <option value="">{ none }</option> }
-			{ groups.map( ( group ) => (
-				<optgroup key={ group.label } label={ group.label }>
-					{ group.options.map( ( option ) => (
-						<option key={ option.value } value={ option.value }>
-							{ option.label }
-						</option>
-					) ) }
-				</optgroup>
-			) ) }
-		</SelectControl>
-	);
-}
-
-/**
- * @param {Object}   props
- * @param {string}   props.clientId      Block client ID.
- * @param {Object}   props.attributes    Block attributes.
- * @param {Function} props.setAttributes Attribute setter.
- * @param {Function} props.onPreview     Replays the animation on the canvas.
- * @return {Element} The panel.
- */
-export function AnimationPanel( {
-	clientId,
-	attributes,
-	setAttributes,
-	onPreview,
-} ) {
-	const {
-		animationType,
-		animationDuration,
-		animationDelay,
-		animationEasing,
-		animationRepeat,
-	} = attributes;
-
-	const has = ( key ) => attributes[ key ] !== ANIMATION_DEFAULTS[ key ];
-	const resetKey = ( key ) => () =>
-		setAttributes( { [ key ]: ANIMATION_DEFAULTS[ key ] } );
-
-	return (
-		<InspectorControls group="settings">
-			<ToolsPanel
-				label={ __( 'Animation', 'zealblocks' ) }
-				resetAll={ () => setAttributes( { ...ANIMATION_DEFAULTS } ) }
-				panelId={ clientId }
-			>
-				<ToolsPanelItem
-					hasValue={ () => !! animationType }
-					label={ __( 'Entrance animation', 'zealblocks' ) }
-					onDeselect={ () =>
-						setAttributes( { ...ANIMATION_DEFAULTS } )
-					}
-					isShownByDefault
-					panelId={ clientId }
-				>
-					<GroupedSelect
-						label={ __( 'Entrance animation', 'zealblocks' ) }
-						value={ animationType }
-						groups={ ANIMATION_GROUPS }
-						none={ __( 'None', 'zealblocks' ) }
-						onChange={ ( next ) =>
-							setAttributes( { animationType: next } )
-						}
-						help={ __(
-							'Plays when the block scrolls into view. Skipped for visitors who prefer reduced motion.',
-							'zealblocks'
-						) }
-					/>
-					{ !! animationType && (
-						<Button
-							variant="secondary"
-							size="compact"
-							onClick={ onPreview }
-							style={ { marginTop: '8px' } }
-						>
-							{ __( 'Preview', 'zealblocks' ) }
-						</Button>
-					) }
-				</ToolsPanelItem>
-
-				{ !! animationType && (
-					<>
-						<ToolsPanelItem
-							hasValue={ () => has( 'animationDuration' ) }
-							label={ __( 'Duration', 'zealblocks' ) }
-							onDeselect={ resetKey( 'animationDuration' ) }
-							isShownByDefault
-							panelId={ clientId }
-						>
-							<RangeControl
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-								label={ __( 'Duration (ms)', 'zealblocks' ) }
-								value={ animationDuration }
-								onChange={ ( next ) =>
-									setAttributes( {
-										animationDuration:
-											next ??
-											ANIMATION_DEFAULTS.animationDuration,
-									} )
-								}
-								min={ 100 }
-								max={ 3000 }
-								step={ 50 }
-							/>
-						</ToolsPanelItem>
-
-						<ToolsPanelItem
-							hasValue={ () => has( 'animationDelay' ) }
-							label={ __( 'Delay', 'zealblocks' ) }
-							onDeselect={ resetKey( 'animationDelay' ) }
-							isShownByDefault
-							panelId={ clientId }
-						>
-							<RangeControl
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-								label={ __( 'Delay (ms)', 'zealblocks' ) }
-								value={ animationDelay }
-								onChange={ ( next ) =>
-									setAttributes( {
-										animationDelay:
-											next ??
-											ANIMATION_DEFAULTS.animationDelay,
-									} )
-								}
-								min={ 0 }
-								max={ 3000 }
-								step={ 50 }
-							/>
-						</ToolsPanelItem>
-
-						<ToolsPanelItem
-							hasValue={ () => has( 'animationEasing' ) }
-							label={ __( 'Easing', 'zealblocks' ) }
-							onDeselect={ resetKey( 'animationEasing' ) }
-							isShownByDefault
-							panelId={ clientId }
-						>
-							<SelectControl
-								__next40pxDefaultSize
-								__nextHasNoMarginBottom
-								label={ __( 'Easing', 'zealblocks' ) }
-								value={ animationEasing }
-								options={ EASING_OPTIONS }
-								onChange={ ( next ) =>
-									setAttributes( { animationEasing: next } )
-								}
-							/>
-						</ToolsPanelItem>
-
-						<ToolsPanelItem
-							hasValue={ () => has( 'animationRepeat' ) }
-							label={ __( 'Repeat', 'zealblocks' ) }
-							onDeselect={ resetKey( 'animationRepeat' ) }
-							isShownByDefault
-							panelId={ clientId }
-						>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={ __(
-									'Play every time it scrolls into view',
-									'zealblocks'
-								) }
-								checked={ !! animationRepeat }
-								onChange={ ( next ) =>
-									setAttributes( { animationRepeat: next } )
-								}
-							/>
-						</ToolsPanelItem>
-					</>
-				) }
-			</ToolsPanel>
-		</InspectorControls>
-	);
-}
 
 /**
  * @param {Object}   props

@@ -17,7 +17,7 @@
  * stronger here would defeat a user setting a font size in the inspector.
  */
 
-@use "sass:list";
+@use "../shared/animation/animation";
 
 /*
  * Fallback sizes, hoisted so each font-size declaration stays on one readable
@@ -199,78 +199,11 @@ $fallback-h3: clamp(1.5rem, 2.5vw, 1.875rem);
 	&:where(.has-zealblocks-z-index) {
 		position: relative;
 	}
-
-	/*
-	 * Entrance animation.
-	 *
-	 * Before view.js adds `is-animated`, the block is transparent and nothing
-	 * else: it is NOT moved, because the observer measures the transformed box
-	 * and a block parked off-screen would never be seen to enter. The movement
-	 * is all in the keyframes, from the type's start state to rest.
-	 *
-	 * Both halves sit behind `scripting: enabled` and no reduced-motion
-	 * preference, so text is never hidden for a visitor without JavaScript and
-	 * never moves for one who asked it not to.
-	 */
-	@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-
-		&.has-animation:not(.is-animated) {
-			opacity: 0;
-		}
-
-		&.has-animation.is-animated {
-			animation: zealblocks-text-enter var(--zealblocks-animation-duration, 400ms) var(--zealblocks-animation-easing, ease) var(--zealblocks-animation-delay, 0ms) both;
-		}
-	}
 }
 
 /*
- * Start state per type, as two custom properties the keyframes read. The
- * values are AOS's, which Spectra uses, so an animation looks the same moved
- * across. Flips and slides keep full opacity there too.
+ * Entrance animation: hidden start, play, start states and keyframes, scoped to
+ * this block. Shared with every animated block; see
+ * src/shared/animation/_animation.scss.
  */
-$animation-starts: (
-	"fade": (0, none),
-	"fade-up": (0, translate3d(0, 100px, 0)),
-	"fade-down": (0, translate3d(0, -100px, 0)),
-	"fade-left": (0, translate3d(100px, 0, 0)),
-	"fade-right": (0, translate3d(-100px, 0, 0)),
-	"flip-up": (1, perspective(2500px) rotateX(-100deg)),
-	"flip-down": (1, perspective(2500px) rotateX(100deg)),
-	"flip-left": (1, perspective(2500px) rotateY(-100deg)),
-	"flip-right": (1, perspective(2500px) rotateY(100deg)),
-	"slide-up": (1, translate3d(0, 100%, 0)),
-	"slide-down": (1, translate3d(0, -100%, 0)),
-	"slide-left": (1, translate3d(100%, 0, 0)),
-	"slide-right": (1, translate3d(-100%, 0, 0)),
-	"zoom-in": (0, scale(0.6)),
-	"zoom-in-up": (0, translate3d(0, 100px, 0) scale(0.6)),
-	"zoom-in-down": (0, translate3d(0, -100px, 0) scale(0.6)),
-	"zoom-in-left": (0, translate3d(100px, 0, 0) scale(0.6)),
-	"zoom-in-right": (0, translate3d(-100px, 0, 0) scale(0.6)),
-	"zoom-out": (0, scale(1.2)),
-	"zoom-out-up": (0, translate3d(0, 100px, 0) scale(1.2)),
-	"zoom-out-down": (0, translate3d(0, -100px, 0) scale(1.2)),
-	"zoom-out-left": (0, translate3d(100px, 0, 0) scale(1.2)),
-	"zoom-out-right": (0, translate3d(-100px, 0, 0) scale(1.2)),
-);
-
-@each $type, $start in $animation-starts {
-	.wp-block-zealblocks-text[data-zealblocks-animation="#{$type}"] {
-		--zealblocks-animation-from-opacity: #{list.nth($start, 1)};
-		--zealblocks-animation-from: #{list.nth($start, 2)};
-	}
-}
-
-@keyframes zealblocks-text-enter {
-
-	from {
-		opacity: var(--zealblocks-animation-from-opacity, 0);
-		transform: var(--zealblocks-animation-from, none);
-	}
-
-	to {
-		opacity: 1;
-		transform: none;
-	}
-}
+@include animation.front(".wp-block-zealblocks-text");

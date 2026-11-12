@@ -36,6 +36,7 @@ block API.** Not code that merely gets used by blocks.
 |---|---|---|
 | `Block\Registrar` | yes | `register_block_type()`, `block_categories_all`, script translations |
 | `Block\Render` | yes | Render-template plumbing — `get_block_wrapper_attributes()`, attributes |
+| `Block\Animation` | yes | Block wrapper markup and the view script for entrance animation ([animation.md](animation.md)) |
 | `Responsive_Styles` | no | Generates CSS. Knows nothing about the block API |
 | `Helper` | no | Environment queries |
 | `Plugin`, `Autoloader`, `Module` | no | Plugin infrastructure |
@@ -55,6 +56,7 @@ Zealblocks\Plugin              includes/class-plugin.php
 Zealblocks\Helper              includes/class-helper.php
 Zealblocks\Block\Registrar     includes/block/class-registrar.php
 Zealblocks\Block\Render        includes/block/class-render.php
+Zealblocks\Block\Animation     includes/block/class-animation.php
 Zealblocks\Responsive_Styles   includes/class-responsive-styles.php
 ```
 

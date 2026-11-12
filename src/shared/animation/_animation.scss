@@ -1,0 +1,121 @@
+/**
+ * Entrance animation, shared by every block that opts in.
+ *
+ * Mixins rather than a stylesheet of their own, so the rules ship INSIDE each
+ * animated block's style-index.css and load wherever and whenever that does.
+ * A separate file enqueued at render time would print in the footer on a
+ * classic theme, after an above-the-fold block had already been seen, and the
+ * block would vanish and then animate in.
+ *
+ *   @use "../shared/animation/animation";
+ *   @include animation.front(".wp-block-zealblocks-text");    // style.scss
+ *   @include animation.preview(".wp-block-zealblocks-text");  // editor.scss
+ *
+ * Both take the block's root selector, so every rule is scoped to that block
+ * and two blocks including them cannot collide.
+ */
+
+@use "sass:list";
+
+/*
+ * Start state per type, as two custom properties the keyframes read. The
+ * values are AOS's, which Spectra uses, so an animation looks the same moved
+ * across. Flips and slides keep full opacity there too.
+ *
+ * The keys MUST match Animation::TYPES; BlockContractTest compares them.
+ */
+$starts: (
+	"fade": (0, none),
+	"fade-up": (0, translate3d(0, 100px, 0)),
+	"fade-down": (0, translate3d(0, -100px, 0)),
+	"fade-left": (0, translate3d(100px, 0, 0)),
+	"fade-right": (0, translate3d(-100px, 0, 0)),
+	"flip-up": (1, perspective(2500px) rotateX(-100deg)),
+	"flip-down": (1, perspective(2500px) rotateX(100deg)),
+	"flip-left": (1, perspective(2500px) rotateY(-100deg)),
+	"flip-right": (1, perspective(2500px) rotateY(100deg)),
+	"slide-up": (1, translate3d(0, 100%, 0)),
+	"slide-down": (1, translate3d(0, -100%, 0)),
+	"slide-left": (1, translate3d(100%, 0, 0)),
+	"slide-right": (1, translate3d(-100%, 0, 0)),
+	"zoom-in": (0, scale(0.6)),
+	"zoom-in-up": (0, translate3d(0, 100px, 0) scale(0.6)),
+	"zoom-in-down": (0, translate3d(0, -100px, 0) scale(0.6)),
+	"zoom-in-left": (0, translate3d(100px, 0, 0) scale(0.6)),
+	"zoom-in-right": (0, translate3d(-100px, 0, 0) scale(0.6)),
+	"zoom-out": (0, scale(1.2)),
+	"zoom-out-up": (0, translate3d(0, 100px, 0) scale(1.2)),
+	"zoom-out-down": (0, translate3d(0, -100px, 0) scale(1.2)),
+	"zoom-out-left": (0, translate3d(100px, 0, 0) scale(1.2)),
+	"zoom-out-right": (0, translate3d(-100px, 0, 0) scale(1.2)),
+);
+
+$play: zealblocks-animation-enter var(--zealblocks-animation-duration, 400ms) var(--zealblocks-animation-easing, ease) var(--zealblocks-animation-delay, 0ms) both;
+
+/**
+ * Front end and editor canvas: the hidden start, the play, the start states and
+ * the keyframes. For a block's style.scss, at the root.
+ *
+ * Before view.js adds `is-animated`, the block is transparent and nothing
+ * else: it is NOT moved, because the observer measures the transformed box and
+ * a block parked off-screen would never be seen to enter. The movement is all
+ * in the keyframes, from the type's start state to rest.
+ *
+ * Both halves sit behind `scripting: enabled` and no reduced-motion
+ * preference, so a block is never hidden for a visitor without JavaScript and
+ * never moves for one who asked it not to.
+ */
+@mixin front($block) {
+
+	@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+
+		#{$block}.has-animation:not(.is-animated) {
+			opacity: 0;
+		}
+
+		#{$block}.has-animation.is-animated {
+			animation: $play;
+		}
+	}
+
+	@each $type, $start in $starts {
+		#{$block}[data-zealblocks-animation="#{$type}"] {
+			--zealblocks-animation-from-opacity: #{list.nth($start, 1)};
+			--zealblocks-animation-from: #{list.nth($start, 2)};
+		}
+	}
+
+	/*
+	 * Identical in every stylesheet that includes this mixin, so a page loading
+	 * several of them gets the same keyframes whichever wins.
+	 */
+	@keyframes zealblocks-animation-enter {
+
+		from {
+			opacity: var(--zealblocks-animation-from-opacity, 0);
+			transform: var(--zealblocks-animation-from, none);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+}
+
+/**
+ * Editor only: one play of the same keyframes, started by the
+ * `is-animation-preview` class useAnimationPreview() adds. Not behind
+ * `scripting: enabled` like the front end, since the editor always has
+ * JavaScript; still skipped under reduced motion. For a block's editor.scss,
+ * at the root.
+ */
+@mixin preview($block) {
+
+	@media (prefers-reduced-motion: no-preference) {
+
+		#{$block}.is-animation-preview {
+			animation: $play;
+		}
+	}
+}

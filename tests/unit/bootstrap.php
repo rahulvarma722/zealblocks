@@ -84,6 +84,19 @@ if ( ! function_exists( 'wp_get_global_settings' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_enqueue_script' ) ) {
+	/**
+	 * Stub: records the handle, so a test can assert what a render would load.
+	 * Whether WordPress then prints it is the integration suite's business.
+	 *
+	 * @param string $handle Script handle.
+	 * @return void
+	 */
+	function wp_enqueue_script( $handle ) {
+		$GLOBALS['enqueued_scripts'][] = $handle;
+	}
+}
+
 require_once ZEALBLOCKS_PATH . 'includes/class-autoloader.php';
 
 Zealblocks\Autoloader::register();

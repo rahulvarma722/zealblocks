@@ -5,6 +5,8 @@
  * affordances belong here.
  */
 
+@use "../shared/animation/animation";
+
 .wp-block-zealblocks-text {
 
 	[data-rich-text-placeholder] {
@@ -30,19 +32,6 @@
 	}
 
 	/*
-	 * Animation preview: one play of the front end's keyframes, started by
-	 * edit.js adding the class. Not behind `scripting: enabled` like the
-	 * front end, since the editor always has JavaScript; still skipped under
-	 * reduced motion.
-	 */
-	@media (prefers-reduced-motion: no-preference) {
-
-		&.is-animation-preview {
-			animation: zealblocks-text-enter var(--zealblocks-animation-duration, 400ms) var(--zealblocks-animation-easing, ease) var(--zealblocks-animation-delay, 0ms) both;
-		}
-	}
-
-	/*
 	 * A block with display conditions is shown in the editor, always — hiding
 	 * it would make it impossible to edit. A dashed outline marks that some
 	 * visitors will not see it.
@@ -52,3 +41,9 @@
 		outline-offset: 2px;
 	}
 }
+
+/*
+ * Animation preview: one play of the front end's keyframes, started by
+ * useAnimationPreview(). See src/shared/animation/_animation.scss.
+ */
+@include animation.preview(".wp-block-zealblocks-text");

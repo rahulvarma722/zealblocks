@@ -1,10 +1,10 @@
 /**
- * Text — entrance animations on the front end.
+ * Entrance animations on the front end, for every block that opts in.
  *
- * Loaded only on pages with an animated Text block (render.php enqueues it;
- * see Registrar::ON_DEMAND_VIEW_SCRIPTS). Adds `is-animated` when a block
- * scrolls into view; style.scss does the rest with a keyframe animation, so
- * this file holds no animation logic of its own.
+ * One script for all block types, loaded only on pages with an animated block
+ * (Zealblocks\Block\Animation::wrapper() enqueues it). Adds `is-animated` when
+ * a block scrolls into view; _animation.scss does the rest with a keyframe
+ * animation, so this file holds no animation logic of its own.
  *
  * Before it plays, a block is only transparent — never moved. The movement
  * lives in the keyframes, because the observer measures the TRANSFORMED box:
@@ -12,11 +12,15 @@
  * would stay hidden for good.
  *
  * The start state is hidden by CSS only under `@media (scripting: enabled)`,
- * so with JavaScript off the text is simply visible. Under reduced motion the
+ * so with JavaScript off the block is simply visible. Under reduced motion the
  * CSS never hides it and this script does nothing.
+ *
+ * The data attribute alone is the selector: it is namespaced, and only
+ * Animation::wrapper() writes it, so it matches exactly the animated blocks of
+ * every type.
  */
 
-const SELECTOR = '.wp-block-zealblocks-text[data-zealblocks-animation]';
+const SELECTOR = '[data-zealblocks-animation]';
 
 function init() {
 	const blocks = document.querySelectorAll( SELECTOR );

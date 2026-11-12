@@ -7,6 +7,7 @@
 
 namespace Zealblocks;
 
+use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Registrar;
 use Zealblocks\Icon_Handler\Editor_Provider as Icon_Editor_Provider;
@@ -38,6 +39,7 @@ final class Plugin {
 		Icon_Rest::class,
 		Registrar::class,
 		Display_Conditions::class,
+		Animation::class,
 	);
 
 	/**

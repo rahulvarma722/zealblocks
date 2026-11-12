@@ -385,12 +385,23 @@ $check( 'sticky refused', false === strpos( $css, 'sticky' ) );
 $check( 'injected z-index refused', false === strpos( $css, 'color:red' ) );
 
 // ---------------------------------------------------------------------
-echo "\nText — entrance animation\n";
+echo "\nText — entrance animation (shared Animation module)\n";
 // ---------------------------------------------------------------------
-wp_dequeue_script( 'zealblocks-text-view-script' );
+$animation_handle = Zealblocks\Block\Animation::handle();
+$text_type        = WP_Block_Type_Registry::get_instance()->get_registered( 'zealblocks/text' );
+
+$check( 'animation script registered under the shared handle', wp_script_is( $animation_handle, 'registered' ) );
+$check(
+	'animation script points at the built shared file',
+	false !== strpos( (string) wp_scripts()->registered[ $animation_handle ]->src, 'build/shared/animation-view.js' )
+	&& is_readable( Zealblocks\Helper::path( Zealblocks\Block\Animation::SCRIPT ) )
+);
+$check( 'animation script is deferred', 'defer' === ( wp_scripts()->registered[ $animation_handle ]->extra['strategy'] ?? '' ) );
+$check( 'Text has no view script of its own any more', $text_type && empty( $text_type->view_script_handles ) );
+
+wp_dequeue_script( $animation_handle );
 do_blocks( '<!-- wp:zealblocks/text {"content":"X"} /-->' );
-$check( 'view script NOT loaded for a plain text block', ! wp_script_is( 'zealblocks-text-view-script', 'enqueued' ) );
-$check( 'view script still registered', wp_script_is( 'zealblocks-text-view-script', 'registered' ) );
+$check( 'view script NOT loaded for a plain text block', ! wp_script_is( $animation_handle, 'enqueued' ) );
 
 $out = do_blocks( '<!-- wp:zealblocks/text {"content":"X","animationType":"zoom-in-up","animationDuration":99999,"animationDelay":-5,"animationEasing":"steps(1)","animationRepeat":true} /-->' );
 $check( 'animation data attribute', false !== strpos( $out, 'data-zealblocks-animation="zoom-in-up"' ) );
@@ -399,7 +410,7 @@ $check( 'duration clamped to 5000ms', false !== strpos( $out, '--zealblocks-anim
 $check( 'delay clamped to 0ms', false !== strpos( $out, '--zealblocks-animation-delay:0ms' ) );
 $check( 'unknown easing falls back to ease', 1 === preg_match( '/--zealblocks-animation-easing:ease[;"]/', $out ) && false === strpos( $out, 'steps' ) );
 $check( 'repeat flag', false !== strpos( $out, 'data-zealblocks-animation-repeat="true"' ) );
-$check( 'view script loaded for an animated block', wp_script_is( 'zealblocks-text-view-script', 'enqueued' ) );
+$check( 'view script loaded for an animated block', wp_script_is( $animation_handle, 'enqueued' ) );
 $check( 'unknown animation type ignored', false === strpos( do_blocks( '<!-- wp:zealblocks/text {"content":"X","animationType":"explode"} /-->' ), 'data-zealblocks-animation' ) );
 
 // ---------------------------------------------------------------------

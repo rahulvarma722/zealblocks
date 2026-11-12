@@ -157,6 +157,13 @@ fi
 # reason it was about to fix itself.
 [[ -d "build" ]] || die "build/ is missing and could not be generated. Run 'npm run build' — blocks are registered from build/, so the plugin does nothing without it."
 for d in build/*/; do
+	# build/shared/ is not a block: it holds what several blocks use (the
+	# animation view script, a webpack entry of its own). Checked for that
+	# instead, since without it an animated block stays transparent forever.
+	if [[ "$d" == "build/shared/" ]]; then
+		[[ -f "build/shared/animation-view.js" ]] || die "build/shared/animation-view.js is missing; animated blocks would never appear."
+		continue
+	fi
 	[[ -f "${d}block.json" ]] || die "${d} has no block.json; the build looks incomplete."
 done
 BLOCK_COUNT=$( find build -mindepth 2 -maxdepth 2 -name block.json | wc -l | tr -d ' ' )

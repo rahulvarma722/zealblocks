@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * closure in wp-includes/blocks.php, which is global scope, and the alias still
  * applies here.
  */
+use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Render as Block_Render;
 
@@ -211,73 +212,13 @@ $style_as = Block_Render::one_of(
 );
 
 /*
- * Entrance animation.
- *
- * The type is a data attribute that style.scss maps to a start state, and
- * timing travels as custom properties. Everything is validated here because it
- * lands in attribute and style positions: the type against the fixed list,
- * the numbers clamped to 0–5000 ms.
- *
- * The view script is loaded only when a block on the page is animated. The
- * registrar strips it from the block type so core does not load it for every
- * Text block (see Registrar::ON_DEMAND_VIEW_SCRIPTS).
+ * Entrance animation, shared with every block that opts in. Animation
+ * validates the type and clamps the timing, because both land in attribute and
+ * style positions, and enqueues the view script only for an animated block.
  */
-$animation_type = Block_Render::one_of(
-	Block_Render::text( $attributes, 'animationType' ),
-	array(
-		'fade',
-		'fade-up',
-		'fade-down',
-		'fade-left',
-		'fade-right',
-		'flip-up',
-		'flip-down',
-		'flip-left',
-		'flip-right',
-		'slide-up',
-		'slide-down',
-		'slide-left',
-		'slide-right',
-		'zoom-in',
-		'zoom-in-up',
-		'zoom-in-down',
-		'zoom-in-left',
-		'zoom-in-right',
-		'zoom-out',
-		'zoom-out-up',
-		'zoom-out-down',
-		'zoom-out-left',
-		'zoom-out-right',
-	)
-);
+$animation = Animation::wrapper( $attributes );
 
-$extra_attributes = array();
-
-if ( '' !== $animation_type ) {
-	$clamp_ms = static function ( $key, $fallback ) use ( $attributes ) {
-		$value = isset( $attributes[ $key ] ) && is_numeric( $attributes[ $key ] ) ? (int) $attributes[ $key ] : $fallback;
-
-		return max( 0, min( 5000, $value ) );
-	};
-
-	$extra_attributes['data-zealblocks-animation'] = $animation_type;
-	$extra_attributes['style']                     = sprintf(
-		'--zealblocks-animation-duration:%dms;--zealblocks-animation-delay:%dms;--zealblocks-animation-easing:%s;',
-		$clamp_ms( 'animationDuration', 400 ),
-		$clamp_ms( 'animationDelay', 0 ),
-		Block_Render::one_of(
-			Block_Render::text( $attributes, 'animationEasing' ),
-			array( 'ease', 'ease-in', 'ease-out', 'ease-in-out', 'linear' ),
-			'ease'
-		)
-	);
-
-	if ( ! empty( $attributes['animationRepeat'] ) ) {
-		$extra_attributes['data-zealblocks-animation-repeat'] = 'true';
-	}
-
-	wp_enqueue_script( 'zealblocks-text-view-script' );
-}
+$extra_attributes = $animation['attributes'];
 
 $wrapper_classes = array_filter(
 	array(
@@ -287,7 +228,7 @@ $wrapper_classes = array_filter(
 		$has_text_shadow ? 'has-text-shadow' : '',
 		$has_hover ? 'has-hover' : '',
 		$has_z_index ? 'has-zealblocks-z-index' : '',
-		'' !== $animation_type ? 'has-animation' : '',
+		...$animation['classes'],
 	)
 );
 

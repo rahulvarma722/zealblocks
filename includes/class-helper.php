@@ -179,6 +179,21 @@ final class Helper {
 	}
 
 	/**
+	 * URL of a file inside the plugin.
+	 *
+	 * Core's plugins_url() resolves against the FOLDER of the file it is given.
+	 * This class sits in includes/, so `__DIR__` (…/includes) names the plugin
+	 * root as its parent — the same answer as the main file gives, without
+	 * needing that file's name, which bin/rename.sh changes.
+	 *
+	 * @param string $relative Path relative to the plugin root, no leading slash.
+	 * @return string
+	 */
+	public static function url( $relative = '' ) {
+		return plugins_url( ltrim( $relative, '/' ), __DIR__ );
+	}
+
+	/**
 	 * Whether this request is rendering inside the block editor.
 	 *
 	 * `defined( 'REST_REQUEST' )` matters as much as `is_admin()`: the editor

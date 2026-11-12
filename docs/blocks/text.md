@@ -90,22 +90,10 @@ the same cases. Respects the theme's `typography.dropCap` setting.
 
 ## Entrance animation
 
-`render.php` writes `data-zealblocks-animation`, the `has-animation` class and
-the timing as custom properties, all validated (type against the list, times
-clamped to 0–5000 ms). `view.js` adds `is-animated` when a tenth of the block
-is in view; `style.scss` plays one keyframe animation from the type's start
-state (AOS's values, as Spectra uses).
-
-- The script loads only on pages with an animated block: the registrar removes
-  it from the block type (`Registrar::ON_DEMAND_VIEW_SCRIPTS`) and `render.php`
-  enqueues it.
-- Before it plays the block is only transparent, never moved — the observer
-  measures the transformed box, so a slid-away block would never "enter".
-- The hidden start state is behind `@media (scripting: enabled) and
-  (prefers-reduced-motion: no-preference)`: no JavaScript or reduced motion
-  means the text is just there.
-- The editor plays the same keyframes once when the type changes or Preview is
-  pressed.
+Shared with every animated block, so it is documented once in
+[../animation.md](../animation.md). Text opts in through the four pieces listed
+there: the five attributes in `block.json`, `Animation::wrapper()` in
+`render.php`, the panel and preview hook in `edit.js`, and the two SCSS mixins.
 
 ## Display conditions
 

@@ -10,6 +10,7 @@ A Gutenberg block collection built on the WordPress 7.1 block API.
 | work on a block | [blocks/](blocks/README.md) |
 | work on icons | [icons/](icons/README.md) |
 | work on per-viewport values | [responsive-styles/](responsive-styles/README.md) |
+| work on entrance animation | [animation.md](animation.md) |
 | understand the CSS conventions | [styles.md](styles.md) |
 | add or run tests | [testing.md](testing.md) |
 | cut a release | [build-and-release.md](build-and-release.md) |
@@ -35,6 +36,7 @@ includes/              PHP. Namespaced Zealblocks\, PSR-4-ish autoloading
   icon-handler/        the icon library (+ 2 generated files)
 src/                   JS and SCSS sources — NOT loaded at runtime
   <block>/             one folder per block
+  shared/              features several blocks opt into (animation)
   ui/                  shared editor UI: icon library, Tailwind, shadcn dialog
 build/                 what actually loads. Generated. gitignored
 bin/                   generator, zip builder, integration runner
@@ -66,6 +68,7 @@ docs/
 ├── icons/                       6 files — the largest feature
 ├── blocks/                      shared concerns + one file per block
 ├── responsive-styles/           the shipped feature + the R&D bench
+├── animation.md                 shared entrance animation
 ├── styles.md
 ├── testing.md
 └── build-and-release.md

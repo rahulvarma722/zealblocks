@@ -15,15 +15,15 @@ import {
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
-import {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from '@wordpress/element';
+import { useMemo } from '@wordpress/element';
 
 import { useStyleState } from '../button/responsive-width/use-style-state';
+import {
+	AnimationPanel,
+	useAnimationPreview,
+	getAnimationProps,
+} from '../shared/animation';
+import { GroupedSelect } from '../shared/grouped-select';
 
 import {
 	STYLE_PRESETS,
@@ -39,11 +39,7 @@ import {
 	HoverControls,
 } from './style-controls';
 import { PositionControls } from './position-controls';
-import {
-	AnimationPanel,
-	DisplayConditionsPanel,
-	GroupedSelect,
-} from './settings-controls';
+import { DisplayConditionsPanel } from './settings-controls';
 
 export default function Edit( {
 	attributes,
@@ -83,38 +79,8 @@ export default function Edit( {
 		align !== 'center' &&
 		align !== ( isRTL() ? 'left' : 'right' );
 
-	/*
-	 * Animation preview: a class that runs the same keyframes the front end
-	 * uses, for one play. Removed and re-added on the next tick to replay —
-	 * re-adding within the same frame would not restart the animation.
-	 *
-	 * Plays when the type changes, not on load: opening a post must not set
-	 * every animated block moving.
-	 */
-	const [ isPreviewing, setIsPreviewing ] = useState( false );
-	const playPreview = useCallback( () => {
-		setIsPreviewing( false );
-		window.setTimeout( () => setIsPreviewing( true ), 30 );
-	}, [] );
-
-	const previousType = useRef( animationType );
-	useEffect( () => {
-		if ( animationType && animationType !== previousType.current ) {
-			playPreview();
-		}
-		previousType.current = animationType;
-	}, [ animationType, playPreview ] );
-
-	useEffect( () => {
-		if ( ! isPreviewing ) {
-			return;
-		}
-		const timer = window.setTimeout(
-			() => setIsPreviewing( false ),
-			( animationDuration || 0 ) + ( animationDelay || 0 ) + 50
-		);
-		return () => window.clearTimeout( timer );
-	}, [ isPreviewing, animationDuration, animationDelay ] );
+	// Shared with every animated block: src/shared/animation/preview.js.
+	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
 
 	const hasConditions =
 		!! displayConditions && Object.keys( displayConditions ).length > 0;
@@ -128,6 +94,15 @@ export default function Edit( {
 		const preview = getPreview( attributes.style, device, {
 			previewPosition: false !== positionPreview,
 		} );
+		const animation = getAnimationProps(
+			{
+				animationType,
+				animationDuration,
+				animationDelay,
+				animationEasing,
+			},
+			isPreviewing
+		);
 
 		/*
 		 * `styleAs` is a class, not an inline style.
@@ -141,26 +116,14 @@ export default function Edit( {
 			styleAs ? `has-style-${ styleAs }` : '',
 			showDropCap ? 'has-drop-cap' : '',
 			...preview.classes,
-			isPreviewing && animationType ? 'is-animation-preview' : '',
+			animation.className,
 			hasConditions ? 'has-display-conditions' : '',
 		].filter( Boolean );
 
-		// The type selects the start state in style.scss; timing travels as
-		// the same custom properties render.php writes.
-		const animationVars = animationType
-			? {
-					'--zealblocks-animation-duration': `${ animationDuration }ms`,
-					'--zealblocks-animation-delay': `${ animationDelay }ms`,
-					'--zealblocks-animation-easing': animationEasing,
-			  }
-			: {};
-
 		return {
 			...( classes.length ? { className: classes.join( ' ' ) } : {} ),
-			...( animationType
-				? { 'data-zealblocks-animation': animationType }
-				: {} ),
-			style: { ...style, ...preview.style, ...animationVars },
+			...animation.data,
+			style: { ...style, ...preview.style, ...animation.style },
 		};
 	}, [
 		attributes.style,
