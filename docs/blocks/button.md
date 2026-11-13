@@ -233,6 +233,17 @@ the alpha as a fourth byte, for every block. This is what fixed the Text
 block's default `rgba(0, 0, 0, 0.3)` shadow, which had been rendering
 colourless.
 
+## Astra's content-link underline (BUG-03)
+
+With Astra's "Underline content links" option on (the default), Astra prints
+`.ast-single-post .entry-content a { text-decoration: underline }` at (0,2,1)
+on single posts and pages, which outranks the button's one class. Every button
+in the content was underlined. `style.scss` overrides it with
+`.ast-single-post .entry-content a.wp-block-zealblocks-button`, as Spectra
+does for its own Button; Astra has no filter to add a selector to its own
+exclusion list. Plain text links keep their underline, and an underline the
+author picks in Typography still wins, since core writes it inline.
+
 ## No inline `<style>`
 
 Per-viewport CSS goes through the **style engine** under the `zealblocks`

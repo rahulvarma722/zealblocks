@@ -231,3 +231,21 @@
  * z-index, at zero added specificity. See src/shared/z-index/_z-index.scss.
  */
 @include z-index.base(".wp-block-zealblocks-button");
+
+/*
+ * BUG-03: ASTRA'S "UNDERLINE CONTENT LINKS".
+ *
+ * With that option on (the default), Astra prints
+ * `.ast-single-post .entry-content a { text-decoration: underline }`, at
+ * specificity (0,2,1), on single posts and on pages. It outranks this block's
+ * one class, so every button in the content was underlined, at rest, on hover
+ * and on focus. A button is not a text link. Astra has no filter to add a
+ * selector to its own exclusion list, so this overrides it, as Spectra does
+ * for its Button. Plain text links in the content keep their underline.
+ *
+ * An underline the author chooses in the Typography panel still shows: core
+ * writes it inline on the same element, which beats any selector.
+ */
+.ast-single-post .entry-content a.wp-block-zealblocks-button {
+	text-decoration: none;
+}

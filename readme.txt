@@ -22,7 +22,7 @@ reimplemented. What Zealblocks adds is the part core leaves out.
 * **Icon** — an SVG icon from the bundled icon library, with flip, free rotation, right-to-left mirroring, hover colours, an optional link and a proper decorative/meaningful accessibility choice.
 * **Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
 * **Buttons** — a flex container for one or more buttons, with block gap, padding, margin, background (with a hover colour or gradient), border, shadow and wide/full alignment.
-* **Button** — a button-style link with an optional icon, and per-viewport width and icon size.
+* **Button** — a button-style link with an optional icon. Per-viewport width, icon size and text–icon gap; hover colours for text, background, border, icon and shadow that also show on keyboard focus; margin and padding on every side; icon rotation; icon-only buttons; and a second icon that swaps in on hover.
 
 = 1,992 icons, shared by every block =
 
@@ -77,7 +77,8 @@ Any icon from the bundled library, positionable left or right. Position is done
 with `flex-direction: row-reverse` rather than `order`, so the DOM order stays
 text-then-icon and the button's accessible name is unaffected by where the icon
 appears. Icons are marked `aria-hidden` — they are decorative, and the button
-text is the accessible name.
+text is the accessible name. An icon-only button does not show its text, but
+keeps it as the button's `aria-label`, so it is still announced.
 
 Directional icons can be set to mirror in right-to-left languages. It is opt-in
 per block, because an arrow should flip and a clock should not.

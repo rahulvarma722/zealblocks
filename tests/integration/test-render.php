@@ -650,6 +650,14 @@ $hostile_button = $button_probe(
 $check( 'hostile hover, icon, gap and shadow values all dropped', '' === $hostile_button['css'] );
 $check( 'and leave no hash or feature class behind', false === strpos( $hostile_button['html'], 'zealblocks-btn-' ) && false === strpos( $hostile_button['html'], 'has-hover' ) && false === strpos( $hostile_button['html'], 'has-shadow-hover' ) );
 
+/*
+ * BUG-03: Astra's "underline content links" prints
+ * `.ast-single-post .entry-content a { text-decoration: underline }`, which
+ * outranks the button's own class. The built stylesheet must carry the
+ * override, or every button in a post or page is underlined again.
+ */
+$check( 'the built stylesheet overrides Astra\'s content-link underline (BUG-03)', 1 === preg_match( '/\.ast-single-post \.entry-content a\.wp-block-zealblocks-button\s*\{\s*text-decoration:\s*none;?\s*\}/', (string) file_get_contents( ZEALBLOCKS_PATH . 'build/button/style-index.css' ) ) );
+
 $block_supports = WP_Block_Type_Registry::get_instance()->get_registered( 'zealblocks/button' )->supports;
 $check( 'margin, four-sided padding and writing mode are supported (B-11 to B-13)', true === ( $block_supports['spacing']['margin'] ?? null ) && true === ( $block_supports['spacing']['padding'] ?? null ) && true === ( $block_supports['typography']['__experimentalWritingMode'] ?? null ) );
 
