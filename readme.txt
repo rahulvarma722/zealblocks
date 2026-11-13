@@ -4,11 +4,11 @@ Tags:              blocks, button, responsive, icons, beta
 Requires at least: 7.1
 Tested up to:      7.1
 Requires PHP:      8.1
-Stable tag:        0.0.2-beta
+Stable tag:        0.0.3-beta
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Blocks that extend WordPress 7.1 rather than reinvent it — a typographic scale that follows your theme, and per-viewport button sizing.
+Text, Button, Icon and Buttons blocks built on WordPress 7.1: per-device styles, hover colours, entrance animation and display conditions.
 
 == Description ==
 
@@ -20,9 +20,16 @@ reimplemented. What Zealblocks adds is the part core leaves out.
 = Blocks =
 
 * **Icon** — an SVG icon from the bundled icon library, with flip, free rotation, right-to-left mirroring, hover colours, an optional link and a proper decorative/meaningful accessibility choice.
-* **Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
+* **Text** — text as any of 41 HTML tags, with a visual style preset (Display, H1–H6, Lead, Body, Caption or Eyebrow) chosen independently of the tag, a drop cap, per-viewport column gap, text shadow and position, and hover colours.
 * **Buttons** — a flex container for one or more buttons, with block gap, padding, margin, background (with a hover colour or gradient), border, shadow and wide/full alignment.
 * **Button** — a button-style link with an optional icon. Per-viewport width, icon size and text–icon gap; hover colours for text, background, border, icon and shadow that also show on keyboard focus; margin and padding on every side; icon rotation; icon-only buttons; and a second icon that swaps in on hover.
+
+= On every block =
+
+* **Entrance animation** — 23 types, with duration, delay, easing and replay. A block plays when it scrolls into view, stays still for visitors who prefer reduced motion, and is never hidden when JavaScript is off.
+* **Display conditions** — hide a block when the visitor is logged in or out, has a given role, uses a given browser or operating system, or on chosen days. Decided on the server, so hidden content is not in the page source. With full-page caching, the browser, system and day conditions follow whoever filled the cache.
+* **Z-index**, per viewport.
+* Core's own per-viewport hiding works on every block.
 
 = 1,992 icons, shared by every block =
 
@@ -160,6 +167,19 @@ that swaps the label. Pages with neither load no Zealblocks JavaScript.
 
 == Changelog ==
 
+= 0.0.3-beta =
+* Text: 41 HTML tags, a drop cap, per-viewport column gap, text shadow, position and overflow, and hover colours.
+* Text: links, highlights, keyboard text, language spans and inline images no longer disappear from the published page.
+* Button: hover colours for text, background, border, icon and shadow, also on keyboard focus; icon colour; text–icon gap; margin and padding on every side; writing mode.
+* Button: icon rotation, icon-only buttons that keep their text as the accessible name, and a second icon that swaps in on hover.
+* Button: no longer underlined by Astra's "Underline content links" option.
+* Icon: hover colours, right-to-left mirroring, and a link that always has an accessible name.
+* Buttons: background colour and gradient, background hover, border, shadow, and margin on every side.
+* Every block: entrance animation, display conditions and z-index.
+* Colours written as rgb() or hsl() are no longer dropped from per-viewport styles.
+* A hidden block no longer leaves its CSS on the page.
+* Front-end JavaScript loads only on pages that use an animation or a hover-icon label.
+
 = 0.0.2-beta =
 * Icon library: 1,992 Font Awesome Free icons in 68 categories, shared by the Icon and Button blocks.
 * Icon picker with search, category filtering and a virtualised grid.
@@ -174,6 +194,9 @@ that swaps the label. Pages with neither load no Zealblocks JavaScript.
 * Per-viewport Custom Width and Icon Size using WordPress 7.1 style states and core's viewport media queries.
 
 == Upgrade Notice ==
+
+= 0.0.3-beta =
+Hover colours, entrance animation, display conditions and z-index on every block, and fixes for Text formatting and Astra underlining buttons. Existing content needs no changes.
 
 = 0.0.2-beta =
 Beta release. The Icon block moves to a new bundled icon library, so icons chosen with 0.0.1 need re-selecting.
