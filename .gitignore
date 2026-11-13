@@ -23,3 +23,7 @@ dist/
 
 # Test caches
 .phpunit.cache/
+
+# Playwright: the local test login (see tests/e2e/README.md) and run artifacts.
+.env.e2e
+artifacts/

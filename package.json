@@ -15,6 +15,7 @@
 		"test:js": "wp-scripts test-unit-js",
 		"test:php": "vendor/bin/phpunit",
 		"test:integration": "./bin/test-integration.sh",
+		"test:e2e": "wp-scripts test-playwright",
 		"test": "npm run test:php && npm run test:js",
 		"update-icons": "node bin/generate-icons-json.js --version=7.3.1"
 	},
