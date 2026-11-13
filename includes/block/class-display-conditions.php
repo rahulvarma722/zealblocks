@@ -99,7 +99,8 @@ final class Display_Conditions implements Module {
 
 	/**
 	 * Renders nothing for a hidden block of ours, before core renders the
-	 * blocks inside it.
+	 * blocks inside it: one hidden by its display conditions, or one core's
+	 * block visibility hides everywhere (`metadata.blockVisibility: false`).
 	 *
 	 * This is what a CONTAINER needs. Core renders a block's inner blocks
 	 * first and passes them to its render callback as `$content`, so the early
@@ -110,6 +111,13 @@ final class Display_Conditions implements Module {
 	 * dequeues whatever a block enqueued while rendering empty. The style
 	 * engine store has no such undo.) `pre_render_block` runs before any of
 	 * it, for nested blocks as well, and spares the wasted rendering too.
+	 *
+	 * Core's "hide everywhere" has the same problem for EVERY block of ours,
+	 * not only containers: wp_render_block_visibility_support() discards the
+	 * markup on `render_block`, after render.php has stored its rules. Core
+	 * would print nothing for it either way, so stopping here changes no
+	 * markup; it only keeps the CSS off the page (S-08). Hiding per device is
+	 * left to core: the block renders, and core hides it with a media query.
 	 *
 	 * render.php keeps its own early return for render paths that call a
 	 * block's render callback directly and skip this filter.
@@ -127,6 +135,11 @@ final class Display_Conditions implements Module {
 
 		if ( 0 !== strpos( $name, Helper::slug() . '/' ) ) {
 			return null;
+		}
+
+		// Core's rule exactly: boolean false hides the block on every device.
+		if ( false === ( $parsed_block['attrs']['metadata']['blockVisibility'] ?? null ) ) {
+			return '';
 		}
 
 		return self::hides( $parsed_block['attrs']['displayConditions'] ?? null ) ? '' : null;

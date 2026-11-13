@@ -8,7 +8,15 @@ conditions are **ORed**, so any one that matches hides the block.
 Text, Button, Icon and Buttons use it (Button, Icon and Buttons since S-06).
 
 Per-device hiding is not here: core's block visibility (7.0+) already does it
-for every block, from the block toolbar.
+for every block, from the block toolbar. S-08 checked it on all four blocks:
+hiding on a device puts core's `wp-block-hidden-{viewport}` class on our root
+element and prints its `display: none` rule in that viewport's media query,
+which beats our own `display` (a Button with an icon is `inline-flex`).
+
+Core's "hide everywhere" (`metadata.blockVisibility: false`) discards a block's
+markup on `render_block`, after render.php has stored its CSS rules, so every
+block of ours hidden that way used to leave its rules on the page. `pre_render()`
+below now stops such a block before it renders, with the same markup result.
 
 ## Where it lives
 

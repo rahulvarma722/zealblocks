@@ -839,6 +839,43 @@ $check( 'pre_render leaves other plugins\' blocks alone', null === $display_cond
 $check( 'and keeps content another filter already chose', 'kept' === $display_conditions->pre_render( 'kept', array( 'blockName' => 'zealblocks/icon', 'attrs' => array( 'displayConditions' => $hide ) ) ) );
 
 // ---------------------------------------------------------------------
+echo "\nAll four blocks — core's per-device hide (S-08)\n";
+// ---------------------------------------------------------------------
+/*
+ * Core's block visibility (WordPress 7.0+): hiding on a device adds
+ * `wp-block-hidden-{viewport}` to the block's first tag and a display:none rule
+ * in that viewport's media query; `blockVisibility: false` hides it on every
+ * device. Each case carries a hover colour, so CSS left behind would show.
+ */
+$visibility_sources = array(
+	'text'    => '<!-- wp:zealblocks/text {"content":"T","metadata":{"blockVisibility":%s},"style":{"zealblocks":{"textHover":"#0a0b01"}}} /-->',
+	'button'  => '<!-- wp:zealblocks/button {"text":"B","url":"https://ex.org","metadata":{"blockVisibility":%s},"style":{"zealblocks":{"textHover":"#0a0b02"}}} /-->',
+	'icon'    => '<!-- wp:zealblocks/icon {"icon":"heart","metadata":{"blockVisibility":%s},"style":{"zealblocks":{"textHover":"#0a0b03"}}} /-->',
+	'buttons' => '<!-- wp:zealblocks/buttons {"metadata":{"blockVisibility":%s}} --><!-- wp:zealblocks/button {"text":"In","url":"https://ex.org","style":{"zealblocks":{"backgroundHover":"#0a0b04"}}} /--><!-- /wp:zealblocks/buttons -->',
+);
+
+foreach ( $visibility_sources as $visibility_slug => $visibility_source ) {
+	foreach ( array( 'mobile', 'tablet', 'desktop' ) as $viewport ) {
+		WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+		$visible_html = trim( do_blocks( sprintf( $visibility_source, wp_json_encode( array( 'viewport' => array( $viewport => false ) ) ) ) ) );
+		preg_match( '/^<[a-z]+[^>]*>/', $visible_html, $visible_root );
+
+		$check(
+			$visibility_slug . ': hidden on ' . $viewport . ' puts core\'s class on our root, and its rule',
+			false !== strpos( $visible_root[0] ?? '', 'wp-block-zealblocks-' . $visibility_slug ) && false !== strpos( $visible_root[0] ?? '', 'wp-block-hidden-' . $viewport )
+				&& false !== strpos( wp_style_engine_get_stylesheet_from_context( 'block-supports' ), '.wp-block-hidden-' . $viewport . '{display:none !important;}' )
+				&& '' !== wp_style_engine_get_stylesheet_from_context( 'zealblocks' )
+		);
+	}
+
+	WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+	$everywhere = trim( do_blocks( sprintf( $visibility_source, 'false' ) ) );
+	$check( $visibility_slug . ': hidden everywhere renders nothing and leaves none of our CSS', '' === $everywhere && '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) );
+}
+
+$check( 'a Button hidden on mobile inside a visible group carries the class itself', 1 === preg_match( '/<a [^>]*class="[^"]*wp-block-hidden-mobile[^"]*"[^>]*>Hidden on phones/', str_replace( '<span class="wp-block-zealblocks-button__text">', '', do_blocks( '<!-- wp:zealblocks/buttons --><!-- wp:zealblocks/button {"text":"Hidden on phones","url":"https://ex.org","metadata":{"blockVisibility":{"viewport":{"mobile":false}}}} /--><!-- /wp:zealblocks/buttons -->' ) ) ) );
+
+// ---------------------------------------------------------------------
 echo "\nButton, Icon and Buttons — z-index (S-07)\n";
 // ---------------------------------------------------------------------
 $z_sources = array(
