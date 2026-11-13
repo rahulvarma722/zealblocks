@@ -42,6 +42,7 @@ use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Hover_Label;
 use Zealblocks\Block\Render as Block_Render;
+use Zealblocks\Block\Z_Index;
 use Zealblocks\Icon_Handler\Library as Icon_Library;
 
 /*
@@ -272,6 +273,8 @@ $responsive = Block_Render::responsive(
 		'shadowHoverBlur'   => array( '--zealblocks-button-shadow-hover-blur', 'length' ),
 		'shadowHoverSpread' => array( '--zealblocks-button-shadow-hover-spread', 'signed-length' ),
 		'shadowHoverColor'  => array( '--zealblocks-button-shadow-hover-color', 'color' ),
+		// Stacking order, per device (S-07); see includes/block/class-z-index.php.
+		Z_Index::KEY        => Z_Index::PROPERTY,
 	),
 	'zealblocks-btn-'
 );
@@ -318,6 +321,7 @@ $wrapper_classes = array_filter(
 		'' !== $hover_icon_markup && ! empty( $attributes['hoverIconFlipForRTL'] ) ? 'has-hover-icon-rtl-flip' : '',
 		...$hover_classes,
 		$has_shadow_hover ? 'has-shadow-hover' : '',
+		...Z_Index::classes( $responsive['rules'] ),
 		...$animation['classes'],
 	)
 );

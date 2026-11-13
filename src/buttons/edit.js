@@ -17,6 +17,7 @@ import { useMemo } from '@wordpress/element';
 
 import { useStyleState } from '../button/responsive-width/use-style-state';
 import { HoverControls, getHoverPreview } from '../shared/hover';
+import { ZIndexControl, getZIndexPreview } from '../shared/z-index';
 import {
 	AnimationPanel,
 	useAnimationPreview,
@@ -64,6 +65,12 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 		[ style, device ]
 	);
 
+	// Stacking order for the previewed device (S-07).
+	const zIndexPreview = useMemo(
+		() => getZIndexPreview( style, device ),
+		[ style, device ]
+	);
+
 	// Entrance animation, shared: src/shared/animation/preview.js.
 	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
 	const animation = getAnimationProps(
@@ -72,11 +79,16 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 	);
 
 	const blockProps = useBlockProps( {
-		style: { ...hoverPreview.style, ...animation.style },
+		style: {
+			...hoverPreview.style,
+			...zIndexPreview.style,
+			...animation.style,
+		},
 		...animation.data,
 		className:
 			[
 				...hoverPreview.classes,
+				...zIndexPreview.classes,
 				animation.className,
 				// The canvas marks a block with display conditions; it never hides it.
 				hasAnyCondition( displayConditions )
@@ -124,6 +136,14 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 				stateKey={ stateKey }
 				device={ device }
 				hasText={ false }
+			/>
+			{ /* Stacking order, per device, in Dimensions (S-07). */ }
+			<ZIndexControl
+				clientId={ clientId }
+				style={ style }
+				setAttributes={ setAttributes }
+				stateKey={ stateKey }
+				device={ device }
 			/>
 			<div { ...innerBlocksProps } />
 		</>

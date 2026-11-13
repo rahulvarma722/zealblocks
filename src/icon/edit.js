@@ -28,6 +28,7 @@ import IconControl, { IconPicker, useIcon, Icon } from '@/ui/icon-library';
 import { useStyleState } from '../button/responsive-width/use-style-state';
 import { HoverControls, getHoverPreview } from '../shared/hover';
 import { LinkToolbar } from '../shared/link';
+import { ZIndexControl, getZIndexPreview } from '../shared/z-index';
 import {
 	AnimationPanel,
 	useAnimationPreview,
@@ -102,6 +103,12 @@ export default function Edit( {
 		[ style, device ]
 	);
 
+	// Stacking order for the previewed device (S-07).
+	const zIndexPreview = useMemo(
+		() => getZIndexPreview( style, device ),
+		[ style, device ]
+	);
+
 	// Entrance animation, shared: src/shared/animation/preview.js.
 	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
 	const animation = getAnimationProps(
@@ -111,7 +118,11 @@ export default function Edit( {
 
 	const blockProps = useBlockProps( {
 		ref: setAnchor,
-		style: { ...hoverPreview.style, ...animation.style },
+		style: {
+			...hoverPreview.style,
+			...zIndexPreview.style,
+			...animation.style,
+		},
 		...animation.data,
 		className: [
 			! hasIcon ? 'is-placeholder' : '',
@@ -128,6 +139,7 @@ export default function Edit( {
 			// Mirrors render.php (I-03).
 			flipForRTL ? 'has-rtl-flip' : '',
 			...hoverPreview.classes,
+			...zIndexPreview.classes,
 			animation.className,
 			// The canvas marks a block with display conditions; it never hides it.
 			hasAnyCondition( displayConditions )
@@ -203,6 +215,15 @@ export default function Edit( {
 				stateKey={ stateKey }
 				device={ device }
 				textLabel={ __( 'Icon hover', 'zealblocks' ) }
+			/>
+
+			{ /* Stacking order, per device, in Dimensions (S-07). */ }
+			<ZIndexControl
+				clientId={ clientId }
+				style={ style }
+				setAttributes={ setAttributes }
+				stateKey={ stateKey }
+				device={ device }
 			/>
 
 			<AnimationPanel

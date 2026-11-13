@@ -143,6 +143,12 @@ hide the icon when logged in or out, for a role, browser, operating system or
 day. Decided on the server, so a hidden icon is not in the page source. The
 editor marks it with a dashed outline.
 
+## Z-index (S-07)
+
+The shared z-index (see [../z-index.md](../z-index.md)), per device, in
+Dimensions. A static icon becomes `position: relative` once it has one, so
+alignment and the RTL flip are unaffected.
+
 ## `is-inline` is opt-in
 
 The default is a block-level wrapper. An icon is usually its own element — a

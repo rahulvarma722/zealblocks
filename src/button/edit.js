@@ -23,6 +23,7 @@ import { getResolvedValue } from './responsive-width/style-value';
 import { ICON_SIZE_KEY, CSS_VARS } from './responsive-width/constants';
 import { HoverControls } from '../shared/hover';
 import { LinkToolbar } from '../shared/link';
+import { ZIndexControl, getZIndexPreview } from '../shared/z-index';
 import {
 	AnimationPanel,
 	useAnimationPreview,
@@ -121,6 +122,8 @@ export default function Edit( {
 	const extraBlockProps = useMemo( () => {
 		// Hover, icon colours, gap and shadow hover: see preview.js.
 		const preview = getStylePreview( style, device );
+		// Stacking order for the previewed device (S-07).
+		const zIndex = getZIndexPreview( style, device );
 		const animation = getAnimationProps(
 			{
 				animationType,
@@ -130,7 +133,11 @@ export default function Edit( {
 			},
 			isPreviewing
 		);
-		const inline = { ...preview.style, ...animation.style };
+		const inline = {
+			...preview.style,
+			...zIndex.style,
+			...animation.style,
+		};
 
 		if ( previewWidth ) {
 			inline.width = previewWidth;
@@ -153,6 +160,7 @@ export default function Edit( {
 				hoverIconFlipForRTL,
 			} ),
 			...preview.classes,
+			...zIndex.classes,
 			animation.className,
 			hasConditions ? 'has-display-conditions' : '',
 		].filter( Boolean );
@@ -221,6 +229,7 @@ export default function Edit( {
 			<ButtonColorControls { ...styleControlProps } hasIcon={ !! icon } />
 			<IconGapControl { ...styleControlProps } hasIcon={ !! icon } />
 			<ShadowHoverControl { ...styleControlProps } />
+			<ZIndexControl { ...styleControlProps } />
 
 			<InspectorControls>
 				<PanelBody title={ __( 'Settings', 'zealblocks' ) }>

@@ -839,6 +839,34 @@ $check( 'pre_render leaves other plugins\' blocks alone', null === $display_cond
 $check( 'and keeps content another filter already chose', 'kept' === $display_conditions->pre_render( 'kept', array( 'blockName' => 'zealblocks/icon', 'attrs' => array( 'displayConditions' => $hide ) ) ) );
 
 // ---------------------------------------------------------------------
+echo "\nButton, Icon and Buttons — z-index (S-07)\n";
+// ---------------------------------------------------------------------
+$z_sources = array(
+	'button'  => static function ( $style ) {
+		return '<!-- wp:zealblocks/button ' . wp_json_encode( array( 'text' => 'Z', 'url' => 'https://ex.org', 'style' => $style ) ) . ' /-->';
+	},
+	'icon'    => static function ( $style ) {
+		return '<!-- wp:zealblocks/icon ' . wp_json_encode( array( 'icon' => 'heart', 'style' => $style ) ) . ' /-->';
+	},
+	'buttons' => static function ( $style ) {
+		return '<!-- wp:zealblocks/buttons ' . wp_json_encode( array( 'style' => $style ) ) . ' --><!-- wp:zealblocks/button {"text":"In","url":"https://ex.org"} /--><!-- /wp:zealblocks/buttons -->';
+	},
+);
+
+foreach ( $z_sources as $z_slug => $z_source ) {
+	WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+	$z_html = do_blocks( $z_source( array( 'zealblocks' => array( 'zIndex' => '5' ), '@mobile' => array( 'zealblocks' => array( 'zIndex' => '-2' ) ) ) ) );
+	$z_css  = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+	preg_match( '/<(?:a|div) [^>]*class="[^"]*wp-block-zealblocks-' . $z_slug . '\b[^"]*"/', $z_html, $z_root );
+
+	$check( $z_slug . ': z-index per device, and the class on the block root', 1 === preg_match( '/\{z-index:5;\}/', $z_css ) && 1 === preg_match( '/@media[^{]*\{[^{]*\{z-index:-2;\}\}/', $z_css ) && false !== strpos( $z_root[0] ?? '', 'has-zealblocks-z-index' ) );
+
+	WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+	$z_bad = do_blocks( $z_source( array( 'zealblocks' => array( 'zIndex' => '9;}body{color:red' ) ) ) );
+	$check( $z_slug . ': an injected z-index leaves no CSS and no class', '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) && false === strpos( $z_bad, 'has-zealblocks-z-index' ) );
+}
+
+// ---------------------------------------------------------------------
 echo "\nText — inline formats survive the front end\n";
 // ---------------------------------------------------------------------
 /*

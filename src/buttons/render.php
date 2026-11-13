@@ -22,6 +22,7 @@ use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
+use Zealblocks\Block\Z_Index;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -81,9 +82,13 @@ if ( '' === trim( (string) $content ) ) {
 $responsive = Block_Render::responsive(
 	isset( $attributes['style'] ) ? $attributes['style'] : array(),
 	'zealblocks',
-	array_diff_key(
-		Hover::properties( '--zealblocks-buttons-hover-', array( ':hover', ':has(:focus-visible)' ) ),
-		array( Hover::TEXT => true )
+	array_merge(
+		array_diff_key(
+			Hover::properties( '--zealblocks-buttons-hover-', array( ':hover', ':has(:focus-visible)' ) ),
+			array( Hover::TEXT => true )
+		),
+		// Stacking order, per device (S-07); see includes/block/class-z-index.php.
+		array( Z_Index::KEY => Z_Index::PROPERTY )
 	),
 	'zealblocks-btns-'
 );
@@ -94,7 +99,7 @@ $responsive = Block_Render::responsive(
  */
 $animation = Animation::wrapper( $attributes );
 
-$wrapper_classes = array_filter( array( $responsive['class'], ...Hover::classes( $responsive['rules'] ), ...$animation['classes'] ) );
+$wrapper_classes = array_filter( array( $responsive['class'], ...Hover::classes( $responsive['rules'] ), ...Z_Index::classes( $responsive['rules'] ), ...$animation['classes'] ) );
 
 // To core's style engine, as the Button's rules go. See button/render.php.
 Block_Render::store_rules( $responsive['rules'] );

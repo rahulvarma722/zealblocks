@@ -20,6 +20,7 @@ use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
+use Zealblocks\Block\Z_Index;
 use Zealblocks\Icon_Handler\Library as Icon_Library;
 
 /*
@@ -146,7 +147,11 @@ if ( $processor->next_tag( 'svg' ) ) {
 $responsive = Block_Render::responsive(
 	isset( $attributes['style'] ) ? $attributes['style'] : array(),
 	'zealblocks',
-	Hover::properties( '--zealblocks-icon-hover-', array( ':hover', ':focus-visible' ) ),
+	array_merge(
+		Hover::properties( '--zealblocks-icon-hover-', array( ':hover', ':focus-visible' ) ),
+		// Stacking order, per device (S-07); see includes/block/class-z-index.php.
+		array( Z_Index::KEY => Z_Index::PROPERTY )
+	),
 	'zealblocks-icon-'
 );
 
@@ -165,6 +170,7 @@ $wrapper_classes = array_filter(
 		// Opt-in mirroring for directional icons (I-03); style.scss gates it on [dir=rtl].
 		empty( $attributes['flipForRTL'] ) ? '' : 'has-rtl-flip',
 		...Hover::classes( $responsive['rules'] ),
+		...Z_Index::classes( $responsive['rules'] ),
 		...$animation['classes'],
 	)
 );

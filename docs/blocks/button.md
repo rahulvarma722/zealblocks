@@ -47,6 +47,11 @@ every Button in it, and leaves none of their CSS behind: the module stops a
 hidden block on `pre_render_block`, before core renders its children. A hidden
 Button inside a visible group drops out on its own.
 
+### Z-index (S-07)
+
+Both blocks have the shared z-index (see [../z-index.md](../z-index.md)), per
+device, in Dimensions.
+
 ## `zealblocks/button` — attributes
 
 | attribute | type | notes |

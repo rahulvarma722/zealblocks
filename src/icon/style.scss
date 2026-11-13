@@ -9,6 +9,7 @@
 
 @use "../shared/animation/animation";
 @use "../shared/hover/hover";
+@use "../shared/z-index/z-index";
 
 .wp-block-zealblocks-icon {
 	// Without this the wrapper keeps a text line-box and the icon appears to
@@ -177,3 +178,9 @@ a.wp-block-zealblocks-icon:focus {
  * scoped to this block. See src/shared/animation/_animation.scss.
  */
 @include animation.front(".wp-block-zealblocks-icon");
+
+/*
+ * Z-index (S-07): a static block becomes `position: relative` once it has a
+ * z-index, at zero added specificity. See src/shared/z-index/_z-index.scss.
+ */
+@include z-index.base(".wp-block-zealblocks-icon");

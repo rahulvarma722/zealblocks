@@ -397,6 +397,39 @@ final class BlockContractTest extends TestCase {
 	}
 
 	/**
+	 * Every block that emits a z-index also includes the base() mixin and an
+	 * editor control. Without the mixin a static block's z-index does nothing;
+	 * without the control nobody can set it. Neither shows up as an error.
+	 *
+	 * @return void
+	 */
+	public function test_z_index_blocks_include_the_mixin_and_a_control() {
+		$with_z_index = 0;
+
+		foreach ( array_keys( self::blocks() ) as $slug ) {
+			$dir    = ZEALBLOCKS_PATH . 'src/' . $slug . '/';
+			$render = is_readable( $dir . 'render.php' ) ? (string) file_get_contents( $dir . 'render.php' ) : '';
+
+			if ( false === strpos( $render, 'Z_Index::KEY' ) ) {
+				continue;
+			}
+
+			++$with_z_index;
+
+			$this->assertStringContainsString( 'z-index.base(".wp-block-zealblocks-' . $slug . '")', (string) file_get_contents( $dir . 'style.scss' ), $slug . ' style.scss must include z-index.base()' );
+
+			$editor = '';
+			foreach ( (array) glob( $dir . '*.js' ) as $file ) {
+				$editor .= (string) file_get_contents( $file );
+			}
+
+			$this->assertMatchesRegularExpression( '/<ZIndex(Control|Item)\b/', $editor, $slug . ' must render a z-index control' );
+		}
+
+		$this->assertSame( 4, $with_z_index, 'Text, Button, Icon and Buttons all emit a z-index' );
+	}
+
+	/**
 	 * The hover keys and class agree between PHP, the editor and the
 	 * stylesheet, and Text's variable prefix is the same in all four places
 	 * it is written.

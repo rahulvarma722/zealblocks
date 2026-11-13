@@ -5,9 +5,9 @@ Free's Z-Index extension: a range of −100 to 1000, and a block that is not
 otherwise positioned becomes `position: relative`, because a z-index does
 nothing on a static box.
 
-Text has it inside its Position panel. Button, Icon and Buttons get it as a
-control of its own under task S-07, because Spectra Free has no Position panel
-on those blocks (Position is a Pro feature).
+Text has it inside its Position panel. Button, Icon and Buttons have it as a
+control of its own in Dimensions (since S-07), because Spectra Free has no
+Position panel on those blocks (Position is a Pro feature).
 
 ## Where it lives
 
@@ -60,3 +60,12 @@ attribute, in core's viewport-state shape, like every other per-device value:
 mixin. `BlockContractTest::test_z_index_values_match_across_php_js_and_scss`
 checks all of them. A class that differed between the two would leave every
 z-index on a static block doing nothing, with no error anywhere.
+
+`BlockContractTest::test_z_index_blocks_include_the_mixin_and_a_control` checks
+that every block whose render.php emits a z-index also includes `base()` in
+its style.scss and renders a `ZIndexControl` or `ZIndexItem`.
+
+Adding the key to a block's property map changes the hash in its generated
+class for blocks that already had per-device values, because the hash covers
+every key in the map. That is harmless: the class and its CSS are generated in
+the same request.
