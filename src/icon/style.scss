@@ -7,6 +7,7 @@
  * `color` block support work at all.
  */
 
+@use "../shared/animation/animation";
 @use "../shared/hover/hover";
 
 .wp-block-zealblocks-icon {
@@ -170,3 +171,9 @@ a.wp-block-zealblocks-icon:focus {
 [dir="rtl"] .wp-block-zealblocks-icon.has-rtl-flip svg.is-flip-horizontal.is-flip-vertical {
 	scale: 1 -1;
 }
+
+/*
+ * Entrance animation (S-05): hidden start, play, start states and keyframes,
+ * scoped to this block. See src/shared/animation/_animation.scss.
+ */
+@include animation.front(".wp-block-zealblocks-icon");

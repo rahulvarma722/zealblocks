@@ -2,6 +2,7 @@
  * Buttons — editor-only styles.
  */
 
+@use "../shared/animation/animation";
 @use "../shared/hover/hover";
 
 /*
@@ -14,3 +15,9 @@
 	// Keep the empty container clickable before any button is inserted.
 	min-height: 1em;
 }
+
+/*
+ * Animation preview (S-05): one play of the front end's keyframes, started
+ * by useAnimationPreview(). See src/shared/animation/_animation.scss.
+ */
+@include animation.preview(".wp-block-zealblocks-buttons");

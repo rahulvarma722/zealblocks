@@ -6,6 +6,7 @@
  * Only the things layout does not cover belong here.
  */
 
+@use "../shared/animation/animation";
 @use "../shared/hover/hover";
 
 .wp-block-zealblocks-buttons {
@@ -21,3 +22,9 @@
  * See src/shared/hover/_hover.scss.
  */
 @include hover.transition(".wp-block-zealblocks-buttons", "--zealblocks-buttons-hover-", (background));
+
+/*
+ * Entrance animation (S-05): hidden start, play, start states and keyframes,
+ * scoped to this block. See src/shared/animation/_animation.scss.
+ */
+@include animation.front(".wp-block-zealblocks-buttons");

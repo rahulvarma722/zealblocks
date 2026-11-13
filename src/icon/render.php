@@ -16,6 +16,7 @@ defined( 'ABSPATH' ) || exit;
  * lexical and per-file, so the alias applies here even though core requires
  * this template from inside a closure in global scope.
  */
+use Zealblocks\Block\Animation;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Icon_Handler\Library as Icon_Library;
@@ -138,6 +139,12 @@ $responsive = Block_Render::responsive(
 	'zealblocks-icon-'
 );
 
+/*
+ * Entrance animation (S-05), shared with every block that opts in; see
+ * includes/block/class-animation.php. Empty for an icon that is not animated.
+ */
+$animation = Animation::wrapper( $attributes );
+
 $wrapper_classes = array_filter(
 	array(
 		$responsive['class'],
@@ -147,10 +154,14 @@ $wrapper_classes = array_filter(
 		// Opt-in mirroring for directional icons (I-03); style.scss gates it on [dir=rtl].
 		empty( $attributes['flipForRTL'] ) ? '' : 'has-rtl-flip',
 		...Hover::classes( $responsive['rules'] ),
+		...$animation['classes'],
 	)
 );
 
-$extra_attributes = $wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array();
+$extra_attributes = array_merge(
+	$wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array(),
+	$animation['attributes']
+);
 
 if ( $link_attributes ) {
 	$icon_data = Icon_Library::get( $icon_name );

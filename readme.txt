@@ -145,7 +145,10 @@ themes. Nothing is emitted inline next to the block.
 
 = Does it add any front-end JavaScript? =
 
-No. Every block renders server-side in PHP and ships no front-end script.
+Only where a block needs it. Every block renders server-side in PHP. A page
+with an animated block loads one small script that starts the entrance
+animations, and a page with an icon-only button that has a hover label loads one
+that swaps the label. Pages with neither load no Zealblocks JavaScript.
 
 == Screenshots ==
 

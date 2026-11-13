@@ -5,6 +5,7 @@
  * affordances belong here.
  */
 
+@use "../shared/animation/animation";
 @use "../shared/hover/hover";
 
 /*
@@ -36,3 +37,9 @@
 		margin: 0;
 	}
 }
+
+/*
+ * Animation preview (S-05): one play of the front end's keyframes, started
+ * by useAnimationPreview(). See src/shared/animation/_animation.scss.
+ */
+@include animation.preview(".wp-block-zealblocks-icon");

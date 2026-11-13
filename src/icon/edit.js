@@ -28,6 +28,11 @@ import IconControl, { IconPicker, useIcon, Icon } from '@/ui/icon-library';
 import { useStyleState } from '../button/responsive-width/use-style-state';
 import { HoverControls, getHoverPreview } from '../shared/hover';
 import { LinkToolbar } from '../shared/link';
+import {
+	AnimationPanel,
+	useAnimationPreview,
+	getAnimationProps,
+} from '../shared/animation';
 import { HOVER_VAR_PREFIX } from './constants';
 import { getSvgProps } from './svg-props';
 
@@ -49,6 +54,10 @@ export default function Edit( {
 		linkTarget,
 		rel,
 		style,
+		animationType,
+		animationDuration,
+		animationDelay,
+		animationEasing,
 	} = attributes;
 
 	// Which viewport state the inspector is editing; see use-style-state.js.
@@ -88,9 +97,17 @@ export default function Edit( {
 		[ style, device ]
 	);
 
+	// Entrance animation, shared: src/shared/animation/preview.js.
+	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
+	const animation = getAnimationProps(
+		{ animationType, animationDuration, animationDelay, animationEasing },
+		isPreviewing
+	);
+
 	const blockProps = useBlockProps( {
 		ref: setAnchor,
-		style: hoverPreview.style,
+		style: { ...hoverPreview.style, ...animation.style },
+		...animation.data,
 		className: [
 			! hasIcon ? 'is-placeholder' : '',
 			/*
@@ -106,6 +123,7 @@ export default function Edit( {
 			// Mirrors render.php (I-03).
 			flipForRTL ? 'has-rtl-flip' : '',
 			...hoverPreview.classes,
+			animation.className,
 		]
 			.filter( Boolean )
 			.join( ' ' ),
@@ -176,6 +194,13 @@ export default function Edit( {
 				stateKey={ stateKey }
 				device={ device }
 				textLabel={ __( 'Icon hover', 'zealblocks' ) }
+			/>
+
+			<AnimationPanel
+				clientId={ clientId }
+				attributes={ attributes }
+				setAttributes={ setAttributes }
+				onPreview={ playPreview }
 			/>
 
 			<InspectorControls group="settings">

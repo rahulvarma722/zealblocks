@@ -17,6 +17,11 @@ import { useMemo } from '@wordpress/element';
 
 import { useStyleState } from '../button/responsive-width/use-style-state';
 import { HoverControls, getHoverPreview } from '../shared/hover';
+import {
+	AnimationPanel,
+	useAnimationPreview,
+	getAnimationProps,
+} from '../shared/animation';
 import { HOVER_VAR_PREFIX } from './constants';
 
 /**
@@ -28,7 +33,13 @@ import { HOVER_VAR_PREFIX } from './constants';
 const TEMPLATE = [ [ 'zealblocks/button' ] ];
 
 export default function Edit( { clientId, attributes, setAttributes } ) {
-	const { style } = attributes;
+	const {
+		style,
+		animationType,
+		animationDuration,
+		animationDelay,
+		animationEasing,
+	} = attributes;
 
 	const hasChildren = useSelect(
 		( select ) => select( blockEditorStore ).getBlockCount( clientId ) > 0,
@@ -48,9 +59,20 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 		[ style, device ]
 	);
 
+	// Entrance animation, shared: src/shared/animation/preview.js.
+	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
+	const animation = getAnimationProps(
+		{ animationType, animationDuration, animationDelay, animationEasing },
+		isPreviewing
+	);
+
 	const blockProps = useBlockProps( {
-		style: hoverPreview.style,
-		className: hoverPreview.classes.join( ' ' ) || undefined,
+		style: { ...hoverPreview.style, ...animation.style },
+		...animation.data,
+		className:
+			[ ...hoverPreview.classes, animation.className ]
+				.filter( Boolean )
+				.join( ' ' ) || undefined,
 	} );
 	const innerBlocksProps = useInnerBlocksProps( blockProps, {
 		template: TEMPLATE,
@@ -71,6 +93,12 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 	return (
 		<>
 			<Probes />
+			<AnimationPanel
+				clientId={ clientId }
+				attributes={ attributes }
+				setAttributes={ setAttributes }
+				onPreview={ playPreview }
+			/>
 			{ /* Background hover only: the container has no text colour. */ }
 			<HoverControls
 				clientId={ clientId }

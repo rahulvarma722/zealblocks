@@ -6,6 +6,7 @@
  * affordances belong here.
  */
 
+@use "../shared/animation/animation";
 @use "../shared/hover/hover";
 
 .wp-block-zealblocks-button {
@@ -25,3 +26,9 @@
 .wp-block-zealblocks-button.has-hover-border:hover {
 	border-color: var(--zealblocks-button-hover-border) !important;
 }
+
+/*
+ * Animation preview (S-05): one play of the front end's keyframes, started
+ * by useAnimationPreview(). See src/shared/animation/_animation.scss.
+ */
+@include animation.preview(".wp-block-zealblocks-button");

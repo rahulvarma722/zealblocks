@@ -18,6 +18,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // A file-level `use` is lexical: see button/render.php.
+use Zealblocks\Block\Animation;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 
@@ -76,7 +77,13 @@ $responsive = Block_Render::responsive(
 	'zealblocks-btns-'
 );
 
-$wrapper_classes = array_filter( array( $responsive['class'], ...Hover::classes( $responsive['rules'] ) ) );
+/*
+ * Entrance animation (S-05), shared with every block that opts in; see
+ * includes/block/class-animation.php. Empty for a group that is not animated.
+ */
+$animation = Animation::wrapper( $attributes );
+
+$wrapper_classes = array_filter( array( $responsive['class'], ...Hover::classes( $responsive['rules'] ), ...$animation['classes'] ) );
 
 // To core's style engine, as the Button's rules go. See button/render.php.
 Block_Render::store_rules( $responsive['rules'] );
@@ -101,6 +108,6 @@ Block_Render::store_rules( $responsive['rules'] );
  */
 printf(
 	'<div %1$s>%2$s</div>',
-	get_block_wrapper_attributes( $wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array() ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); re-escaping attribute markup would corrupt it.
+	get_block_wrapper_attributes( array_merge( $wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array(), $animation['attributes'] ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); re-escaping attribute markup would corrupt it.
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already-rendered inner block HTML; see the note above.
 );

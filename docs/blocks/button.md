@@ -33,6 +33,12 @@ child does not leave it stuck on, as Spectra's `:focus-within` does.
 Child sizing (Spectra's Fit / Fill / Fixed per Button, BS-06) is not built: it
 overlaps the Button's own per-device width, pending decision D-3.
 
+### Entrance animation (S-05)
+
+Both blocks use the shared animation (see [../animation.md](../animation.md)),
+so a group can enter as a whole, each Button on its own, or both. The page
+loads one animation script whatever mix it has.
+
 ## `zealblocks/button` — attributes
 
 | attribute | type | notes |

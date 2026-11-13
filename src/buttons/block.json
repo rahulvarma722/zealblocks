@@ -12,6 +12,36 @@
 
 	"allowedBlocks": [ "zealblocks/button" ],
 
+	"attributes": {
+		"animationType": {
+			"type": "string",
+			"default": ""
+		},
+		"animationDuration": {
+			"type": "number",
+			"default": 400
+		},
+		"animationDelay": {
+			"type": "number",
+			"default": 0
+		},
+		"animationEasing": {
+			"type": "string",
+			"enum": [
+				"ease",
+				"ease-in",
+				"ease-out",
+				"ease-in-out",
+				"linear"
+			],
+			"default": "ease"
+		},
+		"animationRepeat": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+
 	"supports": {
 		"html": false,
 		"anchor": true,

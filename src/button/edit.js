@@ -23,6 +23,11 @@ import { getResolvedValue } from './responsive-width/style-value';
 import { ICON_SIZE_KEY, CSS_VARS } from './responsive-width/constants';
 import { HoverControls } from '../shared/hover';
 import { LinkToolbar } from '../shared/link';
+import {
+	AnimationPanel,
+	useAnimationPreview,
+	getAnimationProps,
+} from '../shared/animation';
 import { getStylePreview } from './preview';
 import {
 	ButtonColorControls,
@@ -55,7 +60,14 @@ export default function Edit( {
 		hoverIconPosition,
 		hoverIconRotation,
 		hoverIconFlipForRTL,
+		animationType,
+		animationDuration,
+		animationDelay,
+		animationEasing,
 	} = attributes;
+
+	// Entrance animation, shared: src/shared/animation/preview.js.
+	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
 
 	// Resolves the saved slugs. Preloaded by PHP, so this costs nothing on load.
 	const iconData = useIcon( icon );
@@ -101,7 +113,16 @@ export default function Edit( {
 	const extraBlockProps = useMemo( () => {
 		// Hover, icon colours, gap and shadow hover: see preview.js.
 		const preview = getStylePreview( style, device );
-		const inline = { ...preview.style };
+		const animation = getAnimationProps(
+			{
+				animationType,
+				animationDuration,
+				animationDelay,
+				animationEasing,
+			},
+			isPreviewing
+		);
+		const inline = { ...preview.style, ...animation.style };
 
 		if ( previewWidth ) {
 			inline.width = previewWidth;
@@ -124,11 +145,13 @@ export default function Edit( {
 				hoverIconFlipForRTL,
 			} ),
 			...preview.classes,
-		];
+			animation.className,
+		].filter( Boolean );
 
 		return {
 			...( Object.keys( inline ).length ? { style: inline } : {} ),
 			...( classes.length ? { className: classes.join( ' ' ) } : {} ),
+			...animation.data,
 		};
 	}, [
 		style,
@@ -143,6 +166,11 @@ export default function Edit( {
 		hoverIcon,
 		hoverIconPosition,
 		hoverIconFlipForRTL,
+		isPreviewing,
+		animationType,
+		animationDuration,
+		animationDelay,
+		animationEasing,
 	] );
 
 	// The block root. render.php puts the same classes on its <a>.
@@ -249,6 +277,13 @@ export default function Edit( {
 					setAttributes={ setAttributes }
 				/>
 			</InspectorControls>
+
+			<AnimationPanel
+				clientId={ clientId }
+				attributes={ attributes }
+				setAttributes={ setAttributes }
+				onPreview={ playPreview }
+			/>
 
 			{ /*
 			 * A span in the editor rather than an anchor, so a click

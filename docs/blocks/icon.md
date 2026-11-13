@@ -128,6 +128,14 @@ matches it. A colour set on the block, and the hover colours, still win.
 The editor's link button and popover are `src/shared/link/`, the same component
 the Button uses.
 
+## Entrance animation (S-05)
+
+The shared animation (see [../animation.md](../animation.md)): the five
+attributes, `Animation::wrapper()` merged into the wrapper (its timing joins
+the width in one `style` attribute), the panel in Settings and the editor
+preview. The keyframes move the wrapper; the SVG's own `rotate` and `scale`
+are separate properties, so an animated icon keeps its rotation and flips.
+
 ## `is-inline` is opt-in
 
 The default is a block-level wrapper. An icon is usually its own element — a

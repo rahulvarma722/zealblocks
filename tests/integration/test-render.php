@@ -520,6 +520,34 @@ $check( 'view script loaded for an animated block', wp_script_is( $animation_han
 $check( 'unknown animation type ignored', false === strpos( do_blocks( '<!-- wp:zealblocks/text {"content":"X","animationType":"explode"} /-->' ), 'data-zealblocks-animation' ) );
 
 // ---------------------------------------------------------------------
+echo "\nButton, Icon and Buttons — entrance animation (S-05)\n";
+// ---------------------------------------------------------------------
+$animated_markup = array(
+	'button'  => '<!-- wp:zealblocks/button {"text":"Go","url":"https://ex.org","animationType":"fade-up","animationDuration":600,"animationDelay":100,"animationEasing":"ease-out"} /-->',
+	'icon'    => '<!-- wp:zealblocks/icon {"icon":"heart","animationType":"fade-up","animationDuration":600,"animationDelay":100,"animationEasing":"ease-out","style":{"dimensions":{"width":"48px"}}} /-->',
+	'buttons' => '<!-- wp:zealblocks/buttons {"animationType":"fade-up","animationDuration":600,"animationDelay":100,"animationEasing":"ease-out"} --><!-- wp:zealblocks/button {"text":"In","url":"https://ex.org"} /--><!-- /wp:zealblocks/buttons -->',
+);
+
+foreach ( $animated_markup as $animated_slug => $animated_source ) {
+	wp_dequeue_script( $animation_handle );
+	$plain_source = (string) preg_replace( '/"animation[A-Za-z]+":("[^"]*"|\d+),?/', '', $animated_source );
+	$plain_source = str_replace( array( ',}', '{}' ), array( '}', '' ), $plain_source );
+	$plain_html   = do_blocks( $plain_source );
+
+	$check( $animated_slug . ': no animation, no class, attribute or script', false === strpos( $plain_html, 'has-animation' ) && false === strpos( $plain_html, 'data-zealblocks-animation' ) && ! wp_script_is( $animation_handle, 'enqueued' ) );
+
+	$animated_html = do_blocks( $animated_source );
+	preg_match( '/<(?:a|div|button) [^>]*class="[^"]*wp-block-zealblocks-' . $animated_slug . '\b[^"]*"[^>]*>/', $animated_html, $animated_root );
+	$animated_root = $animated_root[0] ?? '';
+
+	$check( $animated_slug . ': class, type and timing on the block root', false !== strpos( $animated_root, 'has-animation' ) && false !== strpos( $animated_root, 'data-zealblocks-animation="fade-up"' ) && false !== strpos( $animated_root, '--zealblocks-animation-duration:600ms;--zealblocks-animation-delay:100ms;--zealblocks-animation-easing:ease-out' ) );
+	$check( $animated_slug . ': the view script is loaded', wp_script_is( $animation_handle, 'enqueued' ) );
+}
+
+$check( 'icon: the animation timing joins the width in one style attribute', 1 === preg_match( '/style="[^"]*width:48px[^"]*--zealblocks-animation-duration|style="[^"]*--zealblocks-animation-duration[^"]*width:48px/', do_blocks( $animated_markup['icon'] ) ) );
+wp_dequeue_script( $animation_handle );
+
+// ---------------------------------------------------------------------
 echo "\nButton — hover, icon, gap and shadow styling (B-01 to B-07)\n";
 // ---------------------------------------------------------------------
 /*

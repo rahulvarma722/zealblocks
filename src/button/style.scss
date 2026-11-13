@@ -7,6 +7,7 @@
  * !important, so anything stronger here would defeat them.
  */
 
+@use "../shared/animation/animation";
 @use "../shared/hover/hover";
 
 .wp-block-zealblocks-button {
@@ -217,3 +218,9 @@
 [dir="rtl"] .wp-block-zealblocks-button.has-hover-icon-rtl-flip .wp-block-zealblocks-button__hover-icon {
 	transform: scaleX(-1) rotate(var(--zealblocks-button-icon-rotation, 0deg));
 }
+
+/*
+ * Entrance animation (S-05): hidden start, play, start states and keyframes,
+ * scoped to this block. See src/shared/animation/_animation.scss.
+ */
+@include animation.front(".wp-block-zealblocks-button");

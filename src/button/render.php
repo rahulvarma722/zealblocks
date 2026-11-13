@@ -37,6 +37,7 @@ defined( 'ABSPATH' ) || exit;
  * inside Block_Render now, and importing a name this file no longer uses would
  * be a lie about its dependencies.
  */
+use Zealblocks\Block\Animation;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Hover_Label;
 use Zealblocks\Block\Render as Block_Render;
@@ -287,6 +288,13 @@ if ( ! $hover_classes && ( $has_shadow_hover || $has_icon_hover ) ) {
 	$hover_classes = array( Hover::CLASS_NAME );
 }
 
+/*
+ * Entrance animation (S-05), shared with every block that opts in; see
+ * includes/block/class-animation.php. Empty for a button that is not
+ * animated, and only an animated one loads the view script.
+ */
+$animation = Animation::wrapper( $attributes );
+
 $wrapper_classes = array_filter(
 	array(
 		$responsive['class'],
@@ -299,6 +307,7 @@ $wrapper_classes = array_filter(
 		'' !== $hover_icon_markup && ! empty( $attributes['hoverIconFlipForRTL'] ) ? 'has-hover-icon-rtl-flip' : '',
 		...$hover_classes,
 		$has_shadow_hover ? 'has-shadow-hover' : '',
+		...$animation['classes'],
 	)
 );
 
@@ -320,7 +329,8 @@ $wrapper_classes = array_filter(
 $wrapper_attributes = get_block_wrapper_attributes(
 	array_merge(
 		$wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array(),
-		$extra_attributes
+		$extra_attributes,
+		$animation['attributes']
 	)
 );
 
