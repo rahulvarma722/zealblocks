@@ -239,9 +239,14 @@ final class Render {
 	 * colours use `:hover` and, for keyboard users, a focus state: `:focus` on
 	 * a link or button, `:focus-within` on a container whose child takes focus.
 	 *
+	 * `:has(:focus-visible)` is the keyboard-only form of `:focus-within`, for a
+	 * container. A mouse click focuses a <button> child, so `:focus-within`
+	 * would keep the hover state on until the visitor clicked elsewhere; the
+	 * Button avoids the same thing with `:focus-visible`.
+	 *
 	 * @var string[]
 	 */
-	const PSEUDO_STATES = array( ':hover', ':focus', ':focus-visible', ':focus-within' );
+	const PSEUDO_STATES = array( ':hover', ':focus', ':focus-visible', ':focus-within', ':has(:focus-visible)' );
 
 	/**
 	 * A selector for a base selector in one or more pseudo-states.

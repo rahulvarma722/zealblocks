@@ -19,9 +19,30 @@
 		"spacing": {
 			"blockGap": [ "horizontal", "vertical" ],
 			"padding": true,
-			"margin": [ "top", "bottom" ],
+			"margin": true,
 			"__experimentalDefaultControls": {
 				"blockGap": true
+			}
+		},
+		"color": {
+			"gradients": true,
+			"text": false,
+			"background": true,
+			"__experimentalDefaultControls": {
+				"background": true
+			}
+		},
+		"shadow": true,
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": true,
+				"radius": true,
+				"style": true,
+				"width": true
 			}
 		},
 		"layout": {

@@ -355,6 +355,59 @@ $check( 'Render::link() drops unknown targets and rel tokens', array( 'href' => 
 $check( 'and returns nothing for an unusable URL', array() === Zealblocks\Block\Render::link( array( 'url' => 'data:text/html,x', 'linkTarget' => '_blank' ) ) );
 
 // ---------------------------------------------------------------------
+echo "\nButtons — background, hover, border, shadow and margin (BS-01 to BS-05)\n";
+// ---------------------------------------------------------------------
+$buttons_supports = WP_Block_Type_Registry::get_instance()->get_registered( 'zealblocks/buttons' )->supports;
+$check( 'background colour and gradient, no text colour (BS-01)', true === ( $buttons_supports['color']['background'] ?? null ) && true === ( $buttons_supports['color']['gradients'] ?? null ) && false === ( $buttons_supports['color']['text'] ?? null ) );
+$check( 'border and shadow (BS-03, BS-04)', true === ( $buttons_supports['__experimentalBorder']['width'] ?? null ) && true === ( $buttons_supports['__experimentalBorder']['radius'] ?? null ) && true === ( $buttons_supports['shadow'] ?? null ) );
+$check( 'margin on all sides (BS-05)', true === ( $buttons_supports['spacing']['margin'] ?? null ) );
+
+$buttons_probe = static function ( $attrs ) {
+	WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+	$html = do_blocks(
+		'<!-- wp:zealblocks/buttons ' . wp_json_encode( $attrs ) . ' -->'
+		. '<!-- wp:zealblocks/button {"text":"A","url":"https://ex.org"} /-->'
+		. '<!-- /wp:zealblocks/buttons -->'
+	);
+	preg_match( '/class="[^"]*(zealblocks-btns-[0-9a-f]{8})/', $html, $match );
+
+	return array(
+		'html'  => $html,
+		'css'   => wp_style_engine_get_stylesheet_from_context( 'zealblocks' ),
+		'class' => isset( $match[1] ) ? '.' . $match[1] : '',
+	);
+};
+
+$styled = $buttons_probe(
+	array(
+		'style' => array(
+			'color'   => array( 'background' => '#eeeeee' ),
+			'border'  => array( 'width' => '2px', 'style' => 'solid', 'color' => '#111111', 'radius' => '8px' ),
+			'spacing' => array( 'margin' => array( 'left' => '10px', 'right' => '20px' ) ),
+		),
+	)
+);
+$check( 'core serialises background, border and side margins on the wrapper', false !== strpos( $styled['html'], 'background-color:#eeeeee' ) && false !== strpos( $styled['html'], 'border-width:2px' ) && false !== strpos( $styled['html'], 'margin-left:10px' ) && false !== strpos( $styled['html'], 'margin-right:20px' ) );
+$check( 'no hover: no hash class, no rules', '' === $styled['class'] && '' === $styled['css'] && false === strpos( $styled['html'], 'has-hover' ) );
+
+$hovered = $buttons_probe(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'backgroundHover' => 'linear-gradient(90deg,#000 0%,#fff 100%)',
+				'textHover'       => '#ff0000',
+			),
+			'@tablet'    => array( 'zealblocks' => array( 'backgroundHover' => '#00ff00' ) ),
+		),
+	)
+);
+$check( 'background hover on :hover and keyboard focus inside (BS-02)', '' !== $hovered['class'] && false !== strpos( $hovered['css'], $hovered['class'] . ':hover,' . $hovered['class'] . ':has(:focus-visible){background:linear-gradient(90deg,#000 0%,#fff 100%) !important;}' ) );
+$check( 'background hover is per device', 1 === preg_match( '/@media[^{]*\{' . preg_quote( $hovered['class'] . ':hover,' . $hovered['class'] . ':has(:focus-visible){background:#00ff00 !important;}', '/' ) . '\}/', $hovered['css'] ) );
+$check( 'a stored text hover is dropped: the container has no text colour', false === strpos( $hovered['css'], '#ff0000' ) );
+$check( 'has-hover switches the transition on', false !== strpos( $hovered['html'], 'has-hover' ) );
+$check( 'the children still render inside', false !== strpos( $hovered['html'], 'wp-block-zealblocks-button' ) );
+
+// ---------------------------------------------------------------------
 echo "\nText — visual presets\n";
 // ---------------------------------------------------------------------
 $check( 'zealblocks/text registered', $registry->is_registered( 'zealblocks/text' ) );

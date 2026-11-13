@@ -6,6 +6,8 @@
  * Only the things layout does not cover belong here.
  */
 
+@use "../shared/hover/hover";
+
 .wp-block-zealblocks-buttons {
 	// Buttons wrap rather than overflow on narrow viewports.
 	flex-wrap: wrap;
@@ -13,3 +15,9 @@
 	// Remove the list-ish default margin a theme may apply to the box.
 	box-sizing: border-box;
 }
+
+/*
+ * Background hover transition (BS-02). The prefix MUST match render.php's.
+ * See src/shared/hover/_hover.scss.
+ */
+@include hover.transition(".wp-block-zealblocks-buttons", "--zealblocks-buttons-hover-", (background));

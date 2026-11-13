@@ -16,6 +16,23 @@ inner blocks through `render.php` like everything else — a container returning
 `null` from `save()` would discard its children silently, which is the same trap
 described in [README.md](README.md).
 
+### Styling (BS-01 to BS-05)
+
+| feature | how |
+|---|---|
+| background colour and gradient | core `color.background` and `gradients`; `color.text` is off, as in Spectra |
+| background hover, colour or gradient, per device | shared `Block\Hover` ([../hover.md](../hover.md)) with the text row and `Hover::TEXT` left out |
+| border: colour, width, style, radius | core `__experimentalBorder` |
+| box shadow | core `shadow` |
+| margin on all sides | core `spacing.margin: true` (was top and bottom only) |
+
+The hover states are `:hover` and `:has(:focus-visible)`: keyboard focus on a
+Button inside shows the hover background, but a mouse click on a `<button>`
+child does not leave it stuck on, as Spectra's `:focus-within` does.
+
+Child sizing (Spectra's Fit / Fill / Fixed per Button, BS-06) is not built: it
+overlaps the Button's own per-device width, pending decision D-3.
+
 ## `zealblocks/button` — attributes
 
 | attribute | type | notes |

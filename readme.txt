@@ -21,7 +21,7 @@ reimplemented. What Zealblocks adds is the part core leaves out.
 
 * **Icon** — an SVG icon from the bundled icon library, with flip, free rotation, right-to-left mirroring, hover colours, an optional link and a proper decorative/meaningful accessibility choice.
 * **Text** — a paragraph with a visual style preset: Display, H1–H6, Lead, Body, Caption or Eyebrow, chosen independently of the theme's default paragraph sizing.
-* **Buttons** — a flex container for one or more buttons, with block gap, padding and wide/full alignment.
+* **Buttons** — a flex container for one or more buttons, with block gap, padding, margin, background (with a hover colour or gradient), border, shadow and wide/full alignment.
 * **Button** — a button-style link with an optional icon, and per-viewport width and icon size.
 
 = 1,992 icons, shared by every block =

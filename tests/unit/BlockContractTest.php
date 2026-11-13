@@ -446,6 +446,15 @@ final class BlockContractTest extends TestCase {
 		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $icon . 'constants.js' ) );
 		$this->assertStringContainsString( 'hover.transition(".wp-block-zealblocks-icon", "' . $prefix . '")', (string) file_get_contents( $icon . 'style.scss' ) );
 		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-icon", "' . $prefix . '")', (string) file_get_contents( $icon . 'editor.scss' ) );
+
+		// The Buttons container's prefix, in the same four places.
+		$prefix  = '--zealblocks-buttons-hover-';
+		$buttons = ZEALBLOCKS_PATH . 'src/buttons/';
+
+		$this->assertStringContainsString( "Hover::properties( '" . $prefix . "'", (string) file_get_contents( $buttons . 'render.php' ) );
+		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $buttons . 'constants.js' ) );
+		$this->assertStringContainsString( '".wp-block-zealblocks-buttons", "' . $prefix . '",', $flat( $buttons . 'style.scss' ) );
+		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-buttons", "' . $prefix . '")', (string) file_get_contents( $buttons . 'editor.scss' ) );
 	}
 
 	/**

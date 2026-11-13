@@ -4,8 +4,7 @@ Text and background colours on hover, per device, with a transition. They
 match Spectra Free's Text Hover and Background Hover, including the background
 taking either a colour or a gradient.
 
-Text uses them today. Button (B-01, B-02), Icon (I-01, I-02) and Buttons
-(BS-02) build on this.
+Text, Button (B-01, B-02), Icon (I-01, I-02) and Buttons (BS-02) use them.
 
 ## Where it lives
 
@@ -26,14 +25,15 @@ attribute, in core's viewport-state shape (`style.zealblocks.textHover`,
 
 Pick a **variable prefix** for the block, such as `--zealblocks-button-hover-`,
 and use the same one in all four places below. `BlockContractTest` checks
-Text's.
+every block's.
 
 1. **`render.php`**: spread `Hover::properties( $prefix, $states )` into the map
    passed to `Block_Render::responsive()`, and merge
    `Hover::classes( $responsive['rules'] )` into the wrapper classes.
 2. **`edit.js`**: render `<HoverControls clientId style setAttributes stateKey device />`
    (with `textLabel` where "Text hover" is the wrong word, such as "Icon
-   hover"), and merge `getHoverPreview( attributes.style, device, prefix )`
+   hover", and `hasText={ false }` on a block with no text colour, such as
+   Buttons, which also leaves `Hover::TEXT` out of its PHP map), and merge `getHoverPreview( attributes.style, device, prefix )`
    into the block props.
 3. **`style.scss`**: `@include hover.transition("<block selector>", "<prefix>")`.
 4. **`editor.scss`**: `@include hover.preview("<block selector>", "<prefix>")`.
@@ -41,13 +41,14 @@ Text's.
 ### Choosing the states
 
 `$states` is one state or a list, from `Render::PSEUDO_STATES`
-(`:hover`, `:focus`, `:focus-visible`, `:focus-within`):
+(`:hover`, `:focus`, `:focus-visible`, `:focus-within`, `:has(:focus-visible)`):
 
 | block | states | why |
 |---|---|---|
 | Text | `':hover'` | not focusable on the front end |
-| Button (a link or button) | `array( ':hover', ':focus' )` | keyboard users see what mouse users see, as in Spectra |
-| Icon (with a link), Buttons | `array( ':hover', ':focus-within' )` | the focus lands on a child: the link, or a Button |
+| Button (a link or button) | `array( ':hover', ':focus-visible' )` | keyboard users see what mouse users see. Not Spectra's `:focus`: a mouse click focuses a `<button>` and the hover colours would stick |
+| Icon | `array( ':hover', ':focus-visible' )` | a linked icon's wrapper is the `<a>` itself |
+| Buttons | `array( ':hover', ':has(:focus-visible)' )` | the focus lands on a child Button. Not Spectra's `:focus-within`, which a mouse click on a `<button>` child also triggers |
 
 A list becomes a selector list: `.x:hover,.x:focus{color:… !important}`, inside
 each band's media query too. States not in the allow-list are dropped, because

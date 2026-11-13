@@ -2,6 +2,14 @@
  * Buttons — editor-only styles.
  */
 
+@use "../shared/hover/hover";
+
+/*
+ * Background hover preview for the previewed device (BS-02). The front end
+ * gets real per-band rules instead; see src/shared/hover/_hover.scss.
+ */
+@include hover.preview(".wp-block-zealblocks-buttons", "--zealblocks-buttons-hover-");
+
 .wp-block-zealblocks-buttons {
 	// Keep the empty container clickable before any button is inserted.
 	min-height: 1em;

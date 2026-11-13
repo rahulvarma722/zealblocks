@@ -233,6 +233,17 @@ final class BlockRenderTest extends TestCase {
 		);
 
 		$this->assertSame( '.' . $within['class'] . ':hover,.' . $within['class'] . ':focus-within', $within['rules'][0]['selector'] );
+
+		// The keyboard-only container state the Buttons block uses. Only the
+		// exact string is allowed; a near miss is dropped like any other.
+		$keyboard = Block_Render::responsive(
+			array( 'zealblocks' => array( 'c' => '#fff' ) ),
+			'zealblocks',
+			array( 'c' => array( 'background', 'background', array( ':hover', ':has(:focus-visible)', ':has(*)' ) ) ),
+			'zealblocks-'
+		);
+
+		$this->assertSame( '.' . $keyboard['class'] . ':hover,.' . $keyboard['class'] . ':has(:focus-visible)', $keyboard['rules'][0]['selector'] );
 	}
 
 	/**

@@ -47,6 +47,9 @@ function toNumber( value ) {
  * @param {string}   [props.textLabel]   Label for the text colour, e.g.
  *                                       "Icon hover" on a block whose text
  *                                       colour is its icon's.
+ * @param {boolean}  [props.hasText]     False for a block with no text
+ *                                       colour, such as Buttons: only the
+ *                                       background hover row shows.
  * @return {Element} The fill.
  */
 export function HoverControls( {
@@ -56,6 +59,7 @@ export function HoverControls( {
 	stateKey,
 	device,
 	textLabel = __( 'Text hover', 'zealblocks' ),
+	hasText = true,
 } ) {
 	const colorSettings = useMultipleOriginColorsAndGradients();
 
@@ -97,14 +101,23 @@ export function HoverControls( {
 				panelId={ clientId }
 				{ ...colorSettings }
 				settings={ [
-					{
-						label: withDevice( textLabel, stateKey, device ),
-						colorValue: textHover,
-						onColorChange: ( next ) => set( HOVER_KEYS.text, next ),
-						resetAllFilter: resetKey( HOVER_KEYS.text ),
-						enableAlpha: true,
-						clearable: true,
-					},
+					...( hasText
+						? [
+								{
+									label: withDevice(
+										textLabel,
+										stateKey,
+										device
+									),
+									colorValue: textHover,
+									onColorChange: ( next ) =>
+										set( HOVER_KEYS.text, next ),
+									resetAllFilter: resetKey( HOVER_KEYS.text ),
+									enableAlpha: true,
+									clearable: true,
+								},
+						  ]
+						: [] ),
 					{
 						label: withDevice(
 							__( 'Background hover', 'zealblocks' ),

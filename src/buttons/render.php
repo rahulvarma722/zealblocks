@@ -17,6 +17,10 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// A file-level `use` is lexical: see button/render.php.
+use Zealblocks\Block\Hover;
+use Zealblocks\Block\Render as Block_Render;
+
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
  *
@@ -50,6 +54,34 @@ if ( '' === trim( (string) $content ) ) {
 }
 
 /*
+ * Background hover (BS-02), per device, through the shared Hover. Background
+ * and border, shadow and margin (BS-01, BS-03 to BS-05) are core supports,
+ * which get_block_wrapper_attributes() already serialises.
+ *
+ * No text hover: the container has no text colour (`color.text: false`), so a
+ * hand-stored one is dropped here rather than printed.
+ *
+ * States: `:hover`, and `:has(:focus-visible)` for a keyboard user tabbing to
+ * a button inside. Spectra uses `:focus-within`, which a mouse click on a
+ * <button> child also triggers, leaving the hover background on until the
+ * visitor clicks elsewhere.
+ */
+$responsive = Block_Render::responsive(
+	isset( $attributes['style'] ) ? $attributes['style'] : array(),
+	'zealblocks',
+	array_diff_key(
+		Hover::properties( '--zealblocks-buttons-hover-', array( ':hover', ':has(:focus-visible)' ) ),
+		array( Hover::TEXT => true )
+	),
+	'zealblocks-btns-'
+);
+
+$wrapper_classes = array_filter( array( $responsive['class'], ...Hover::classes( $responsive['rules'] ) ) );
+
+// To core's style engine, as the Button's rules go. See button/render.php.
+Block_Render::store_rules( $responsive['rules'] );
+
+/*
  * $content is NOT filtered, and must not be.
  *
  * It is not user input: it is the finished HTML of the inner blocks, which core
@@ -69,6 +101,6 @@ if ( '' === trim( (string) $content ) ) {
  */
 printf(
 	'<div %1$s>%2$s</div>',
-	get_block_wrapper_attributes(), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); re-escaping attribute markup would corrupt it.
+	get_block_wrapper_attributes( $wrapper_classes ? array( 'class' => implode( ' ', $wrapper_classes ) ) : array() ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); re-escaping attribute markup would corrupt it.
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already-rendered inner block HTML; see the note above.
 );
