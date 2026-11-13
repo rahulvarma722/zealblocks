@@ -22,6 +22,10 @@ import {
 	useAnimationPreview,
 	getAnimationProps,
 } from '../shared/animation';
+import {
+	DisplayConditionsPanel,
+	hasConditions as hasAnyCondition,
+} from '../shared/display-conditions';
 import { HOVER_VAR_PREFIX } from './constants';
 
 /**
@@ -39,6 +43,7 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 		animationDuration,
 		animationDelay,
 		animationEasing,
+		displayConditions,
 	} = attributes;
 
 	const hasChildren = useSelect(
@@ -70,7 +75,14 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 		style: { ...hoverPreview.style, ...animation.style },
 		...animation.data,
 		className:
-			[ ...hoverPreview.classes, animation.className ]
+			[
+				...hoverPreview.classes,
+				animation.className,
+				// The canvas marks a block with display conditions; it never hides it.
+				hasAnyCondition( displayConditions )
+					? 'has-display-conditions'
+					: '',
+			]
 				.filter( Boolean )
 				.join( ' ' ) || undefined,
 	} );
@@ -98,6 +110,11 @@ export default function Edit( { clientId, attributes, setAttributes } ) {
 				attributes={ attributes }
 				setAttributes={ setAttributes }
 				onPreview={ playPreview }
+			/>
+			<DisplayConditionsPanel
+				clientId={ clientId }
+				attributes={ attributes }
+				setAttributes={ setAttributes }
 			/>
 			{ /* Background hover only: the container has no text colour. */ }
 			<HoverControls

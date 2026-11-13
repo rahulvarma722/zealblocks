@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 // A file-level `use` is lexical: see button/render.php.
 use Zealblocks\Block\Animation;
+use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 
@@ -48,6 +49,16 @@ use Zealblocks\Block\Render as Block_Render;
  * variables do not have. Disabled at file level instead, since it applies to
  * every line rather than to any one of them.
  */
+
+/*
+ * Display conditions first, before any work: a hidden block renders nothing at
+ * all, and must not leave a stored CSS rule or an enqueued script behind.
+ * Display_Conditions::pre_render() normally stops it sooner; this covers render
+ * paths that call the callback directly.
+ */
+if ( Display_Conditions::hides( isset( $attributes['displayConditions'] ) ? $attributes['displayConditions'] : null ) ) {
+	return;
+}
 
 // An empty container would render as a stray, invisible wrapper.
 if ( '' === trim( (string) $content ) ) {

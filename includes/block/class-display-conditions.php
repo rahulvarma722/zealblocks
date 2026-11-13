@@ -7,6 +7,7 @@
 
 namespace Zealblocks\Block;
 
+use Zealblocks\Helper;
 use Zealblocks\Module;
 
 defined( 'ABSPATH' ) || exit;
@@ -87,12 +88,48 @@ final class Display_Conditions implements Module {
 	private static $context = null;
 
 	/**
-	 * Adds the editor data hook.
+	 * Adds the editor data hook, and the render short-circuit.
 	 *
 	 * @return void
 	 */
 	public function register() {
 		add_action( 'enqueue_block_editor_assets', array( $this, 'print_roles' ) );
+		add_filter( 'pre_render_block', array( $this, 'pre_render' ), 10, 2 );
+	}
+
+	/**
+	 * Renders nothing for a hidden block of ours, before core renders the
+	 * blocks inside it.
+	 *
+	 * This is what a CONTAINER needs. Core renders a block's inner blocks
+	 * first and passes them to its render callback as `$content`, so the early
+	 * return in render.php comes too late for a hidden Buttons group: each
+	 * Button inside has already stored its CSS rules in the style engine, and
+	 * those reach the page although the group printed nothing. (Scripts it
+	 * enqueued are not the problem: since WordPress 6.9, WP_Block::render()
+	 * dequeues whatever a block enqueued while rendering empty. The style
+	 * engine store has no such undo.) `pre_render_block` runs before any of
+	 * it, for nested blocks as well, and spares the wasted rendering too.
+	 *
+	 * render.php keeps its own early return for render paths that call a
+	 * block's render callback directly and skip this filter.
+	 *
+	 * @param string|null $pre_render   Content another filter already chose, or null.
+	 * @param array       $parsed_block The block being rendered.
+	 * @return string|null '' to render nothing, or null to render as usual.
+	 */
+	public function pre_render( $pre_render, $parsed_block ) {
+		if ( null !== $pre_render || ! is_array( $parsed_block ) ) {
+			return $pre_render;
+		}
+
+		$name = isset( $parsed_block['blockName'] ) && is_string( $parsed_block['blockName'] ) ? $parsed_block['blockName'] : '';
+
+		if ( 0 !== strpos( $name, Helper::slug() . '/' ) ) {
+			return null;
+		}
+
+		return self::hides( $parsed_block['attrs']['displayConditions'] ?? null ) ? '' : null;
 	}
 
 	/**

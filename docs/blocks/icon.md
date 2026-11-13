@@ -136,6 +136,13 @@ the width in one `style` attribute), the panel in Settings and the editor
 preview. The keyframes move the wrapper; the SVG's own `rotate` and `scale`
 are separate properties, so an animated icon keeps its rotation and flips.
 
+## Display conditions (S-06)
+
+The shared display conditions (see [../display-conditions.md](../display-conditions.md)):
+hide the icon when logged in or out, for a role, browser, operating system or
+day. Decided on the server, so a hidden icon is not in the page source. The
+editor marks it with a dashed outline.
+
 ## `is-inline` is opt-in
 
 The default is a block-level wrapper. An icon is usually its own element — a

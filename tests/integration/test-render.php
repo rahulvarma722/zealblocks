@@ -787,6 +787,58 @@ $check( 'a hidden block stores no CSS rule', false === strpos( wp_style_engine_g
 $check( 'a hidden animated block enqueues no script', ! wp_script_is( Zealblocks\Block\Animation::handle(), 'enqueued' ) );
 
 // ---------------------------------------------------------------------
+echo "\nButton, Icon and Buttons — display conditions (S-06)\n";
+// ---------------------------------------------------------------------
+$hide = array( 'hideWhenLoggedOut' => true );
+
+/*
+ * Each hidden block carries an animation and a unique hover colour, so a CSS
+ * rule or a script left behind would show. The visitor here is logged out.
+ */
+$hidden_cases = array(
+	'button' => '<!-- wp:zealblocks/button ' . wp_json_encode( array( 'text' => 'Hidden', 'url' => 'https://ex.org', 'animationType' => 'fade', 'style' => array( 'zealblocks' => array( 'textHover' => '#0d0e01' ) ), 'displayConditions' => $hide ) ) . ' /-->',
+	'icon'   => '<!-- wp:zealblocks/icon ' . wp_json_encode( array( 'icon' => 'heart', 'animationType' => 'fade', 'style' => array( 'zealblocks' => array( 'textHover' => '#0d0e02' ) ), 'displayConditions' => $hide ) ) . ' /-->',
+);
+
+foreach ( $hidden_cases as $hidden_slug => $hidden_source ) {
+	WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+	wp_dequeue_script( Zealblocks\Block\Animation::handle() );
+
+	$check( $hidden_slug . ': hidden renders no markup, CSS rule or script', '' === trim( do_blocks( $hidden_source ) ) && '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) && ! wp_script_is( Zealblocks\Block\Animation::handle(), 'enqueued' ) );
+}
+
+$check( 'a condition that does not match leaves the block alone', false !== strpos( do_blocks( '<!-- wp:zealblocks/icon {"icon":"heart","displayConditions":{"hideWhenLoggedIn":true}} /-->' ), 'wp-block-zealblocks-icon' ) );
+
+/*
+ * THE CONTAINER CASE. Core renders the inner blocks before the container's
+ * own callback, so a hidden group must be stopped by pre_render_block, or its
+ * Buttons would already have stored their CSS rules, which reach the page.
+ * (Core dequeues their scripts itself when the group renders empty.)
+ */
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+wp_dequeue_script( Zealblocks\Block\Animation::handle() );
+$hidden_group = do_blocks(
+	'<!-- wp:zealblocks/buttons {"displayConditions":{"hideWhenLoggedOut":true}} -->'
+	. '<!-- wp:zealblocks/button ' . wp_json_encode( array( 'text' => 'Inner', 'url' => 'https://ex.org', 'animationType' => 'zoom-in', 'style' => array( 'zealblocks' => array( 'backgroundHover' => '#0d0e03' ) ) ) ) . ' /-->'
+	. '<!-- /wp:zealblocks/buttons -->'
+);
+$check( 'buttons: a hidden group renders no markup', '' === trim( $hidden_group ) );
+$check( 'buttons: and its Buttons leave no CSS rule', '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) );
+$check( 'buttons: and no script', ! wp_script_is( Zealblocks\Block\Animation::handle(), 'enqueued' ) );
+
+$one_hidden = do_blocks(
+	'<!-- wp:zealblocks/buttons -->'
+	. '<!-- wp:zealblocks/button {"text":"Shown","url":"https://ex.org"} /-->'
+	. '<!-- wp:zealblocks/button {"text":"Gone","url":"https://ex.org","displayConditions":{"hideWhenLoggedOut":true}} /-->'
+	. '<!-- /wp:zealblocks/buttons -->'
+);
+$check( 'a hidden Button inside a visible group drops out alone', false !== strpos( $one_hidden, '>Shown<' ) && false === strpos( $one_hidden, '>Gone<' ) );
+
+$display_conditions = new Zealblocks\Block\Display_Conditions();
+$check( 'pre_render leaves other plugins\' blocks alone', null === $display_conditions->pre_render( null, array( 'blockName' => 'core/paragraph', 'attrs' => array( 'displayConditions' => $hide ) ) ) );
+$check( 'and keeps content another filter already chose', 'kept' === $display_conditions->pre_render( 'kept', array( 'blockName' => 'zealblocks/icon', 'attrs' => array( 'displayConditions' => $hide ) ) ) );
+
+// ---------------------------------------------------------------------
 echo "\nText — inline formats survive the front end\n";
 // ---------------------------------------------------------------------
 /*

@@ -33,6 +33,10 @@ import {
 	useAnimationPreview,
 	getAnimationProps,
 } from '../shared/animation';
+import {
+	DisplayConditionsPanel,
+	hasConditions as hasAnyCondition,
+} from '../shared/display-conditions';
 import { HOVER_VAR_PREFIX } from './constants';
 import { getSvgProps } from './svg-props';
 
@@ -58,6 +62,7 @@ export default function Edit( {
 		animationDuration,
 		animationDelay,
 		animationEasing,
+		displayConditions,
 	} = attributes;
 
 	// Which viewport state the inspector is editing; see use-style-state.js.
@@ -124,6 +129,10 @@ export default function Edit( {
 			flipForRTL ? 'has-rtl-flip' : '',
 			...hoverPreview.classes,
 			animation.className,
+			// The canvas marks a block with display conditions; it never hides it.
+			hasAnyCondition( displayConditions )
+				? 'has-display-conditions'
+				: '',
 		]
 			.filter( Boolean )
 			.join( ' ' ),
@@ -201,6 +210,11 @@ export default function Edit( {
 				attributes={ attributes }
 				setAttributes={ setAttributes }
 				onPreview={ playPreview }
+			/>
+			<DisplayConditionsPanel
+				clientId={ clientId }
+				attributes={ attributes }
+				setAttributes={ setAttributes }
 			/>
 
 			<InspectorControls group="settings">

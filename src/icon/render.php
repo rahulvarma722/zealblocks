@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
  * this template from inside a closure in global scope.
  */
 use Zealblocks\Block\Animation;
+use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Icon_Handler\Library as Icon_Library;
@@ -28,6 +29,16 @@ use Zealblocks\Icon_Handler\Library as Icon_Library;
  * this template in a static closure and requires it from inside that closure
  * (wp-includes/blocks.php:629-631), so every assignment is function-scoped.
  */
+
+/*
+ * Display conditions first, before any work: a hidden block renders nothing at
+ * all, and must not leave a stored CSS rule or an enqueued script behind.
+ * Display_Conditions::pre_render() normally stops it sooner; this covers render
+ * paths that call the callback directly.
+ */
+if ( Display_Conditions::hides( isset( $attributes['displayConditions'] ) ? $attributes['displayConditions'] : null ) ) {
+	return;
+}
 
 $icon_name = Block_Render::text( $attributes, 'icon' );
 

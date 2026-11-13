@@ -7,6 +7,7 @@
  */
 
 @use "../shared/animation/animation";
+@use "../shared/display-conditions/display-conditions";
 @use "../shared/hover/hover";
 
 .wp-block-zealblocks-button {
@@ -32,3 +33,9 @@
  * by useAnimationPreview(). See src/shared/animation/_animation.scss.
  */
 @include animation.preview(".wp-block-zealblocks-button");
+
+/*
+ * The dashed outline on a block with display conditions (S-06). See
+ * src/shared/display-conditions/_display-conditions.scss.
+ */
+@include display-conditions.marker(".wp-block-zealblocks-button");

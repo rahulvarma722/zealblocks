@@ -121,6 +121,10 @@
 		"animationRepeat": {
 			"type": "boolean",
 			"default": false
+		},
+		"displayConditions": {
+			"type": "object",
+			"default": {}
 		}
 	},
 	"supports": {

@@ -39,6 +39,14 @@ Both blocks use the shared animation (see [../animation.md](../animation.md)),
 so a group can enter as a whole, each Button on its own, or both. The page
 loads one animation script whatever mix it has.
 
+### Display conditions (S-06)
+
+Both blocks use the shared display conditions (see
+[../display-conditions.md](../display-conditions.md)). Hiding a group hides
+every Button in it, and leaves none of their CSS behind: the module stops a
+hidden block on `pre_render_block`, before core renders its children. A hidden
+Button inside a visible group drops out on its own.
+
 ## `zealblocks/button` — attributes
 
 | attribute | type | notes |

@@ -28,6 +28,10 @@ import {
 	useAnimationPreview,
 	getAnimationProps,
 } from '../shared/animation';
+import {
+	DisplayConditionsPanel,
+	hasConditions as hasAnyCondition,
+} from '../shared/display-conditions';
 import { getStylePreview } from './preview';
 import {
 	ButtonColorControls,
@@ -64,7 +68,11 @@ export default function Edit( {
 		animationDuration,
 		animationDelay,
 		animationEasing,
+		displayConditions,
 	} = attributes;
+
+	// The canvas marks a block with display conditions; it never hides it.
+	const hasConditions = hasAnyCondition( displayConditions );
 
 	// Entrance animation, shared: src/shared/animation/preview.js.
 	const { isPreviewing, playPreview } = useAnimationPreview( attributes );
@@ -146,6 +154,7 @@ export default function Edit( {
 			} ),
 			...preview.classes,
 			animation.className,
+			hasConditions ? 'has-display-conditions' : '',
 		].filter( Boolean );
 
 		return {
@@ -171,6 +180,7 @@ export default function Edit( {
 		animationDuration,
 		animationDelay,
 		animationEasing,
+		hasConditions,
 	] );
 
 	// The block root. render.php puts the same classes on its <a>.
@@ -283,6 +293,11 @@ export default function Edit( {
 				attributes={ attributes }
 				setAttributes={ setAttributes }
 				onPreview={ playPreview }
+			/>
+			<DisplayConditionsPanel
+				clientId={ clientId }
+				attributes={ attributes }
+				setAttributes={ setAttributes }
 			/>
 
 			{ /*

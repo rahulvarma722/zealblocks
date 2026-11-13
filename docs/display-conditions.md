@@ -5,7 +5,7 @@ role, a browser, an operating system, or on chosen days of the week. It matches
 Spectra Free's Display Conditions extension, including its model: the
 conditions are **ORed**, so any one that matches hides the block.
 
-Text uses it today. Button, Icon and Buttons opt in under task S-06.
+Text, Button, Icon and Buttons use it (Button, Icon and Buttons since S-06).
 
 Per-device hiding is not here: core's block visibility (7.0+) already does it
 for every block, from the block toolbar.
@@ -36,6 +36,16 @@ for every block, from the block toolbar.
    First, because a hidden block must leave nothing behind. A CSS rule
    already stored, or a script already enqueued (an animated block), would
    still reach the page. The integration suite checks all three.
+
+   Usually the block never gets that far: the module's `pre_render()` filter
+   on `pre_render_block` returns `''` for a hidden block of ours before core
+   renders it. That is what a **container** needs. Core renders a block's
+   inner blocks before its own callback, so by the time a hidden Buttons
+   group's render.php returned, each Button inside had stored its CSS rules,
+   and those reached the page. (Core 6.9+ dequeues the scripts a block
+   enqueued while rendering empty, but the style engine store has no undo.)
+   The render.php check stays for render paths that call the callback
+   directly and skip the filter.
 3. **`edit.js`**: render `<DisplayConditionsPanel>`, and add the
    `has-display-conditions` class to the block props when
    `hasConditions( attributes.displayConditions )`.
