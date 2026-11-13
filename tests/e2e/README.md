@@ -53,7 +53,7 @@ to `artifacts/test-results/`. `artifacts/` is git-ignored.
 | path | what |
 |---|---|
 | `utils/index.js` | `test` (with the `posts` and `visitorPage` fixtures), `block()` markup builder, `computed()`, `tabTo()` |
-| `specs/global/` | the editor: insertion rules, save/reload validity, every inspector control, canvas previews |
+| `specs/global/` | the editor: insertion rules, save/reload validity, every inspector control present (`editor.spec.js`) and operated by click, type and pick (`controls.spec.js`), canvas previews |
 | `specs/button/`, `specs/icon/`, `specs/buttons/`, `specs/text/` | each block on the front end |
 | `specs/extensions/` | animation, display conditions, and everything per device at the 480/481/782/783 edges |
 
