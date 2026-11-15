@@ -1383,6 +1383,57 @@ foreach ( array( 'https://ex.org/photo.jpg', 'javascript:alert(1)', 'https://ex.
 	$check( 'video: "' . $not_video . '" is not a video file', false === strpos( $container( array( 'videoUrl' => $not_video ) ), '<video' ) );
 }
 
+// Phase 3: shape dividers and parent hover.
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$divided     = $container(
+	array(
+		'dividerTop'    => array( 'shape' => 'fan' ),
+		'dividerBottom' => array(
+			'shape'  => 'curve',
+			'flip'   => true,
+			'invert' => true,
+			'front'  => true,
+		),
+		'style'         => array(
+			'zealblocks' => array(
+				'dividerTopColor'    => '#0f1001',
+				'dividerTopHeight'   => '60px',
+				'dividerBottomWidth' => '200%',
+			),
+			'@mobile'    => array( 'zealblocks' => array( 'dividerTopHeight' => '30px' ) ),
+		),
+	)
+);
+$divider_css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$check( 'dividers: the top one, three layers, closed along the top edge', 1 === preg_match( '#<div class="wp-block-zealblocks-container__divider is-top is-shape-fan" aria-hidden="true"><svg viewBox="0 0 1000 100" preserveAspectRatio="none" focusable="false"><path d="M0,0 L500,100 L1000,0 L1000,0 L0,0 Z" opacity="0.33"/><path [^>]*opacity="0.66"/><path d="[^"]*"/></svg></div>#', $divided ) );
+$check( 'dividers: the bottom one flipped, inverted and in front, closed along the bottom edge', false !== strpos( $divided, 'class="wp-block-zealblocks-container__divider is-bottom is-shape-curve is-flipped is-inverted is-front"' ) && false !== strpos( $divided, 'd="M0,0 Q500,200 1000,0 L1000,100 L0,100 Z"' ) );
+$check( 'dividers: after the link and before the content, with the class that isolates them', 1 === preg_match( '#^<div [^>]*\bhas-divider\b[^>]*><div class="wp-block-zealblocks-container__divider is-top#', trim( $divided ) ) );
+$check( 'dividers: colour, height and width as custom properties, per device', false !== strpos( $divider_css, '--zealblocks-container-divider-top-color:#0f1001;--zealblocks-container-divider-top-height:60px;--zealblocks-container-divider-bottom-width:200%;' ) && 1 === preg_match( '/width <= 480px\)\{\.zealblocks-ctr-[0-9a-f]{8}\{--zealblocks-container-divider-top-height:30px;\}/', $divider_css ) );
+
+foreach ( array( array( 'shape' => '../../evil' ), array( 'shape' => 'nope' ), 'triangle', array( 'shape' => array( 'triangle' ) ) ) as $bad_divider ) {
+	$check( 'dividers: ' . wp_json_encode( $bad_divider ) . ' renders no divider', false === strpos( $container( array( 'dividerTop' => $bad_divider ) ), '__divider' ) );
+}
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$parent_hover_child = $container(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'parentHoverRestOpacity' => '0',
+				'parentHoverOpacity'     => '0.9',
+				'parentHoverMove'        => '10px',
+				'parentHoverColor'       => '#0f1002',
+			),
+			'@mobile'    => array( 'zealblocks' => array( 'parentHoverBackground' => '#0f1003' ) ),
+		),
+	)
+);
+$ph_css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$check( 'parent hover: rules hang off the parent Container\'s hover and focus, important', 1 === preg_match( '/\.wp-block-zealblocks-container:hover > \.zealblocks-ctr-ph-([0-9a-f]{8}),\.wp-block-zealblocks-container:has\(:focus-visible\) > \.zealblocks-ctr-ph-\1\{opacity:0.9 !important;color:#0f1002 !important;--zealblocks-container-parent-move:10px !important;\}/', $ph_css ) );
+$check( 'parent hover: a mobile background of its own', 1 === preg_match( '/width <= 480px\)\{\.wp-block-zealblocks-container:hover > \.zealblocks-ctr-ph-[0-9a-f]{8},[^{]*\{background:#0f1003 !important;\}/', $ph_css ) );
+$check( 'parent hover: the opacity at rest as a variable on the block itself', 1 === preg_match( '/\.zealblocks-ctr-[0-9a-f]{8}\{--zealblocks-container-rest-opacity:0;\}/', $ph_css ) );
+$check( 'parent hover: its classes on the root', 1 === preg_match( '/class="[^"]*\bzealblocks-ctr-ph-[0-9a-f]{8} has-parent-hover has-parent-hover-move has-parent-hover-rest\b/', $parent_hover_child ) );
+
 /*
  * A hidden container must stop its children before they render, as the
  * Buttons group does: they would otherwise store CSS rules that reach the page.

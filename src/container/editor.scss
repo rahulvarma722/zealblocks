@@ -57,3 +57,27 @@ $block: ".wp-block-zealblocks-container";
  * src/shared/display-conditions/_display-conditions.scss.
  */
 @include display-conditions.marker(".wp-block-zealblocks-container");
+
+/*
+ * Parent hover preview (P-65): the previewed device's values, applied while
+ * the parent is hovered. The front end gets real rules from render.php
+ * instead; see src/container/preview.js.
+ */
+.wp-block-zealblocks-container:hover > .wp-block-zealblocks-container {
+
+	&.has-ph-opacity {
+		opacity: var(--zealblocks-container-ph-opacity) !important;
+	}
+
+	&.has-ph-color {
+		color: var(--zealblocks-container-ph-color) !important;
+	}
+
+	&.has-ph-background {
+		background: var(--zealblocks-container-ph-background) !important;
+	}
+
+	&.has-ph-move {
+		translate: 0 calc(var(--zealblocks-container-ph-move) * -1);
+	}
+}

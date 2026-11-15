@@ -43,6 +43,7 @@ block API.** Not code that merely gets used by blocks.
 | `Block\Position` | yes | The position and offset property map entries, shared by Text and Container |
 | `Block\Reverse_Order` | yes | Per-device `flex-direction` rules for the Container ([blocks/container.md](blocks/container.md)) |
 | `Block\Background_Video` | yes | The Container's background video markup and its view script |
+| `Block\Shape_Divider` | yes | The Container's top and bottom shape dividers, from `shape-dividers.json` |
 | `Responsive_Styles` | no | Generates CSS. Knows nothing about the block API |
 | `Helper` | no | Environment queries |
 | `Plugin`, `Autoloader`, `Module` | no | Plugin infrastructure |
@@ -69,6 +70,7 @@ Zealblocks\Block\Hover         includes/block/class-hover.php
 Zealblocks\Block\Position      includes/block/class-position.php
 Zealblocks\Block\Reverse_Order includes/block/class-reverse-order.php
 Zealblocks\Block\Background_Video  includes/block/class-background-video.php
+Zealblocks\Block\Shape_Divider includes/block/class-shape-divider.php
 Zealblocks\Responsive_Styles   includes/class-responsive-styles.php
 ```
 

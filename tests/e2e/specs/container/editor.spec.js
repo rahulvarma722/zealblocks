@@ -533,6 +533,61 @@ test.describe( 'Container editor', () => {
 		}
 	} );
 
+	test( 'shape dividers in Background; parent hover only inside a Container', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await newPost( { admin, page, posts } );
+		await editor.insertBlock( {
+			name: 'zealblocks/container',
+			attributes: {
+				layout: { type: 'constrained' },
+				dividerTop: { shape: 'waves' },
+				style: { zealblocks: { dividerTopHeight: '50px' } },
+			},
+			innerBlocks: [
+				{
+					name: 'zealblocks/container',
+					attributes: { layout: { type: 'constrained' } },
+					innerBlocks: [
+						{
+							name: 'core/paragraph',
+							attributes: { content: 'Child' },
+						},
+					],
+				},
+			],
+		} );
+
+		// The divider is drawn in the canvas, at its height.
+		const divider = editor.canvas.locator(
+			'.wp-block-zealblocks-container__divider.is-top svg'
+		);
+
+		await expect( divider ).toHaveCount( 1 );
+		expect(
+			await divider.evaluate( ( el ) =>
+				Math.round( el.getBoundingClientRect().height )
+			)
+		).toBe( 50 );
+
+		await inspectPath( { editor, page }, [ 0 ], 'Styles' );
+		expect( await optionsMenu( page, 'Background' ) ).toEqual(
+			expect.arrayContaining( [ 'Top divider', 'Bottom divider' ] )
+		);
+		expect( await inspectorText( page ) ).toContain( 'top divider' );
+		expect( await optionsMenu( page, 'Border & Shadow' ) ).not.toContain(
+			'When the parent is hovered'
+		);
+
+		await inspectPath( { editor, page }, [ 0, 0 ], 'Styles' );
+		expect( await optionsMenu( page, 'Border & Shadow' ) ).toContain(
+			'When the parent is hovered'
+		);
+	} );
+
 	test( 'a container saves, reloads valid and keeps its settings, with no errors', async ( {
 		admin,
 		editor,
@@ -573,6 +628,8 @@ test.describe( 'Container editor', () => {
 				videoPosition: { x: 0.3, y: 0.4 },
 				videoOnMobile: false,
 				positionPreview: false,
+				dividerTop: { shape: 'waves', flip: true },
+				dividerBottom: { shape: 'curve', invert: true, front: true },
 				style: {
 					color: { background: '#eeeeee' },
 					dimensions: { aspectRatio: '16/9' },
@@ -589,6 +646,9 @@ test.describe( 'Container editor', () => {
 						overlayBlend: 'multiply',
 						overlayHover: '#ff0000',
 						overlayHoverOpacity: '0.2',
+						dividerTopColor: '#ffffff',
+						dividerTopHeight: '60px',
+						dividerBottomWidth: '200%',
 					},
 					'@mobile': {
 						layout: { orientation: 'vertical' },
@@ -607,6 +667,11 @@ test.describe( 'Container editor', () => {
 								order: '-9999',
 								position: 'relative',
 								positionTop: '4px',
+								parentHoverRestOpacity: '0',
+								parentHoverOpacity: '1',
+								parentHoverMove: '8px',
+								parentHoverColor: '#ffff00',
+								parentHoverBackground: '#000000',
 							},
 						},
 					},

@@ -17,6 +17,11 @@ import {
 	toPercent,
 } from '../../src/container/values';
 import { getPositionPreview } from '../../src/shared/position/preview';
+import {
+	DIVIDER_LABELS,
+	DIVIDER_SHAPES,
+	dividerPaths,
+} from '../../src/container/dividers';
 
 const FLEX = { type: 'flex', flexWrap: 'nowrap' };
 
@@ -320,5 +325,78 @@ describe( 'child settings', () => {
 		expect( orderMode( '-9999' ) ).toBe( 'first' );
 		expect( orderMode( '9999' ) ).toBe( 'last' );
 		expect( orderMode( '3' ) ).toBe( 'custom' );
+	} );
+} );
+
+describe( 'shape dividers', () => {
+	it( 'closes each curve along the top edge, or along the bottom when inverted', () => {
+		expect( dividerPaths( 'triangle', false ) ).toEqual( [
+			{ d: 'M0,0 L500,100 L1000,0 L1000,0 L0,0 Z', opacity: null },
+		] );
+		expect( dividerPaths( 'triangle', true )[ 0 ].d ).toBe(
+			'M0,0 L500,100 L1000,0 L1000,100 L0,100 Z'
+		);
+		expect(
+			dividerPaths( 'fan', false ).map( ( { opacity } ) => opacity )
+		).toEqual( [ 0.33, 0.66, null ] );
+		expect( dividerPaths( 'nope', false ) ).toEqual( [] );
+	} );
+
+	it( 'has a label for every shape', () => {
+		expect( Object.keys( DIVIDER_LABELS ) ).toEqual( DIVIDER_SHAPES );
+	} );
+
+	it( 'previews colour, height and width per device, only for a side with a shape', () => {
+		const style = {
+			zealblocks: {
+				dividerTopColor: '#fff',
+				dividerTopHeight: '60px',
+				dividerBottomWidth: '200%',
+			},
+			'@mobile': { zealblocks: { dividerTopHeight: '30px' } },
+		};
+
+		expect(
+			getStylePreview(
+				{ style, dividerTop: { shape: 'waves' } },
+				'Mobile'
+			)
+		).toEqual( {
+			style: {
+				'--zealblocks-container-divider-top-color': '#fff',
+				'--zealblocks-container-divider-top-height': '30px',
+			},
+			classes: [ 'has-divider' ],
+		} );
+	} );
+} );
+
+describe( 'parent hover', () => {
+	it( 'previews the rest opacity on the front end variable, and the hover values as preview classes', () => {
+		const style = {
+			zealblocks: {
+				parentHoverRestOpacity: '0',
+				parentHoverMove: '10px',
+				parentHoverColor: '#ff0',
+			},
+			'@mobile': { zealblocks: { parentHoverBackground: '#000' } },
+		};
+
+		expect( getStylePreview( { style }, 'Desktop' ) ).toEqual( {
+			style: {
+				'--zealblocks-container-rest-opacity': '0',
+				'--zealblocks-container-ph-move': '10px',
+				'--zealblocks-container-ph-color': '#ff0',
+			},
+			classes: [
+				'has-parent-hover',
+				'has-parent-hover-rest',
+				'has-ph-move',
+				'has-ph-color',
+			],
+		} );
+		expect( getStylePreview( { style }, 'Mobile' ).classes ).toContain(
+			'has-ph-background'
+		);
 	} );
 } );

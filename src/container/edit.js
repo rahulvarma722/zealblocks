@@ -53,6 +53,9 @@ import { LiftControl, ReverseControl, SizeControls } from './style-controls';
 import { OverlayControls } from './overlay-controls';
 import { ChildControls } from './child-controls';
 import { VideoPanel } from './video-controls';
+import { DividerControls } from './divider-controls';
+import { ParentHoverControls } from './parent-hover-controls';
+import { Divider } from './dividers';
 import { PRESETS, withPresetStyle } from './presets';
 import { containerIcon } from './icons';
 import { LANDMARK_TAGS, TAGS } from './constants';
@@ -133,6 +136,8 @@ export default function Edit( {
 		videoPoster,
 		videoPosition,
 		videoOnMobile,
+		dividerTop,
+		dividerBottom,
 		animationType,
 		animationDuration,
 		animationDelay,
@@ -175,6 +180,22 @@ export default function Edit( {
 			return (
 				( supports?.layout ?? supports?.__experimentalLayout )?.default
 					?.type ?? 'default'
+			);
+		},
+		[ clientId ]
+	);
+
+	// Parent hover rules hang off a parent Container's :hover, so the
+	// controls are offered inside one.
+	const parentIsContainer = useSelect(
+		( select ) => {
+			const { getBlockRootClientId, getBlockName } =
+				select( blockEditorStore );
+			const parentId = getBlockRootClientId( clientId );
+
+			return (
+				!! parentId &&
+				'zealblocks/container' === getBlockName( parentId )
 			);
 		},
 		[ clientId ]
@@ -238,6 +259,8 @@ export default function Edit( {
 				overlayImageSize,
 				overlayImagePosition,
 				positionPreview,
+				dividerTop,
+				dividerBottom,
 			},
 			device
 		);
@@ -276,6 +299,8 @@ export default function Edit( {
 		overlayImageSize,
 		overlayImagePosition,
 		positionPreview,
+		dividerTop,
+		dividerBottom,
 		videoUrl,
 		device,
 		isPreviewing,
@@ -375,6 +400,14 @@ export default function Edit( {
 				attributes={ attributes }
 				parentLayout={ parentLayout }
 			/>
+			<DividerControls
+				{ ...styleControlProps }
+				attributes={ attributes }
+			/>
+			<ParentHoverControls
+				{ ...styleControlProps }
+				parentIsContainer={ parentIsContainer }
+			/>
 
 			{ url && (
 				<InspectorControls>
@@ -472,6 +505,8 @@ export default function Edit( {
 			) : (
 				<TagName { ...wrapperProps }>
 					{ video }
+					<Divider config={ dividerTop } side="top" />
+					<Divider config={ dividerBottom } side="bottom" />
 					{ innerBlocks }
 				</TagName>
 			) }

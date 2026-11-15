@@ -26,6 +26,8 @@ content. A plain Container inserted empty offers seven column presets.
 | self-hosted background video with a pause button | `Background_Video` |
 | align self and order in a flex or grid parent, per device | this block |
 | position and offsets for a nested Container, per device | `Position` (shared with Text) |
+| shape dividers, top and bottom: 18 shapes, colour, height and width per device, flip, invert, bring to front | `Shape_Divider` |
+| parent hover: a nested Container changes while its parent is hovered or focused | this block |
 | animation, display conditions, z-index | shared modules |
 
 ## Attributes
@@ -46,13 +48,23 @@ content. A plain Container inserted empty offers seven column presets.
 | `videoPosition` | object | focal point, as `object-position` |
 | `videoOnMobile` | boolean | false hides it, and never loads it, in core's mobile band |
 | `positionPreview` | boolean | the shared "Preview in editor" switch for position |
+| `dividerTop`, `dividerBottom` | object | `{ shape, flip, invert, front }`, one for every device |
 
 Everything per device lives in `style.zealblocks`, like every other block:
 `backgroundHover`, `textHover`, `borderHover`, `hoverDuration`, the five
 `shadowHover*` parts (the Button's keys and controls), `hoverLift`, `maxWidth`,
 `maxHeight`, `overflow`, `zIndex`, `reverse`, `overlay`, `overlayOpacity`,
 `overlayBlend`, `overlayHover`, `overlayHoverOpacity`, `alignSelf`, `order`,
-`position` and `positionTop/Right/Bottom/Left`.
+`position`, `positionTop/Right/Bottom/Left`, `dividerTop/BottomColor`,
+`dividerTop/BottomHeight`, `dividerTop/BottomWidth`, `parentHoverRestOpacity`,
+`parentHoverOpacity`, `parentHoverMove`, `parentHoverColor` and
+`parentHoverBackground`.
+
+**No custom property is inherited.** Custom properties inherit by default, so a
+nested Container used to pick up its parent's lift, order or overlay hover in
+any band where it set none of its own. Every Container resets each of its
+variables to `initial` at zero specificity; its own one-class rule still wins.
+A Playwright test proves the bug without the reset.
 
 Every Container is `position: relative`, at zero specificity: the overlay, the
 video, the link and an absolutely placed child are all placed against it, and
@@ -139,8 +151,10 @@ container:
 | the video | -2 |
 | the overlay, `::before` | -1 |
 | the link | -1, later in the tree |
+| the dividers | -1, later still |
 | the content | in flow |
-| the pause button | 1 |
+| a divider brought to the front | 2 |
+| the pause button | 3 |
 
 The video, its button and the link come first in the markup and are out of
 flow, so the first block after them loses its top margin, as core takes it off
@@ -196,6 +210,40 @@ moved to the top level never keeps a setting nobody can see.
   under later positioned siblings, which every Container now is; the help text
   says to set a z-index.
 
+## Shape dividers
+
+`includes/block/class-shape-divider.php`, `includes/block/shape-dividers.json`
+and `src/container/dividers.js`. Our own 18 shapes, generated once by a script:
+each layer is one curve from x=0 to x=1000 in a 1000×100 box. The shape is the
+curve closed along the top edge, the inverse along the bottom edge, so one curve
+makes both. PHP and the editor read the same JSON; the editor holds only the
+translatable labels, and a contract test keeps the two lists equal.
+
+- A bottom divider is the top drawing turned half round (`rotate: 180deg`).
+- Flip is `scale: -1 1` on the SVG; centring is flex, so a width over 100%
+  spreads evenly both ways and right-to-left needs nothing.
+- Shape, flip, invert and "bring to front" are attributes, offered while
+  editing the base. Colour, height and width are per device.
+- The default colour is the theme's base colour where it has one, else white;
+  the default height 80px. `pointer-events: none`, so a divider in front never
+  takes a click.
+
+## Parent hover
+
+For a Container inside another Container, in Border & Shadow: opacity before,
+opacity on hover, move up, text colour and background on hover, per device.
+
+- The rules hang off the parent: `.wp-block-zealblocks-container:hover > .x`
+  and `:has(:focus-visible) > .x`, important, from their own `zealblocks-ctr-ph-`
+  class.
+- The opacity before is a custom property applied only inside
+  `@media (hover: hover)`: on a phone, content hidden until a hover would stay
+  hidden. Hidden at rest with no hover opacity of its own, a child shows in full
+  on hover.
+- The move is a custom property spent on `translate`; off for reduced motion.
+- The canvas previews the hover values on the parent's `:hover` only, through
+  preview classes (`has-ph-*`) and variables.
+
 ## Max width and height
 
 Marked `!important`. The page sets a max width on every content child: Astra
@@ -219,12 +267,15 @@ one-column grid makes the browser add a column.
 | `includes/block/class-reverse-order.php` | per-device reverse rules |
 | `includes/block/class-background-video.php`, `video-view.js` | the video, its button and script |
 | `includes/block/class-position.php`, `src/shared/position/` | position, shared with Text |
+| `includes/block/class-shape-divider.php`, `shape-dividers.json`, `dividers.js` | the dividers |
 | `edit.js` | presets placeholder, inspector, canvas preview |
 | `preview.js` | what the canvas shows for the previewed device |
 | `style-controls.js` | sizes (Dimensions), lift (Border & Shadow), reverse (Layout) |
 | `overlay-controls.js` | the overlay, in Background |
 | `child-controls.js` | align self, order, position, in Dimensions |
 | `video-controls.js` | the Background video panel |
+| `divider-controls.js` | the dividers, in Background |
+| `parent-hover-controls.js` | parent hover, in Border & Shadow |
 | `values.js` | pure helpers for those controls |
 | `presets.js`, `icons.js` | presets and the variation icons |
 | `style.scss` / `editor.scss` | layers, overlay, video, link, shadow, lift / presets, hover preview |
@@ -234,12 +285,14 @@ one-column grid makes the browser add a column.
 - `tests/unit/ReverseOrderTest.php`; the Container in `BlockContractTest`
   (hover prefix in four places; tags, overflow keywords, blend modes, self
   alignments, overlay image sizes and the reverse key between PHP and JS;
-  the shared position keys); the opacity, blend and align-self types in
+  the shared position keys; every divider shape well formed and labelled);
+  the opacity, blend and align-self types in
   `ResponsiveStylesTest`; `Render::focal_point()` in `BlockRenderTest`.
 - `tests/js/container.test.js`: canvas preview, presets, overlay, child
-  settings and the control helpers.
+  settings, dividers, parent hover and the control helpers.
 - `tests/integration/test-render.php`, "Container": markup, link, overlay and
-  its image URL, video markup and script, child settings, CSS, hidden.
+  its image URL, video markup and script, child settings, dividers, parent
+  hover rules, CSS, hidden.
 - `tests/e2e/specs/container/`: the front end in a real browser at three
   widths (the video tests use a video from the media library and skip without
   one), and the editor.

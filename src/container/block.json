@@ -87,6 +87,12 @@
 			"type": "boolean",
 			"default": true
 		},
+		"dividerTop": {
+			"type": "object"
+		},
+		"dividerBottom": {
+			"type": "object"
+		},
 		"animationType": {
 			"type": "string",
 			"default": ""

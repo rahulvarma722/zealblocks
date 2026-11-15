@@ -49,6 +49,39 @@ $block: ".wp-block-zealblocks-container";
  */
 :where(#{$block}) {
 	position: relative;
+
+	/*
+	 * Custom properties inherit, and a nested Container would otherwise pick
+	 * up its parent's: a lift, an order or an overlay hover it never set, in
+	 * any band where it sets none of its own. Each Container starts from
+	 * nothing instead; its own per-instance rule, one class strong, still
+	 * wins over this zero-specificity reset, and an inline value always does.
+	 */
+	--zealblocks-container-hover-duration: initial;
+	--zealblocks-container-hover-color: initial;
+	--zealblocks-container-hover-background: initial;
+	--zealblocks-container-hover-border: initial;
+	--zealblocks-container-shadow-hover-x: initial;
+	--zealblocks-container-shadow-hover-y: initial;
+	--zealblocks-container-shadow-hover-blur: initial;
+	--zealblocks-container-shadow-hover-spread: initial;
+	--zealblocks-container-shadow-hover-color: initial;
+	--zealblocks-container-lift: initial;
+	--zealblocks-container-overlay: initial;
+	--zealblocks-container-overlay-opacity: initial;
+	--zealblocks-container-overlay-blend: initial;
+	--zealblocks-container-overlay-hover: initial;
+	--zealblocks-container-overlay-hover-opacity: initial;
+	--zealblocks-container-overlay-image: initial;
+	--zealblocks-container-order: initial;
+	--zealblocks-container-rest-opacity: initial;
+	--zealblocks-container-parent-move: initial;
+	--zealblocks-container-divider-top-color: initial;
+	--zealblocks-container-divider-top-height: initial;
+	--zealblocks-container-divider-top-width: initial;
+	--zealblocks-container-divider-bottom-color: initial;
+	--zealblocks-container-divider-bottom-height: initial;
+	--zealblocks-container-divider-bottom-width: initial;
 }
 
 /*
@@ -67,14 +100,16 @@ $block: ".wp-block-zealblocks-container";
  *   the video                       z-index -2
  *   the overlay, `::before`         z-index -1
  *   the link                        z-index -1, later in the tree
+ *   the dividers                    z-index -1, later still
  *   the content                     in flow
- *   the pause button                z-index 1
+ *   a divider brought to the front  z-index 2
+ *   the pause button                z-index 3
  *
  * Negative z-indexes stay inside the container only while it is its own
  * stacking context, hence `isolation`. It also keeps the overlay's blend mode
  * to what is behind it in this container.
  */
-#{$block}:is(.has-link, .has-overlay, .has-video) {
+#{$block}:is(.has-link, .has-overlay, .has-video, .has-divider) {
 	isolation: isolate;
 }
 
@@ -133,7 +168,7 @@ $block: ".wp-block-zealblocks-container";
 	position: absolute;
 	inset-block-end: 12px;
 	inset-inline-end: 12px;
-	z-index: 1;
+	z-index: 3;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -176,11 +211,102 @@ $block: ".wp-block-zealblocks-container";
 }
 
 /*
+ * Shape dividers (P-75). The SVG is drawn for the top; the bottom one is the
+ * same drawing turned half round. Colour, height and width come per device
+ * from render.php. The SVG is centred with flex rather than an offset, so a
+ * width over 100% spreads evenly both ways and right-to-left needs nothing.
+ * The default colour is the theme's base colour, where it has one: a divider
+ * usually leads into a plain section.
+ */
+#{$block} > #{$block}__divider {
+	position: absolute;
+	inset-inline: 0;
+	z-index: -1;
+	display: flex;
+	justify-content: center;
+	overflow: hidden;
+	line-height: 0;
+	pointer-events: none;
+
+	svg {
+		display: block;
+		flex: none;
+		max-width: none;
+	}
+
+	&.is-flipped svg {
+		scale: -1 1;
+	}
+
+	&.is-front {
+		z-index: 2;
+	}
+}
+
+#{$block} > #{$block}__divider.is-top {
+	top: -1px;
+
+	svg {
+		width: var(--zealblocks-container-divider-top-width, 100%);
+		height: var(--zealblocks-container-divider-top-height, 80px);
+		fill: var(--zealblocks-container-divider-top-color, var(--wp--preset--color--base, #fff));
+	}
+}
+
+#{$block} > #{$block}__divider.is-bottom {
+	bottom: -1px;
+	rotate: 180deg;
+
+	svg {
+		width: var(--zealblocks-container-divider-bottom-width, 100%);
+		height: var(--zealblocks-container-divider-bottom-height, 80px);
+		fill: var(--zealblocks-container-divider-bottom-color, var(--wp--preset--color--base, #fff));
+	}
+}
+
+/*
+ * Parent hover (P-65). The changes themselves are per-instance rules from
+ * render.php, hung off the parent's :hover and :has(:focus-visible); these
+ * are the parts every instance shares. The opacity at rest applies only on a
+ * device that can hover, so a phone never hides what it cannot reveal.
+ */
+#{$block}.has-parent-hover {
+	transition-property: opacity, translate, color, background;
+	transition-duration: var(--zealblocks-container-hover-duration, 0.2s);
+	transition-timing-function: ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition-duration: 0s;
+	}
+}
+
+#{$block}.has-parent-hover-move {
+	translate: 0 calc(var(--zealblocks-container-parent-move, 0px) * -1);
+
+	@media (prefers-reduced-motion: reduce) {
+		translate: none;
+	}
+}
+
+@media (hover: hover) {
+
+	#{$block}.has-parent-hover-rest {
+		opacity: var(--zealblocks-container-rest-opacity, 1);
+	}
+
+	// Hidden at rest and no hover opacity of its own: shown in full on hover.
+	// The author's own hover opacity is an important rule, and still wins.
+	#{$block}:is(:hover, :has(:focus-visible)) > #{$block}.has-parent-hover-rest {
+		opacity: 1;
+	}
+}
+
+/*
  * The video, its button and the link come before the content and are out of
  * flow, so the first block after them loses the top margin core takes off a
  * first child.
  */
-#{$block} > :is(#{$block}__video, #{$block}__video-toggle, #{$block}__link) + :not(#{$block}__video, #{$block}__video-toggle, #{$block}__link) {
+#{$block} > :is(#{$block}__video, #{$block}__video-toggle, #{$block}__link, #{$block}__divider) + :not(#{$block}__video, #{$block}__video-toggle, #{$block}__link, #{$block}__divider) {
 	margin-block-start: 0;
 }
 

@@ -17,9 +17,12 @@ import { HOVER_CLASS } from '../shared/hover/constants';
 import { getPositionPreview } from '../shared/position/preview';
 import {
 	CSS_VARS,
+	DIVIDER_KEYS,
 	HOVER_VAR_PREFIX,
 	KEYS,
 	OVERLAY_HOVER_KEYS,
+	PARENT_HOVER_KEYS,
+	PARENT_HOVER_PREVIEW_CLASSES,
 	OVERLAY_IMAGE_SIZES,
 	OVERLAY_KEYS,
 	SHADOW_HOVER_KEYS,
@@ -137,7 +140,8 @@ export function getOverlayImageLayer( attributes ) {
  * @return {{style: Object, classes: string[]}} What to merge into blockProps.
  */
 export function getStylePreview( attributes, device ) {
-	const { style, layout, positionPreview } = attributes;
+	const { style, layout, positionPreview, dividerTop, dividerBottom } =
+		attributes;
 	const hover = getHoverPreview( style, device, HOVER_VAR_PREFIX );
 	const inline = { ...hover.style };
 	const classes = [ ...hover.classes ];
@@ -147,6 +151,10 @@ export function getStylePreview( attributes, device ) {
 		KEYS.lift,
 		...SHADOW_HOVER_KEYS,
 		...OVERLAY_KEYS,
+		KEYS.parentHoverRestOpacity,
+		...( dividerTop?.shape ? DIVIDER_KEYS.top : [] ),
+		...( dividerBottom?.shape ? DIVIDER_KEYS.bottom : [] ),
+		...PARENT_HOVER_KEYS,
 	].forEach( ( key ) => {
 		const value = getResolvedValue( style, device, key );
 
@@ -201,6 +209,32 @@ export function getStylePreview( attributes, device ) {
 	if ( hasOverlayHover ) {
 		classes.push( 'has-overlay-hover' );
 	}
+
+	if ( dividerTop?.shape || dividerBottom?.shape ) {
+		classes.push( 'has-divider' );
+	}
+
+	/*
+	 * Parent hover. The front end hangs real rules off the parent's :hover;
+	 * the canvas carries the previewed device's values and a class for each,
+	 * and editor.scss applies them while the parent is hovered. The opacity at
+	 * rest uses the front end's own class and variable.
+	 */
+	const hasRest = hasAnyLayerValue( style, [ KEYS.parentHoverRestOpacity ] );
+
+	if ( hasRest || hasAnyLayerValue( style, PARENT_HOVER_KEYS ) ) {
+		classes.push( 'has-parent-hover' );
+	}
+
+	if ( hasRest ) {
+		classes.push( 'has-parent-hover-rest' );
+	}
+
+	PARENT_HOVER_KEYS.forEach( ( key ) => {
+		if ( undefined !== inline[ CSS_VARS[ key ] ] ) {
+			classes.push( PARENT_HOVER_PREVIEW_CLASSES[ key ] );
+		}
+	} );
 
 	if ( hasShadowHover ) {
 		classes.push( 'has-shadow-hover' );

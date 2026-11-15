@@ -552,6 +552,41 @@ final class BlockContractTest extends TestCase {
 	}
 
 	/**
+	 * Every shape divider is drawable and named. Each layer's curve runs from
+	 * x=0 to x=1000 using path commands only, so closing it along an edge
+	 * makes a shape, and nothing else can reach the markup; the editor has a
+	 * label for every shape and none for a shape that does not exist.
+	 *
+	 * @return void
+	 */
+	public function test_shape_dividers_are_well_formed_and_named() {
+		$shapes = json_decode( (string) file_get_contents( ZEALBLOCKS_PATH . 'includes/block/shape-dividers.json' ), true );
+		$js     = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/container/dividers.js' );
+
+		$this->assertIsArray( $shapes );
+		$this->assertGreaterThanOrEqual( 15, count( $shapes ) );
+
+		foreach ( $shapes as $slug => $layers ) {
+			$this->assertMatchesRegularExpression( '/^[a-z]+(?:-[a-z]+)*$/', $slug );
+			$this->assertNotEmpty( $layers, $slug );
+
+			foreach ( $layers as $layer ) {
+				$this->assertMatchesRegularExpression( '/^M0,[\d.]+(?: [LQC][\d., ]+)+$/', $layer['curve'], $slug );
+				$this->assertMatchesRegularExpression( '/[ ,LQC]1000,[\d.]+$/', $layer['curve'], $slug . ' must end at x=1000' );
+
+				if ( isset( $layer['opacity'] ) ) {
+					$this->assertTrue( $layer['opacity'] > 0 && $layer['opacity'] < 1, $slug );
+				}
+			}
+
+			$this->assertMatchesRegularExpression( "/\n\t'?" . preg_quote( $slug, '/' ) . "'?: __\(/", $js, $slug . ' needs a label in dividers.js' );
+		}
+
+		preg_match_all( "/^\t'?([a-z-]+)'?: __\(/m", $js, $labelled );
+		$this->assertSame( array_keys( $shapes ), $labelled[1], 'labels in the same order as the shapes, and no extra' );
+	}
+
+	/**
 	 * The shared position keys are the same in PHP and JS, and both blocks
 	 * that offer position spread the shared map rather than restating it.
 	 *

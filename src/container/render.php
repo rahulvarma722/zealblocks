@@ -25,6 +25,7 @@ use Zealblocks\Block\Hover;
 use Zealblocks\Block\Position;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Block\Reverse_Order;
+use Zealblocks\Block\Shape_Divider;
 use Zealblocks\Block\Z_Index;
 
 /*
@@ -100,8 +101,12 @@ $responsive = Block_Render::responsive(
 			// Stacking order, per device (S-07); see includes/block/class-z-index.php.
 			Z_Index::KEY          => Z_Index::PROPERTY,
 		),
+		// Opacity until the parent is hovered (P-65); style.scss, hover devices only.
+		array( 'parentHoverRestOpacity' => array( '--zealblocks-container-rest-opacity', 'opacity' ) ),
 		// Position and its offsets, shared; see includes/block/class-position.php.
-		Position::properties()
+		Position::properties(),
+		// Divider colour, height and width; see includes/block/class-shape-divider.php.
+		Shape_Divider::properties( '--zealblocks-container-divider-' )
 	),
 	'zealblocks-ctr-'
 );
@@ -118,6 +123,49 @@ foreach ( $responsive['rules'] as $index => $rule ) {
 	if ( array_intersect_key( $rule['declarations'], array_flip( array( 'max-width', 'max-height' ) ) ) ) {
 		$responsive['rules'][ $index ]['important'] = true;
 	}
+}
+
+/*
+ * Parent hover (P-65): this Container changes while its PARENT Container is
+ * hovered, or holds keyboard focus. Its own class, since every rule here hangs
+ * off the parent's state rather than this block's.
+ *
+ * Opacity, text colour and background are real declarations, important as
+ * every hover rule is, so they beat the colour classes core puts on the same
+ * element. The move is a custom property that style.scss spends on
+ * `translate`, which core's style engine would not print. The opacity at rest
+ * is in the main map above, as a custom property: style.scss applies it on
+ * devices that can hover only, so content hidden until a hover is never
+ * hidden for good on a phone.
+ */
+$parent_hover_states   = array( ':hover', ':has(:focus-visible)' );
+$parent_hover          = Block_Render::responsive(
+	$style,
+	'zealblocks',
+	array(
+		'parentHoverOpacity'    => array( 'opacity', 'opacity' ),
+		'parentHoverColor'      => array( 'color', 'color' ),
+		'parentHoverBackground' => array( 'background', 'background' ),
+		'parentHoverMove'       => array( '--zealblocks-container-parent-move', 'signed-length' ),
+	),
+	'zealblocks-ctr-ph-'
+);
+$has_parent_hover_move = false;
+
+foreach ( $parent_hover['rules'] as $index => $rule ) {
+	$child_selector        = $rule['selector'];
+	$has_parent_hover_move = $has_parent_hover_move || isset( $rule['declarations']['--zealblocks-container-parent-move'] );
+
+	$parent_hover['rules'][ $index ]['selector']  = implode(
+		',',
+		array_map(
+			static function ( $parent_state ) use ( $child_selector ) {
+				return '.wp-block-zealblocks-container' . $parent_state . ' > ' . $child_selector;
+			},
+			$parent_hover_states
+		)
+	);
+	$parent_hover['rules'][ $index ]['important'] = true;
 }
 
 /*
@@ -139,6 +187,7 @@ $has_lift          = false;
 $has_overlay       = false;
 $has_overlay_hover = false;
 $has_order         = false;
+$has_rest_opacity  = false;
 
 foreach ( $responsive['rules'] as $rule ) {
 	foreach ( array_keys( $rule['declarations'] ) as $property ) {
@@ -147,6 +196,7 @@ foreach ( $responsive['rules'] as $rule ) {
 		$has_overlay       = $has_overlay || str_starts_with( $property, '--zealblocks-container-overlay' );
 		$has_overlay_hover = $has_overlay_hover || str_starts_with( $property, '--zealblocks-container-overlay-hover' );
 		$has_order         = $has_order || '--zealblocks-container-order' === $property;
+		$has_rest_opacity  = $has_rest_opacity || '--zealblocks-container-rest-opacity' === $property;
 	}
 }
 
@@ -236,6 +286,13 @@ if ( $link_attributes ) {
 	$link_markup .= '></a>';
 }
 
+/*
+ * Shape dividers (P-75), top and bottom; see includes/block/class-shape-divider.php.
+ * Colour, height and width came through the map above as custom properties.
+ */
+$dividers = Shape_Divider::render( isset( $attributes['dividerTop'] ) ? $attributes['dividerTop'] : null, 'top', 'wp-block-zealblocks-container' )
+	. Shape_Divider::render( isset( $attributes['dividerBottom'] ) ? $attributes['dividerBottom'] : null, 'bottom', 'wp-block-zealblocks-container' );
+
 $animation = Animation::wrapper( $attributes );
 
 $wrapper_classes = array_filter(
@@ -252,6 +309,11 @@ $wrapper_classes = array_filter(
 		$has_overlay_hover ? 'has-overlay-hover' : '',
 		$has_order ? 'has-order' : '',
 		...$video['classes'],
+		'' !== $dividers ? 'has-divider' : '',
+		$parent_hover['class'],
+		$parent_hover['class'] || $has_rest_opacity ? 'has-parent-hover' : '',
+		$has_parent_hover_move ? 'has-parent-hover-move' : '',
+		$has_rest_opacity ? 'has-parent-hover-rest' : '',
 	)
 );
 
@@ -266,19 +328,21 @@ if ( '' !== $overlay_style ) {
 }
 
 // To core's style engine, as the Button's rules go. See button/render.php.
-Block_Render::store_rules( array_merge( $responsive['rules'], $reverse['rules'], $video['rules'] ) );
+Block_Render::store_rules( array_merge( $responsive['rules'], $reverse['rules'], $video['rules'], $parent_hover['rules'] ) );
 
 /*
- * Order inside the root: the video and its button, the link, then the content.
- * The decorations are out of flow; style.scss takes the top margin off the
- * first block after them, as core takes it off a first child. The button comes
- * first in the tab order, where a pause control is easiest to reach.
+ * Order inside the root: the video and its button, the link, the dividers,
+ * then the content. The decorations are out of flow; style.scss takes the top
+ * margin off the first block after them, as core takes it off a first child.
+ * The button comes first in the tab order, where a pause control is easiest to
+ * reach.
  */
 printf(
-	'<%1$s %2$s>%3$s%4$s%5$s</%1$s>',
+	'<%1$s %2$s>%3$s%4$s%5$s%6$s</%1$s>',
 	esc_attr( $tag_name ),
 	get_block_wrapper_attributes( $extra_attributes ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_attr() applied per value by get_block_wrapper_attributes(); re-escaping attribute markup would corrupt it.
 	$video['markup'], // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built by Background_Video::render(), which escapes every value.
 	$link_markup, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built above: esc_url() on the href, esc_attr() on every other value.
+	$dividers, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built by Shape_Divider::render(), which escapes every value.
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already-rendered inner block HTML.
 );

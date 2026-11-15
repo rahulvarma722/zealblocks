@@ -29,7 +29,38 @@ export const KEYS = {
 	overlayHoverOpacity: 'overlayHoverOpacity',
 	alignSelf: 'alignSelf',
 	order: 'order',
+	parentHoverOpacity: 'parentHoverOpacity',
+	parentHoverRestOpacity: 'parentHoverRestOpacity',
+	parentHoverMove: 'parentHoverMove',
+	parentHoverColor: 'parentHoverColor',
+	parentHoverBackground: 'parentHoverBackground',
+	dividerTopColor: 'dividerTopColor',
+	dividerTopHeight: 'dividerTopHeight',
+	dividerTopWidth: 'dividerTopWidth',
+	dividerBottomColor: 'dividerBottomColor',
+	dividerBottomHeight: 'dividerBottomHeight',
+	dividerBottomWidth: 'dividerBottomWidth',
 };
+
+/** Changes while the parent Container is hovered. */
+export const PARENT_HOVER_KEYS = [
+	KEYS.parentHoverOpacity,
+	KEYS.parentHoverMove,
+	KEYS.parentHoverColor,
+	KEYS.parentHoverBackground,
+];
+
+/** Per-device divider keys, by side. */
+export const DIVIDER_KEYS = {
+	top: [ KEYS.dividerTopColor, KEYS.dividerTopHeight, KEYS.dividerTopWidth ],
+	bottom: [
+		KEYS.dividerBottomColor,
+		KEYS.dividerBottomHeight,
+		KEYS.dividerBottomWidth,
+	],
+};
+
+export const DIVIDER_HEIGHT_UNITS = [ 'px', 'em', 'rem', 'vh', 'vw' ];
 
 /** Every overlay key: any of them makes the overlay exist. */
 export const OVERLAY_KEYS = [
@@ -67,6 +98,27 @@ export const CSS_VARS = {
 		'--zealblocks-container-overlay-hover-opacity',
 	overlayImage: '--zealblocks-container-overlay-image',
 	[ KEYS.order ]: '--zealblocks-container-order',
+	[ KEYS.parentHoverRestOpacity ]: '--zealblocks-container-rest-opacity',
+	[ KEYS.dividerTopColor ]: '--zealblocks-container-divider-top-color',
+	[ KEYS.dividerTopHeight ]: '--zealblocks-container-divider-top-height',
+	[ KEYS.dividerTopWidth ]: '--zealblocks-container-divider-top-width',
+	[ KEYS.dividerBottomColor ]: '--zealblocks-container-divider-bottom-color',
+	[ KEYS.dividerBottomHeight ]:
+		'--zealblocks-container-divider-bottom-height',
+	[ KEYS.dividerBottomWidth ]: '--zealblocks-container-divider-bottom-width',
+	// Editor only: the front end hangs real rules off the parent's :hover.
+	[ KEYS.parentHoverOpacity ]: '--zealblocks-container-ph-opacity',
+	[ KEYS.parentHoverMove ]: '--zealblocks-container-ph-move',
+	[ KEYS.parentHoverColor ]: '--zealblocks-container-ph-color',
+	[ KEYS.parentHoverBackground ]: '--zealblocks-container-ph-background',
+};
+
+/** The canvas class for each parent hover value. MUST match editor.scss. */
+export const PARENT_HOVER_PREVIEW_CLASSES = {
+	[ KEYS.parentHoverOpacity ]: 'has-ph-opacity',
+	[ KEYS.parentHoverMove ]: 'has-ph-move',
+	[ KEYS.parentHoverColor ]: 'has-ph-color',
+	[ KEYS.parentHoverBackground ]: 'has-ph-background',
 };
 
 /** MUST match Responsive_Styles::KEYWORDS['blend']. */
