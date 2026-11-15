@@ -16,6 +16,7 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
+import { useMergeRefs } from '@wordpress/compose';
 
 import { useStyleState } from '../button/responsive-width/use-style-state';
 import {
@@ -40,6 +41,7 @@ import {
 import { getPreview } from './preview';
 import { TypographyControls, TextShadowControl } from './style-controls';
 import { PositionControls } from './position-controls';
+import { useListKeys } from '../list/keyboard';
 
 export default function Edit( {
 	attributes,
@@ -140,6 +142,14 @@ export default function Edit( {
 	] );
 
 	const blockProps = useBlockProps( extraBlockProps );
+
+	/*
+	 * Inside a List item, as its first block, the keys a list needs: Enter for
+	 * the next item, Backspace to join, Tab to nest. Elsewhere it does
+	 * nothing. Merged with the block's own ref, which RichText also carries.
+	 */
+	const listKeys = useListKeys( clientId );
+	const richTextRef = useMergeRefs( [ blockProps.ref, listKeys ] );
 
 	const controlProps = {
 		clientId,
@@ -246,6 +256,7 @@ export default function Edit( {
 			 */ }
 			<RichText
 				{ ...blockProps }
+				ref={ richTextRef }
 				identifier="content"
 				tagName={ tag }
 				value={ content }

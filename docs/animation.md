@@ -6,7 +6,7 @@ easing, and an option to replay every time. It matches Spectra Free's Animation
 extension, and its start states are AOS's, so an animation moved across looks
 the same.
 
-Text, Button, Icon, Buttons and Container use it (Button, Icon and Buttons since S-05).
+Text, Button, Icon, Buttons, Container and List use it (Button, Icon and Buttons since S-05).
 Each includes the mixins, so the keyframes repeat, identically, in each block's
 stylesheet; whichever loads last wins, and they are the same.
 

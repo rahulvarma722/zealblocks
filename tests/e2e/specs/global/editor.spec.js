@@ -90,7 +90,7 @@ async function inspectorText( page ) {
 }
 
 test.describe( 'Editor', () => {
-	test( 'the inserter offers Buttons, Container, Text and Icon; Button only inside Buttons', async ( {
+	test( 'the inserter offers Buttons, Container, Icon, List and Text; Button and List item only inside their parents', async ( {
 		admin,
 		editor,
 		page,
@@ -132,6 +132,7 @@ test.describe( 'Editor', () => {
 				'zealblocks/buttons',
 				'zealblocks/container',
 				'zealblocks/icon',
+				'zealblocks/list',
 				'zealblocks/text',
 			],
 			buttonAtRoot: false,

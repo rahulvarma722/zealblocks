@@ -429,7 +429,7 @@ final class BlockContractTest extends TestCase {
 			$this->assertMatchesRegularExpression( '/<ZIndex(Control|Item)\b/', $editor, $slug . ' must render a z-index control' );
 		}
 
-		$this->assertSame( 5, $with_z_index, 'Text, Button, Icon, Buttons and Container all emit a z-index' );
+		$this->assertSame( 6, $with_z_index, 'Text, Button, Icon, Buttons, Container and List all emit a z-index' );
 	}
 
 	/**
@@ -584,6 +584,35 @@ final class BlockContractTest extends TestCase {
 
 		preg_match_all( "/^\t'?([a-z-]+)'?: __\(/m", $js, $labelled );
 		$this->assertSame( array_keys( $shapes ), $labelled[1], 'labels in the same order as the shapes, and no extra' );
+	}
+
+	/**
+	 * The List's lists agree between PHP and JS: the icon presets the editor
+	 * shows are the ones PHP preloads (else each fetches on its own), and the
+	 * numbering styles the editor offers are the ones render.php prints and
+	 * block.json accepts (else a choice is saved and then dropped).
+	 *
+	 * @return void
+	 */
+	public function test_list_lists_match_between_php_and_js() {
+		$js     = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/list/constants.js' );
+		$render = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/list/render.php' );
+		$json   = json_decode( (string) file_get_contents( ZEALBLOCKS_PATH . 'src/list/block.json' ), true );
+
+		$this->assertSame( 1, preg_match( '/ICON_PRESETS = \[([^\]]*)\]/', $js, $presets ) );
+		preg_match_all( "/'([a-z-]+)'/", $presets[1], $preset_list );
+		$this->assertSame( \Zealblocks\Icon_Handler\Editor_Provider::LIST_PRESETS, $preset_list[1] );
+
+		preg_match_all( "/value: '([a-z-]+)'/", substr( $js, (int) strpos( $js, 'ORDERED_TYPES' ) ), $types );
+		$this->assertSame( $json['attributes']['type']['enum'], $types[1] );
+		$this->assertStringContainsString( "array( '" . implode( "', '", $types[1] ) . "' )", $render );
+
+		// The item reads the list's icon and numbering through block context.
+		$item = json_decode( (string) file_get_contents( ZEALBLOCKS_PATH . 'src/list-item/block.json' ), true );
+
+		foreach ( array_keys( $json['providesContext'] ) as $key ) {
+			$this->assertContains( $key, $item['usesContext'] );
+		}
 	}
 
 	/**

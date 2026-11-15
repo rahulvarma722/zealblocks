@@ -5,7 +5,7 @@ role, a browser, an operating system, or on chosen days of the week. It matches
 Spectra Free's Display Conditions extension, including its model: the
 conditions are **ORed**, so any one that matches hides the block.
 
-Text, Button, Icon, Buttons and Container use it (Button, Icon and Buttons since S-06). A hidden Container stops its children from rendering, as a hidden Buttons group does.
+Text, Button, Icon, Buttons, Container and List use it (Button, Icon and Buttons since S-06). A hidden Container stops its children from rendering, as a hidden Buttons group does.
 
 Per-device hiding is not here: core's block visibility (7.0+) already does it
 for every block, from the block toolbar. S-08 checked it on all four blocks:

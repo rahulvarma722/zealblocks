@@ -5,8 +5,8 @@ Free's Z-Index extension: a range of −100 to 1000, and a block that is not
 otherwise positioned becomes `position: relative`, because a z-index does
 nothing on a static box.
 
-Text has it inside its Position panel. Button, Icon, Buttons and Container have it
-as a control of its own in Dimensions (since S-07), because Spectra Free has no
+Text has it inside its Position panel. Button, Icon, Buttons, Container and List
+have it as a control of its own in Dimensions (since S-07), because Spectra Free has no
 Position panel on those blocks (Position is a Pro feature).
 
 ## Where it lives
