@@ -87,10 +87,15 @@ function DividerItem( {
 				key
 			),
 		} );
-	const setConfig = ( next ) =>
-		setAttributes( {
-			[ attribute ]: next.shape ? { ...config, ...next } : undefined,
-		} );
+	/*
+	 * Merged first, then checked: a toggle changes flip, invert or front
+	 * alone, and the divider keeps its shape. Choosing "None" removes it.
+	 */
+	const setConfig = ( next ) => {
+		const merged = { ...config, ...next };
+
+		setAttributes( { [ attribute ]: merged.shape ? merged : undefined } );
+	};
 	const perDevice = ( text ) => withDevice( text, stateKey, device );
 	const keys = DIVIDER_KEYS[ side ];
 	const widthValue = parseFloat( value( width ) );
@@ -144,7 +149,9 @@ function DividerItem( {
 				{ !! config.shape && (
 					<>
 						<BaseControl.VisualLabel>
-							{ perDevice( __( 'Colour', 'zealblocks' ) ) }
+							{ perDevice(
+								__( 'Divider colour', 'zealblocks' )
+							) }
 						</BaseControl.VisualLabel>
 						<ColorPalette
 							__experimentalIsRenderedInSidebar
@@ -161,7 +168,9 @@ function DividerItem( {
 						/>
 						<UnitControl
 							__next40pxDefaultSize
-							label={ perDevice( __( 'Height', 'zealblocks' ) ) }
+							label={ perDevice(
+								__( 'Divider height', 'zealblocks' )
+							) }
 							labelPosition="top"
 							value={ value( height ) }
 							onChange={ ( next ) =>
@@ -174,7 +183,9 @@ function DividerItem( {
 						<RangeControl
 							__next40pxDefaultSize
 							__nextHasNoMarginBottom
-							label={ perDevice( __( 'Width', 'zealblocks' ) ) }
+							label={ perDevice(
+								__( 'Divider width', 'zealblocks' )
+							) }
 							value={
 								Number.isFinite( widthValue )
 									? widthValue

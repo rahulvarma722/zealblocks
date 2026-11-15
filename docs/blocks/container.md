@@ -295,4 +295,7 @@ one-column grid makes the browser add a column.
   hover rules, CSS, hidden.
 - `tests/e2e/specs/container/`: the front end in a real browser at three
   widths (the video tests use a video from the media library and skip without
-  one), and the editor.
+  one), the editor, and `controls.spec.js`, which operates the controls as an
+  author does (link toolbar, colour picks, sliders, unit fields, selects,
+  toggles, per-device values with Responsive styles on, the variation
+  switcher) and checks the stored value, the canvas and the published page.
