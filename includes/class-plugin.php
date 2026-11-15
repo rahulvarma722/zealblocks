@@ -8,6 +8,7 @@
 namespace Zealblocks;
 
 use Zealblocks\Block\Animation;
+use Zealblocks\Block\Background_Video;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover_Label;
 use Zealblocks\Block\Registrar;
@@ -42,6 +43,7 @@ final class Plugin {
 		Display_Conditions::class,
 		Animation::class,
 		Hover_Label::class,
+		Background_Video::class,
 	);
 
 	/**

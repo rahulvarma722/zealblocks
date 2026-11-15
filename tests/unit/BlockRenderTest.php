@@ -287,4 +287,21 @@ final class BlockRenderTest extends TestCase {
 		$this->assertSame( 0, $angle( array( 45 ) ) );
 		$this->assertSame( 0, $angle( null ) );
 	}
+
+	/**
+	 * A focal point becomes two clamped percentages; the centre and junk
+	 * become nothing.
+	 *
+	 * @return void
+	 */
+	public function test_focal_point_is_two_clamped_percentages() {
+		$this->assertSame( array( '30%', '40%' ), Block_Render::focal_point( array( 'x' => 0.3, 'y' => 0.4 ) ) );
+		$this->assertSame( array( '33.33%', '0%' ), Block_Render::focal_point( array( 'x' => '0.33333', 'y' => -2 ) ) );
+		$this->assertSame( array( '100%', '75%' ), Block_Render::focal_point( array( 'x' => 5, 'y' => 0.75 ) ) );
+		$this->assertNull( Block_Render::focal_point( array( 'x' => 0.5, 'y' => 0.5 ) ), 'the centre is the default' );
+
+		foreach ( array( null, 'x', array(), array( 'x' => 0.3 ), array( 'x' => '1;}', 'y' => 0.2 ) ) as $junk ) {
+			$this->assertNull( Block_Render::focal_point( $junk ) );
+		}
+	}
 }

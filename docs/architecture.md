@@ -40,6 +40,9 @@ block API.** Not code that merely gets used by blocks.
 | `Block\Display_Conditions` | yes | Whether a block renders for this visitor; the editor's role list ([display-conditions.md](display-conditions.md)) |
 | `Block\Z_Index` | yes | The z-index property map entry and wrapper class ([z-index.md](z-index.md)) |
 | `Block\Hover` | yes | Hover-colour property map entries and wrapper class ([hover.md](hover.md)) |
+| `Block\Position` | yes | The position and offset property map entries, shared by Text and Container |
+| `Block\Reverse_Order` | yes | Per-device `flex-direction` rules for the Container ([blocks/container.md](blocks/container.md)) |
+| `Block\Background_Video` | yes | The Container's background video markup and its view script |
 | `Responsive_Styles` | no | Generates CSS. Knows nothing about the block API |
 | `Helper` | no | Environment queries |
 | `Plugin`, `Autoloader`, `Module` | no | Plugin infrastructure |
@@ -63,6 +66,9 @@ Zealblocks\Block\Animation     includes/block/class-animation.php
 Zealblocks\Block\Display_Conditions  includes/block/class-display-conditions.php
 Zealblocks\Block\Z_Index       includes/block/class-z-index.php
 Zealblocks\Block\Hover         includes/block/class-hover.php
+Zealblocks\Block\Position      includes/block/class-position.php
+Zealblocks\Block\Reverse_Order includes/block/class-reverse-order.php
+Zealblocks\Block\Background_Video  includes/block/class-background-video.php
 Zealblocks\Responsive_Styles   includes/class-responsive-styles.php
 ```
 

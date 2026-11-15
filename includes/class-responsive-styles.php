@@ -167,12 +167,29 @@ final class Responsive_Styles {
 	 * `position` leaves out `sticky` and `static`: sticky belongs to core's own
 	 * position support, and static is what "no value" already means.
 	 *
+	 * `blend` is every `mix-blend-mode` keyword except the global ones.
+	 * `align-self` leaves out `auto`, which is what "no value" means, and the
+	 * flex-only spellings: `start` and `end` work in flex and grid alike.
+	 *
 	 * @var array<string, string[]>
 	 */
 	const KEYWORDS = array(
-		'position' => array( 'absolute', 'relative', 'fixed' ),
-		'overflow' => array( 'visible', 'hidden', 'auto', 'clip' ),
+		'position'   => array( 'absolute', 'relative', 'fixed' ),
+		'overflow'   => array( 'visible', 'hidden', 'auto', 'clip' ),
+		'blend'      => array( 'normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity' ),
+		'align-self' => array( 'start', 'center', 'end', 'stretch' ),
 	);
+
+	/**
+	 * Whether a value is an opacity: a number from 0 to 1, at most three
+	 * decimals. Not a percentage: the editor stores what the slider means.
+	 *
+	 * @param string $value Candidate value.
+	 * @return bool Whether it is safe to emit.
+	 */
+	public static function is_safe_opacity( $value ) {
+		return 1 === preg_match( '/^(?:0(?:\.\d{1,3})?|1(?:\.0{1,3})?|\.\d{1,3})$/', (string) $value );
+	}
 
 	/**
 	 * Whether a value is a CSS integer, as `z-index` takes.
@@ -199,8 +216,11 @@ final class Responsive_Styles {
 	 *   background     colour or gradient, see is_safe_background()
 	 *   time           see is_safe_time()
 	 *   integer        see is_safe_integer()
+	 *   opacity        see is_safe_opacity()
 	 *   position       one of KEYWORDS['position']
 	 *   overflow       one of KEYWORDS['overflow']
+	 *   blend          one of KEYWORDS['blend']
+	 *   align-self     one of KEYWORDS['align-self']
 	 *
 	 * An unknown type validates nothing, so a typo in a property map drops the
 	 * rule rather than printing an unchecked value.
@@ -223,8 +243,12 @@ final class Responsive_Styles {
 				return self::is_safe_time( $value );
 			case 'integer':
 				return self::is_safe_integer( $value );
+			case 'opacity':
+				return self::is_safe_opacity( $value );
 			case 'position':
 			case 'overflow':
+			case 'blend':
+			case 'align-self':
 				return in_array( $value, self::KEYWORDS[ $type ], true );
 		}
 

@@ -44,6 +44,33 @@ function firstBlock( page ) {
 }
 
 /**
+ * Selects a block by its path of indexes and opens the inspector on a tab.
+ *
+ * @param {Object}   fixtures        Playwright fixtures.
+ * @param {Object}   fixtures.editor Editor utils.
+ * @param {Object}   fixtures.page   Page.
+ * @param {number[]} path            Indexes from the root.
+ * @param {string}   tab             'Settings' or 'Styles'.
+ * @return {Promise<void>}
+ */
+async function inspectPath( { editor, page }, path, tab ) {
+	await page.evaluate( ( indexes ) => {
+		const { select, dispatch } = window.wp.data;
+		let list = select( 'core/block-editor' ).getBlocks();
+		let found;
+
+		indexes.forEach( ( index ) => {
+			found = list[ index ];
+			list = found.innerBlocks;
+		} );
+
+		dispatch( 'core/block-editor' ).selectBlock( found.clientId );
+	}, path );
+	await editor.openDocumentSettingsSidebar();
+	await page.getByRole( 'tab', { name: tab } ).click();
+}
+
+/**
  * Selects the first block and opens the inspector on a tab.
  *
  * @param {Object} fixtures        Playwright fixtures.
@@ -365,6 +392,147 @@ test.describe( 'Container editor', () => {
 		expect( await computed( root, 'overflow' ) ).toBe( 'hidden' );
 	} );
 
+	test( 'overlay, aspect ratio and background video controls; no child settings at the top level', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await newPost( { admin, page, posts } );
+		await editor.insertBlock( {
+			name: 'zealblocks/container',
+			attributes: { layout: { type: 'constrained' } },
+			innerBlocks: [
+				{ name: 'core/paragraph', attributes: { content: 'Hi' } },
+			],
+		} );
+
+		await inspectFirst( { editor, page }, 'Styles' );
+		const styles = await inspectorText( page );
+
+		expect( styles ).toContain( 'overlay' );
+		expect( styles ).toContain( 'overlay hover' );
+		expect( await optionsMenu( page, 'Background' ) ).toEqual(
+			expect.arrayContaining( [
+				'Overlay opacity',
+				'Overlay hover opacity',
+				'Overlay blend mode',
+				'Overlay image',
+			] )
+		);
+
+		const dimensions = await optionsMenu( page, 'Dimensions' );
+
+		expect( dimensions ).toContain( 'Aspect ratio' );
+		for ( const child of [ 'Align self', 'Order', 'Position' ] ) {
+			expect( dimensions ).not.toContain( child );
+		}
+
+		await page.getByRole( 'tab', { name: 'Settings' } ).click();
+		const settings = page.locator( '.block-editor-block-inspector' );
+
+		await settings
+			.getByRole( 'button', { name: 'Background video' } )
+			.click();
+		await expect(
+			settings.getByRole( 'button', { name: 'Choose video' } )
+		).toBeVisible();
+	} );
+
+	test( 'child settings: align self and order in a flex or grid parent, position anywhere nested', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await newPost( { admin, page, posts } );
+		await editor.insertBlock( {
+			name: 'zealblocks/container',
+			attributes: { layout: { type: 'flex', flexWrap: 'nowrap' } },
+			innerBlocks: [
+				{
+					name: 'zealblocks/container',
+					attributes: { layout: { type: 'constrained' } },
+					innerBlocks: [
+						{
+							name: 'zealblocks/container',
+							attributes: { layout: { type: 'constrained' } },
+							innerBlocks: [
+								{
+									name: 'core/paragraph',
+									attributes: { content: 'Deep' },
+								},
+							],
+						},
+					],
+				},
+			],
+		} );
+
+		// A child of the Row: all three.
+		await inspectPath( { editor, page }, [ 0, 0 ], 'Styles' );
+		expect( await optionsMenu( page, 'Dimensions' ) ).toEqual(
+			expect.arrayContaining( [ 'Align self', 'Order', 'Position' ] )
+		);
+
+		// A child of a flow Container: position only.
+		await inspectPath( { editor, page }, [ 0, 0, 0 ], 'Styles' );
+		const flowChild = await optionsMenu( page, 'Dimensions' );
+
+		expect( flowChild ).toContain( 'Position' );
+		expect( flowChild ).not.toContain( 'Align self' );
+		expect( flowChild ).not.toContain( 'Order' );
+	} );
+
+	test( 'the canvas shows the overlay, the overlay image and the video', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+		requestUtils,
+	} ) => {
+		const media = await requestUtils.rest( {
+			path: '/wp/v2/media',
+			params: { media_type: 'video', per_page: 1 },
+		} );
+		const video = media[ 0 ]?.source_url;
+
+		await newPost( { admin, page, posts } );
+		await editor.insertBlock( {
+			name: 'zealblocks/container',
+			attributes: {
+				layout: { type: 'constrained' },
+				overlayImage: { url: 'https://example.org/pattern.png' },
+				...( video ? { videoUrl: video } : {} ),
+				style: {
+					zealblocks: { overlay: '#000000', overlayOpacity: '0.4' },
+				},
+			},
+			innerBlocks: [
+				{ name: 'core/paragraph', attributes: { content: 'Hi' } },
+			],
+		} );
+
+		const root = editor.canvas
+			.locator( '.wp-block-zealblocks-container' )
+			.first();
+
+		expect( await computed( root, 'opacity', '::before' ) ).toBe( '0.4' );
+		expect(
+			await computed( root, 'background-image', '::before' )
+		).toMatch( /^url\("https:\/\/example\.org\/pattern\.png"\)/ );
+
+		if ( video ) {
+			await expect(
+				root.locator( '> video.wp-block-zealblocks-container__video' )
+			).toHaveAttribute( 'src', video );
+			// No pause button in the canvas: it is not the page.
+			await expect(
+				root.locator( '.wp-block-zealblocks-container__video-toggle' )
+			).toHaveCount( 0 );
+		}
+	} );
+
 	test( 'a container saves, reloads valid and keeps its settings, with no errors', async ( {
 		admin,
 		editor,
@@ -397,8 +565,17 @@ test.describe( 'Container editor', () => {
 				layout: { type: 'flex', flexWrap: 'nowrap' },
 				animationType: 'fade-up',
 				displayConditions: { hideWhenLoggedOut: true },
+				overlayImage: { id: 1, url: 'https://example.org/p.png' },
+				overlayImageSize: 'contain',
+				overlayImagePosition: { x: 0.2, y: 0.8 },
+				videoUrl: 'https://example.org/v.mp4',
+				videoPoster: 'https://example.org/poster.jpg',
+				videoPosition: { x: 0.3, y: 0.4 },
+				videoOnMobile: false,
+				positionPreview: false,
 				style: {
 					color: { background: '#eeeeee' },
+					dimensions: { aspectRatio: '16/9' },
 					zealblocks: {
 						backgroundHover: '#ffcc00',
 						borderHover: '#ff0000',
@@ -407,6 +584,11 @@ test.describe( 'Container editor', () => {
 						maxWidth: '600px',
 						reverse: true,
 						zIndex: '2',
+						overlay: 'linear-gradient(135deg,#000 0%,#fff 100%)',
+						overlayOpacity: '0.5',
+						overlayBlend: 'multiply',
+						overlayHover: '#ff0000',
+						overlayHoverOpacity: '0.2',
 					},
 					'@mobile': {
 						layout: { orientation: 'vertical' },
@@ -417,7 +599,17 @@ test.describe( 'Container editor', () => {
 			innerBlocks: [
 				{
 					name: 'zealblocks/container',
-					attributes: { layout: { type: 'constrained' } },
+					attributes: {
+						layout: { type: 'constrained' },
+						style: {
+							zealblocks: {
+								alignSelf: 'end',
+								order: '-9999',
+								position: 'relative',
+								positionTop: '4px',
+							},
+						},
+					},
 					innerBlocks: [
 						{
 							name: 'core/paragraph',

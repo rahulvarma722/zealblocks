@@ -281,6 +281,42 @@ final class ResponsiveStylesTest extends TestCase {
 	}
 
 	/**
+	 * Opacity: 0 to 1, at most three decimals; no units, no percentages.
+	 *
+	 * @return void
+	 */
+	public function test_opacity_is_a_number_from_zero_to_one() {
+		foreach ( array( '0', '1', '0.5', '.25', '0.125', '1.0', '1.000' ) as $value ) {
+			$this->assertTrue( Responsive_Styles::is_safe_value( $value, 'opacity' ), $value );
+		}
+
+		foreach ( array( '', '2', '1.5', '-0.5', '50%', '0.1234', '1.01', '0.5;color:red', ' 0.5' ) as $value ) {
+			$this->assertFalse( Responsive_Styles::is_safe_value( $value, 'opacity' ), $value );
+		}
+	}
+
+	/**
+	 * Blend modes and self alignment: keyword allow-lists, exact.
+	 *
+	 * @return void
+	 */
+	public function test_blend_and_align_self_are_keywords() {
+		foreach ( Responsive_Styles::KEYWORDS['blend'] as $mode ) {
+			$this->assertTrue( Responsive_Styles::is_safe_value( $mode, 'blend' ), $mode );
+		}
+
+		foreach ( array( 'Multiply', 'plus-lighter', 'inherit', 'multiply;x', '' ) as $value ) {
+			$this->assertFalse( Responsive_Styles::is_safe_value( $value, 'blend' ), $value );
+		}
+
+		$this->assertSame( array( 'start', 'center', 'end', 'stretch' ), Responsive_Styles::KEYWORDS['align-self'] );
+
+		foreach ( array( 'auto', 'flex-start', 'baseline', 'END', '' ) as $value ) {
+			$this->assertFalse( Responsive_Styles::is_safe_value( $value, 'align-self' ), $value );
+		}
+	}
+
+	/**
 	 * build_rules() validates with the type it is given.
 	 *
 	 * @return void

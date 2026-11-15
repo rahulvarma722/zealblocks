@@ -43,21 +43,154 @@ $block: ".wp-block-zealblocks-container";
 }
 
 /*
+ * Every Container is a containing block, at zero specificity: a child placed
+ * absolutely (CH-06), the overlay, the video and the link are all placed
+ * against it, and core's sticky position or the author's own still wins.
+ */
+:where(#{$block}) {
+	position: relative;
+}
+
+/*
+ * Order (CH-05), per device, from a custom property: core's style engine drops
+ * an `order` declaration, which safecss_filter_attr() does not allow. A band
+ * with no value falls back to 0, the default.
+ */
+#{$block}.has-order {
+	order: var(--zealblocks-container-order, 0);
+}
+
+/*
+ * Layers inside a container, back to front:
+ *
+ *   the container's own background (core)
+ *   the video                       z-index -2
+ *   the overlay, `::before`         z-index -1
+ *   the link                        z-index -1, later in the tree
+ *   the content                     in flow
+ *   the pause button                z-index 1
+ *
+ * Negative z-indexes stay inside the container only while it is its own
+ * stacking context, hence `isolation`. It also keeps the overlay's blend mode
+ * to what is behind it in this container.
+ */
+#{$block}:is(.has-link, .has-overlay, .has-video) {
+	isolation: isolate;
+}
+
+/*
+ * The overlay (P-42). Fill, opacity and blend come per device from render.php
+ * as custom properties; the image is one layer for every device, above the
+ * fill. Hover values fall back to the base ones, so an author can change only
+ * the opacity on hover.
+ */
+#{$block}.has-overlay::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+	background: var(--zealblocks-container-overlay-image, none), var(--zealblocks-container-overlay, transparent);
+	opacity: var(--zealblocks-container-overlay-opacity, 1);
+	mix-blend-mode: var(--zealblocks-container-overlay-blend, normal);
+	pointer-events: none;
+	transition: opacity var(--zealblocks-container-hover-duration, 0.2s) ease, background-color var(--zealblocks-container-hover-duration, 0.2s) ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition-duration: 0s;
+	}
+}
+
+#{$block}.has-overlay-hover:hover::before,
+#{$block}.has-overlay-hover:not(.editor-styles-wrapper *):has(:focus-visible)::before {
+	background: var(--zealblocks-container-overlay-image, none), var(--zealblocks-container-overlay-hover, var(--zealblocks-container-overlay, transparent));
+	opacity: var(--zealblocks-container-overlay-hover-opacity, var(--zealblocks-container-overlay-opacity, 1));
+}
+
+/*
+ * The background video (P-43). Fills the container like a cover image;
+ * render.php sets object-position from the focal point.
+ */
+#{$block} > #{$block}__video {
+	position: absolute;
+	inset: 0;
+	z-index: -2;
+	width: 100%;
+	max-width: none;
+	height: 100%;
+	margin: 0;
+	object-fit: cover;
+	border-radius: inherit;
+	pointer-events: none;
+}
+
+/*
+ * The pause button: hidden until the script has the video playing, so it is
+ * never a control that does nothing. 40px, above the 24px minimum target
+ * (WCAG 2.5.8), in the end corner, with a ring visible on any background.
+ */
+#{$block} > #{$block}__video-toggle {
+	position: absolute;
+	inset-block-end: 12px;
+	inset-inline-end: 12px;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	margin: 0;
+	padding: 0;
+	color: #fff;
+	background: rgba(0, 0, 0, 0.6);
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+
+	&[hidden] {
+		display: none;
+	}
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.8);
+	}
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+		box-shadow: 0 0 0 4px #000;
+	}
+
+	svg {
+		fill: currentcolor;
+	}
+}
+
+#{$block}__video-icon-play,
+#{$block}__video-toggle.is-paused #{$block}__video-icon-pause {
+	display: none;
+}
+
+#{$block}__video-toggle.is-paused #{$block}__video-icon-play {
+	display: inline;
+}
+
+/*
+ * The video, its button and the link come before the content and are out of
+ * flow, so the first block after them loses the top margin core takes off a
+ * first child.
+ */
+#{$block} > :is(#{$block}__video, #{$block}__video-toggle, #{$block}__link) + :not(#{$block}__video, #{$block}__video-toggle, #{$block}__link) {
+	margin-block-start: 0;
+}
+
+/*
  * The link (P-64): an empty <a> stretched over the container, under its
  * content. Clicks pass through the content to it, except on the content's own
  * controls, so a card can hold its own buttons. render.php explains why it is
  * not a wrapping <a>.
- *
- * Zero specificity for `position`, so core's sticky position support, which
- * also makes a containing block, still wins.
  */
-:where(#{$block}.has-link) {
-	position: relative;
-}
-
 #{$block}.has-link {
-	// Keeps the link's z-index: -1 inside the container, above its background.
-	isolation: isolate;
 
 	> :not(#{$block}__link) {
 		pointer-events: none;
@@ -65,12 +198,6 @@ $block: ".wp-block-zealblocks-container";
 
 	:is(a, button, input, select, textarea, label, summary, iframe, video, audio, [tabindex]:not([tabindex="-1"]), [role="button"]) {
 		pointer-events: auto;
-	}
-
-	// The link is the first child, so the first visible block loses the
-	// top margin core takes off a first child.
-	> #{$block}__link + * {
-		margin-block-start: 0;
 	}
 
 	// The focus ring goes on the container: the link sits under the content,

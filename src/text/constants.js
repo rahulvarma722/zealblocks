@@ -206,22 +206,6 @@ export const CSS_VARS = {
  */
 export const GAP_UNITS = [ 'px', 'em', 'rem', '%', 'vw' ];
 
-/**
- * Units for position offsets. Each must pass is_safe_length( $v, true ).
- */
-export const OFFSET_UNITS = [ 'px', '%', 'em', 'rem', 'vw', 'vh' ];
-
-/**
- * Position types. Mirrors Responsive_Styles::KEYWORDS — sticky is core's own
- * position support, and leaving the value unset means static.
- */
-export const POSITION_OPTIONS = [
-	{ value: '', label: __( 'Default', 'zealblocks' ) },
-	{ value: 'relative', label: __( 'Relative', 'zealblocks' ) },
-	{ value: 'absolute', label: __( 'Absolute', 'zealblocks' ) },
-	{ value: 'fixed', label: __( 'Fixed', 'zealblocks' ) },
-];
-
 export const OVERFLOW_OPTIONS = [
 	{ value: '', label: __( 'Default', 'zealblocks' ) },
 	{ value: 'visible', label: __( 'Visible', 'zealblocks' ) },

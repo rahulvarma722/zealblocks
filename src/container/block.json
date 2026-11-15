@@ -49,6 +49,44 @@
 			"type": "string",
 			"default": ""
 		},
+		"overlayImage": {
+			"type": "object"
+		},
+		"overlayImageSize": {
+			"type": "string",
+			"enum": [
+				"cover",
+				"contain",
+				"repeat"
+			],
+			"default": "cover"
+		},
+		"overlayImagePosition": {
+			"type": "object"
+		},
+		"videoUrl": {
+			"type": "string"
+		},
+		"videoId": {
+			"type": "number"
+		},
+		"videoPoster": {
+			"type": "string"
+		},
+		"videoPosterId": {
+			"type": "number"
+		},
+		"videoPosition": {
+			"type": "object"
+		},
+		"videoOnMobile": {
+			"type": "boolean",
+			"default": true
+		},
+		"positionPreview": {
+			"type": "boolean",
+			"default": true
+		},
 		"animationType": {
 			"type": "string",
 			"default": ""
@@ -126,7 +164,8 @@
 		"dimensions": {
 			"minHeight": true,
 			"height": true,
-			"width": true
+			"width": true,
+			"aspectRatio": true
 		},
 		"position": {
 			"sticky": true

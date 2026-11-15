@@ -22,6 +22,7 @@ defined( 'ABSPATH' ) || exit;
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
+use Zealblocks\Block\Position;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Block\Z_Index;
 
@@ -164,11 +165,8 @@ $responsive = Block_Render::responsive(
 		'textShadowColor' => array( '--zealblocks-text-shadow-color', 'color' ),
 		...Hover::properties( '--zealblocks-text-hover-', ':hover' ),
 		Z_Index::KEY      => Z_Index::PROPERTY,
-		'position'        => array( 'position', 'position' ),
-		'positionTop'     => array( 'top', 'signed-length' ),
-		'positionRight'   => array( 'right', 'signed-length' ),
-		'positionBottom'  => array( 'bottom', 'signed-length' ),
-		'positionLeft'    => array( 'left', 'signed-length' ),
+		// Position and its offsets, shared; see includes/block/class-position.php.
+		...Position::properties(),
 		'overflow'        => array( 'overflow', 'overflow' ),
 	),
 	'zealblocks-text-'

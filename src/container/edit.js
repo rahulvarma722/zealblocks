@@ -15,7 +15,11 @@ import {
 	InspectorControls,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
+import {
+	createBlocksFromInnerBlocksTemplate,
+	store as blocksStore,
+} from '@wordpress/blocks';
+import { useReducedMotion } from '@wordpress/compose';
 import {
 	Button,
 	Notice,
@@ -44,8 +48,11 @@ import {
 	DisplayConditionsPanel,
 	hasConditions as hasAnyCondition,
 } from '../shared/display-conditions';
-import { getStylePreview } from './preview';
+import { focalPosition, getStylePreview } from './preview';
 import { LiftControl, ReverseControl, SizeControls } from './style-controls';
+import { OverlayControls } from './overlay-controls';
+import { ChildControls } from './child-controls';
+import { VideoPanel } from './video-controls';
 import { PRESETS, withPresetStyle } from './presets';
 import { containerIcon } from './icons';
 import { LANDMARK_TAGS, TAGS } from './constants';
@@ -118,6 +125,14 @@ export default function Edit( {
 		ariaLabel,
 		layout,
 		style,
+		overlayImage,
+		overlayImageSize,
+		overlayImagePosition,
+		positionPreview,
+		videoUrl,
+		videoPoster,
+		videoPosition,
+		videoOnMobile,
 		animationType,
 		animationDuration,
 		animationDelay,
@@ -130,6 +145,42 @@ export default function Edit( {
 		[ clientId ]
 	);
 	const { replaceInnerBlocks } = useDispatch( blockEditorStore );
+
+	/*
+	 * The parent's layout type, for the child settings: align self and order
+	 * mean something only in a flex or grid parent. Null at the top level. A
+	 * parent with no layout attribute has its block type's default, as core's
+	 * Row variation of Group does not and core's Columns does.
+	 */
+	const parentLayout = useSelect(
+		( select ) => {
+			const { getBlockRootClientId, getBlockAttributes, getBlockName } =
+				select( blockEditorStore );
+			const parentId = getBlockRootClientId( clientId );
+
+			if ( ! parentId ) {
+				return null;
+			}
+
+			const type = getBlockAttributes( parentId )?.layout?.type;
+
+			if ( type ) {
+				return type;
+			}
+
+			const supports = select( blocksStore ).getBlockType(
+				getBlockName( parentId )
+			)?.supports;
+
+			return (
+				( supports?.layout ?? supports?.__experimentalLayout )?.default
+					?.type ?? 'default'
+			);
+		},
+		[ clientId ]
+	);
+
+	const isReducedMotion = useReducedMotion();
 
 	/*
 	 * Whether a heading inside can name the link. render.php takes the first
@@ -179,7 +230,17 @@ export default function Edit( {
 	// Memoised for the same reason as the Button's: see button/edit.js.
 	const extraBlockProps = useMemo( () => {
 		// Hover, shadow, lift, size limits and reverse order: see preview.js.
-		const preview = getStylePreview( { style, layout }, device );
+		const preview = getStylePreview(
+			{
+				style,
+				layout,
+				overlayImage,
+				overlayImageSize,
+				overlayImagePosition,
+				positionPreview,
+			},
+			device
+		);
 		const zIndex = getZIndexPreview( style, device );
 		const animation = getAnimationProps(
 			{
@@ -200,6 +261,7 @@ export default function Edit( {
 			...zIndex.classes,
 			animation.className,
 			hasConditions ? 'has-display-conditions' : '',
+			videoUrl ? 'has-video' : '',
 		].filter( Boolean );
 
 		return {
@@ -210,6 +272,11 @@ export default function Edit( {
 	}, [
 		style,
 		layout,
+		overlayImage,
+		overlayImageSize,
+		overlayImagePosition,
+		positionPreview,
+		videoUrl,
 		device,
 		isPreviewing,
 		animationType,
@@ -259,6 +326,28 @@ export default function Edit( {
 
 	const TagName = TAGS.includes( tagName ) ? tagName : 'div';
 
+	/*
+	 * The video in the canvas: playing, unless the author prefers reduced
+	 * motion, and absent in the Mobile preview when it is off on mobile, as on
+	 * the front end. No pause button here; the canvas is not the page.
+	 */
+	const video =
+		videoUrl && ! ( 'Mobile' === device && false === videoOnMobile ) ? (
+			<video
+				className="wp-block-zealblocks-container__video"
+				src={ videoUrl }
+				poster={ videoPoster || undefined }
+				autoPlay={ ! isReducedMotion }
+				muted
+				loop
+				playsInline
+				aria-hidden="true"
+				tabIndex={ -1 }
+				style={ { objectPosition: focalPosition( videoPosition ) } }
+			/>
+		) : null;
+	const { children: innerBlocks, ...wrapperProps } = innerBlocksProps;
+
 	return (
 		<>
 			<LinkToolbar
@@ -277,6 +366,15 @@ export default function Edit( {
 			<LiftControl { ...styleControlProps } />
 			<SizeControls { ...styleControlProps } />
 			<ReverseControl { ...styleControlProps } layout={ layout } />
+			<OverlayControls
+				{ ...styleControlProps }
+				attributes={ attributes }
+			/>
+			<ChildControls
+				{ ...styleControlProps }
+				attributes={ attributes }
+				parentLayout={ parentLayout }
+			/>
 
 			{ url && (
 				<InspectorControls>
@@ -307,6 +405,11 @@ export default function Edit( {
 					</PanelBody>
 				</InspectorControls>
 			) }
+
+			<VideoPanel
+				attributes={ attributes }
+				setAttributes={ setAttributes }
+			/>
 
 			<AnimationPanel
 				clientId={ clientId }
@@ -367,7 +470,10 @@ export default function Edit( {
 					<Presets onSelect={ selectPreset } />
 				</TagName>
 			) : (
-				<TagName { ...innerBlocksProps } />
+				<TagName { ...wrapperProps }>
+					{ video }
+					{ innerBlocks }
+				</TagName>
 			) }
 		</>
 	);

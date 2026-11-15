@@ -1269,6 +1269,120 @@ $core_css  = wp_style_engine_get_stylesheet_from_context( 'block-supports' );
 $check( 'preset grid: core writes three columns, and one on mobile', false !== strpos( $core_css, 'repeat(3, minmax(0, 1fr))' ) && 1 === preg_match( '/width <= 480px\)\{[^}]*\{[^}]*repeat\(1, minmax\(0, 1fr\)\)/', $core_css ) );
 $check( 'preset grid: core spans the wide column, and not on mobile', false !== strpos( $core_css, 'grid-column:span 2' ) && 1 === preg_match( '/width <= 480px\)\{[^}]*\{grid-column:span 1/', $core_css ) && false !== strpos( $grid_html, '>B<' ) );
 
+// Phase 2: overlay, video, child settings.
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$overlaid    = $container(
+	array(
+		'overlayImage'         => array( 'url' => 'https://ex.org/pattern.png' ),
+		'overlayImageSize'     => 'repeat',
+		'overlayImagePosition' => array(
+			'x' => 0.25,
+			'y' => 0.75,
+		),
+		'style'                => array(
+			'zealblocks' => array(
+				'overlay'             => '#0e0f01',
+				'overlayOpacity'      => '0.6',
+				'overlayBlend'        => 'multiply',
+				'overlayHoverOpacity' => '0.3',
+			),
+			'@mobile'    => array( 'zealblocks' => array( 'overlayOpacity' => '0.8' ) ),
+		),
+	)
+);
+$overlay_css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$check( 'overlay: fill, opacity and blend as custom properties', false !== strpos( $overlay_css, '--zealblocks-container-overlay:#0e0f01;--zealblocks-container-overlay-opacity:0.6;--zealblocks-container-overlay-blend:multiply;--zealblocks-container-overlay-hover-opacity:0.3;' ) );
+$check( 'overlay: a mobile opacity of its own', 1 === preg_match( '/width <= 480px\)\{\.zealblocks-ctr-[0-9a-f]{8}\{--zealblocks-container-overlay-opacity:0.8;\}/', $overlay_css ) );
+$check( 'overlay: classes on the root, the hover one switching the transition on', 1 === preg_match( '/class="[^"]*\bhas-hover\b[^"]*\bhas-overlay has-overlay-hover\b/', $overlaid ) );
+// WordPress strips the trailing semicolon from a style attribute.
+$check( 'overlay image: a layer on the root, at its focal point, tiled', false !== strpos( $overlaid, 'style="--zealblocks-container-overlay-image:url(&quot;https://ex.org/pattern.png&quot;) 25% 75% / auto repeat"' ) );
+
+$hostile_image = $container( array( 'overlayImage' => array( 'url' => "https://ex.org/a.png\");}body{display:none;background:url('x')" ) ) );
+preg_match( '/style="([^"]*)"/', $hostile_image, $hostile_style );
+$check( 'overlay image: a URL cannot leave its url() or split the declaration', isset( $hostile_style[1] ) && 1 === preg_match( '/^--zealblocks-container-overlay-image:url\(&quot;[^&;(){}\'"]*&quot;\) 50% 50% \/ cover no-repeat$/', $hostile_style[1] ) );
+$check( 'overlay image: an unusable URL is no overlay', false === strpos( $container( array( 'overlayImage' => array( 'url' => 'javascript:alert(1)' ) ) ), 'has-overlay' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$bad_overlay = $container(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'overlayOpacity' => '2',
+				'overlayBlend'   => 'evil;}',
+				'alignSelf'      => 'bogus',
+				'order'          => '1e3',
+				'position'       => 'sticky',
+			),
+		),
+	)
+);
+$check( 'overlay and child values that fail validation leave no CSS and no class', '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) && false === strpos( $bad_overlay, 'zealblocks-ctr-' ) && false === strpos( $bad_overlay, 'has-overlay' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$child     = $container(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'alignSelf'     => 'end',
+				'position'      => 'absolute',
+				'positionTop'   => '-10px',
+				'positionRight' => '-10px',
+			),
+			'@mobile'    => array(
+				'zealblocks' => array(
+					'order'    => '-9999',
+					'position' => 'relative',
+				),
+			),
+		),
+	)
+);
+$child_css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$check( 'child: align self and the shared position, as declarations', 1 === preg_match( '/\.zealblocks-ctr-[0-9a-f]{8}\{align-self:end;position:absolute;top:-10px;right:-10px;\}/', $child_css ) );
+$check( 'child: order through a custom property, as core drops `order` itself', 1 === preg_match( '/width <= 480px\)\{\.zealblocks-ctr-[0-9a-f]{8}\{--zealblocks-container-order:-9999;position:relative;\}/', $child_css ) && false !== strpos( $child, 'has-order' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$text_positioned = do_blocks( '<!-- wp:zealblocks/text {"content":"P","style":{"zealblocks":{"position":"absolute","positionTop":"5px","positionLeft":"-2px"}}} /-->' );
+$check( 'text: position still renders through the shared map', 1 === preg_match( '/\{position:absolute;top:5px;left:-2px;\}/', wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) ) && false !== strpos( $text_positioned, 'zealblocks-text-' ) );
+
+// The video.
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+wp_dequeue_script( Zealblocks\Block\Background_Video::handle() );
+$check( 'video: its script is registered', wp_script_is( Zealblocks\Block\Background_Video::handle(), 'registered' ) );
+$check( 'video: no video, no script', false === strpos( $container( array() ), '<video' ) && ! wp_script_is( Zealblocks\Block\Background_Video::handle(), 'enqueued' ) );
+
+$videoed = $container(
+	array(
+		'videoUrl'      => 'https://ex.org/clip.mp4?a=1&b=2',
+		'videoPoster'   => 'https://ex.org/poster.jpg',
+		'videoPosition' => array(
+			'x' => 0.3,
+			'y' => 0.4,
+		),
+	)
+);
+preg_match( '#<video [^>]*></video>#', $videoed, $video_tag );
+$video_tag = $video_tag[0] ?? '';
+$check( 'video: no src and no autoplay, so nothing plays or downloads without the script', false === strpos( $video_tag, ' src=' ) && false === strpos( $video_tag, 'autoplay' ) && false !== strpos( $video_tag, 'data-src="https://ex.org/clip.mp4?a=1&#038;b=2"' ) );
+$check( 'video: muted, looped, inline, lazy, hidden from assistive tech', false !== strpos( $video_tag, ' muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"' ) );
+$check( 'video: poster and focal point', false !== strpos( $video_tag, 'poster="https://ex.org/poster.jpg"' ) && false !== strpos( $video_tag, 'style="object-position:30% 40%;"' ) );
+$check( 'video: the pause button starts hidden, with both labels', 1 === preg_match( '#<button type="button" class="wp-block-zealblocks-container__video-toggle" aria-label="Pause background video" data-label-pause="Pause background video" data-label-play="Play background video" hidden>#', $videoed ) );
+$check( 'video: first inside the root, before the content', 1 === preg_match( '#^<div [^>]*\bhas-video\b[^>]*><video #', trim( $videoed ) ) );
+$check( 'video: its script enqueued', wp_script_is( Zealblocks\Block\Background_Video::handle(), 'enqueued' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$desktop_only = $container(
+	array(
+		'videoUrl'      => 'https://ex.org/clip.webm',
+		'videoOnMobile' => false,
+	)
+);
+$check( 'video off on mobile: a class, the band for the script, and a rule in core\'s mobile band', false !== strpos( $desktop_only, 'has-video-hidden-mobile' ) && false !== strpos( $desktop_only, 'data-zealblocks-video-skip="(width &lt;= 480px)"' ) && false !== strpos( wp_style_engine_get_stylesheet_from_context( 'zealblocks' ), '@media (width <= 480px){.wp-block-zealblocks-container.has-video-hidden-mobile > .wp-block-zealblocks-container__video,.wp-block-zealblocks-container.has-video-hidden-mobile > .wp-block-zealblocks-container__video-toggle{display:none !important;}}' ) );
+
+foreach ( array( 'https://ex.org/photo.jpg', 'javascript:alert(1)', 'https://ex.org/clip' ) as $not_video ) {
+	$check( 'video: "' . $not_video . '" is not a video file', false === strpos( $container( array( 'videoUrl' => $not_video ) ), '<video' ) );
+}
+
 /*
  * A hidden container must stop its children before they render, as the
  * Buttons group does: they would otherwise store CSS rules that reach the page.

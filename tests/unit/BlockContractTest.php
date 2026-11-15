@@ -30,6 +30,7 @@ use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Hover_Label;
+use Zealblocks\Block\Position;
 use Zealblocks\Block\Reverse_Order;
 use Zealblocks\Block\Z_Index;
 use Zealblocks\Responsive_Styles;
@@ -530,6 +531,44 @@ final class BlockContractTest extends TestCase {
 		$this->assertSame( 1, preg_match( '/OVERFLOW_VALUES = \[([^\]]*)\]/', $js, $overflow ) );
 		preg_match_all( "/'([a-z]+)'/", $overflow[1], $overflow_list );
 		$this->assertSame( Responsive_Styles::KEYWORDS['overflow'], $overflow_list[1] );
+
+		// The blend modes and self alignments the editor offers are exactly the
+		// keywords the server accepts; one it offered and the server refused
+		// would show in the canvas and nowhere else.
+		foreach ( array(
+			'BLEND_MODES'       => 'blend',
+			'ALIGN_SELF_VALUES' => 'align-self',
+		) as $constant => $type ) {
+			$this->assertSame( 1, preg_match( '/' . $constant . ' = \[([^\]]*)\]/', $js, $list ), $constant );
+			preg_match_all( "/'([a-z-]+)'/", $list[1], $values );
+			$this->assertSame( Responsive_Styles::KEYWORDS[ $type ], $values[1], $constant );
+		}
+
+		// The overlay image sizes, between the editor and render.php.
+		$this->assertSame( 1, preg_match( '/OVERLAY_IMAGE_SIZES = \[([^\]]*)\]/', $js, $sizes ) );
+		preg_match_all( "/'([a-z]+)'/", $sizes[1], $size_list );
+		$this->assertStringContainsString( "array( '" . implode( "', '", $size_list[1] ) . "' )", $render );
+		$this->assertSame( $size_list[1], $json['attributes']['overlayImageSize']['enum'] );
+	}
+
+	/**
+	 * The shared position keys are the same in PHP and JS, and both blocks
+	 * that offer position spread the shared map rather than restating it.
+	 *
+	 * @return void
+	 */
+	public function test_position_keys_match_between_php_and_js() {
+		$js = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/shared/position/constants.js' );
+
+		$this->assertStringContainsString( "POSITION_KEY = 'position'", $js );
+
+		foreach ( Position::PROPERTIES as $key => $target ) {
+			$this->assertStringContainsString( $key . ": '" . $target[0] . "'", $js, $key . ' must map to ' . $target[0] . ' in POSITION_STYLE' );
+		}
+
+		foreach ( array( 'text', 'container' ) as $slug ) {
+			$this->assertStringContainsString( 'Position::properties()', (string) file_get_contents( ZEALBLOCKS_PATH . 'src/' . $slug . '/render.php' ), $slug );
+		}
 	}
 
 	/**

@@ -4,10 +4,19 @@
  */
 
 import {
+	focalPosition,
+	getOverlayImageLayer,
 	getPreviewDirection,
 	getStylePreview,
 } from '../../src/container/preview';
 import { PRESETS, withPresetStyle } from '../../src/container/presets';
+import {
+	fromPercent,
+	orderMode,
+	setOverlayFill,
+	toPercent,
+} from '../../src/container/values';
+import { getPositionPreview } from '../../src/shared/position/preview';
 
 const FLEX = { type: 'flex', flexWrap: 'nowrap' };
 
@@ -175,5 +184,141 @@ describe( 'presets', () => {
 				layout: { minimumColumnWidth: '10rem', columnCount: 1 },
 			},
 		} );
+	} );
+} );
+
+describe( 'overlay', () => {
+	it( 'previews the fill, opacity, blend and hover per device, with its classes', () => {
+		const style = {
+			zealblocks: {
+				overlay: '#000',
+				overlayOpacity: '0.6',
+				overlayBlend: 'multiply',
+				overlayHoverOpacity: '0.3',
+			},
+			'@mobile': { zealblocks: { overlayOpacity: '0.8' } },
+		};
+
+		expect( getStylePreview( { style }, 'Mobile' ) ).toEqual( {
+			style: {
+				'--zealblocks-container-overlay': '#000',
+				'--zealblocks-container-overlay-opacity': '0.8',
+				'--zealblocks-container-overlay-blend': 'multiply',
+				'--zealblocks-container-overlay-hover-opacity': '0.3',
+			},
+			classes: [ 'has-hover', 'has-overlay', 'has-overlay-hover' ],
+		} );
+	} );
+
+	it( 'writes the image layer exactly as render.php does', () => {
+		expect(
+			getOverlayImageLayer( {
+				overlayImage: { url: 'https://example.org/p.png' },
+				overlayImageSize: 'repeat',
+				overlayImagePosition: { x: 0.25, y: 0.75 },
+			} )
+		).toBe( 'url("https://example.org/p.png") 25% 75% / auto repeat' );
+		expect(
+			getOverlayImageLayer( {
+				overlayImage: { url: 'https://example.org/p.png' },
+				overlayImageSize: 'bogus',
+			} )
+		).toBe( 'url("https://example.org/p.png") 50% 50% / cover no-repeat' );
+		expect( getOverlayImageLayer( {} ) ).toBe( undefined );
+
+		// The characters render.php percent-encodes, encoded the same way.
+		expect(
+			getOverlayImageLayer( {
+				overlayImage: { url: "https://ex.org/a b;(c)'.png" },
+			} )
+		).toBe(
+			'url("https://ex.org/a%20b%3B%28c%29%27.png") 50% 50% / cover no-repeat'
+		);
+
+		// An image alone is an overlay.
+		expect(
+			getStylePreview(
+				{ overlayImage: { url: 'https://example.org/p.png' } },
+				'Desktop'
+			).classes
+		).toEqual( [ 'has-overlay' ] );
+	} );
+
+	it( 'rounds and clamps a focal point as Render::focal_point() does', () => {
+		expect( focalPosition( { x: 0.33333, y: -2 } ) ).toBe( '33.33% 0%' );
+		expect( focalPosition( { x: 5, y: 0.75 } ) ).toBe( '100% 75%' );
+		expect( focalPosition( undefined ) ).toBe( '50% 50%' );
+		expect( focalPosition( { x: 'a', y: 0.2 } ) ).toBe( '50% 50%' );
+	} );
+
+	it( 'seeds a 50% opacity on the base the first time an overlay appears, and only then', () => {
+		const first = setOverlayFill( undefined, '@tablet', 'overlay', '#000' );
+
+		expect( first ).toEqual( {
+			zealblocks: { overlayOpacity: '0.5' },
+			'@tablet': { zealblocks: { overlay: '#000' } },
+		} );
+
+		const second = setOverlayFill( first, null, 'overlay', '#fff' );
+
+		expect( second.zealblocks ).toEqual( {
+			overlayOpacity: '0.5',
+			overlay: '#fff',
+		} );
+
+		// A hover fill alone never seeds the base opacity.
+		expect(
+			setOverlayFill( undefined, null, 'overlayHover', '#000' )
+		).toEqual( { zealblocks: { overlayHover: '#000' } } );
+	} );
+
+	it( 'converts opacity to and from the slider percentage', () => {
+		expect( toPercent( '0.35' ) ).toBe( 35 );
+		expect( toPercent( undefined ) ).toBe( undefined );
+		expect( fromPercent( 35 ) ).toBe( '0.35' );
+		expect( fromPercent( 100 ) ).toBe( '1' );
+		expect( fromPercent( 140 ) ).toBe( '1' );
+		expect( fromPercent( undefined ) ).toBe( undefined );
+	} );
+} );
+
+describe( 'child settings', () => {
+	it( 'previews align self, order and position for the device', () => {
+		const style = {
+			zealblocks: {
+				alignSelf: 'end',
+				position: 'absolute',
+				positionTop: '-10px',
+			},
+			'@mobile': {
+				zealblocks: { order: '-9999', position: 'relative' },
+			},
+		};
+
+		expect( getStylePreview( { style }, 'Mobile' ).style ).toEqual( {
+			alignSelf: 'end',
+			order: '-9999',
+			position: 'relative',
+			top: '-10px',
+		} );
+	} );
+
+	it( 'leaves position out of the canvas when its preview is off', () => {
+		const style = { zealblocks: { position: 'absolute' } };
+
+		expect(
+			getStylePreview( { style, positionPreview: false }, 'Desktop' )
+				.style
+		).toEqual( {} );
+		expect( getPositionPreview( style, 'Desktop' ) ).toEqual( {
+			position: 'absolute',
+		} );
+	} );
+
+	it( 'reads the order choice back from what is stored', () => {
+		expect( orderMode( undefined ) ).toBe( '' );
+		expect( orderMode( '-9999' ) ).toBe( 'first' );
+		expect( orderMode( '9999' ) ).toBe( 'last' );
+		expect( orderMode( '3' ) ).toBe( 'custom' );
 	} );
 } );

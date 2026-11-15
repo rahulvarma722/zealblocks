@@ -22,7 +22,31 @@ export const KEYS = {
 	maxHeight: 'maxHeight',
 	overflow: 'overflow',
 	reverse: REVERSE_KEY,
+	overlay: 'overlay',
+	overlayOpacity: 'overlayOpacity',
+	overlayBlend: 'overlayBlend',
+	overlayHover: 'overlayHover',
+	overlayHoverOpacity: 'overlayHoverOpacity',
+	alignSelf: 'alignSelf',
+	order: 'order',
 };
+
+/** Every overlay key: any of them makes the overlay exist. */
+export const OVERLAY_KEYS = [
+	KEYS.overlay,
+	KEYS.overlayOpacity,
+	KEYS.overlayBlend,
+	KEYS.overlayHover,
+	KEYS.overlayHoverOpacity,
+];
+
+export const OVERLAY_HOVER_KEYS = [
+	KEYS.overlayHover,
+	KEYS.overlayHoverOpacity,
+];
+
+/** What the overlay's opacity starts at when an overlay is first added. */
+export const OVERLAY_DEFAULT_OPACITY = '0.5';
 
 export { SHADOW_HOVER_KEYS };
 
@@ -35,7 +59,45 @@ export const CSS_VARS = {
 	shadowHoverBlur: '--zealblocks-container-shadow-hover-blur',
 	shadowHoverSpread: '--zealblocks-container-shadow-hover-spread',
 	shadowHoverColor: '--zealblocks-container-shadow-hover-color',
+	[ KEYS.overlay ]: '--zealblocks-container-overlay',
+	[ KEYS.overlayOpacity ]: '--zealblocks-container-overlay-opacity',
+	[ KEYS.overlayBlend ]: '--zealblocks-container-overlay-blend',
+	[ KEYS.overlayHover ]: '--zealblocks-container-overlay-hover',
+	[ KEYS.overlayHoverOpacity ]:
+		'--zealblocks-container-overlay-hover-opacity',
+	overlayImage: '--zealblocks-container-overlay-image',
+	[ KEYS.order ]: '--zealblocks-container-order',
 };
+
+/** MUST match Responsive_Styles::KEYWORDS['blend']. */
+export const BLEND_MODES = [
+	'normal',
+	'multiply',
+	'screen',
+	'overlay',
+	'darken',
+	'lighten',
+	'color-dodge',
+	'color-burn',
+	'hard-light',
+	'soft-light',
+	'difference',
+	'exclusion',
+	'hue',
+	'saturation',
+	'color',
+	'luminosity',
+];
+
+/** MUST match Responsive_Styles::KEYWORDS['align-self']. */
+export const ALIGN_SELF_VALUES = [ 'start', 'center', 'end', 'stretch' ];
+
+/** What "First" and "Last" store for the order. */
+export const ORDER_FIRST = '-9999';
+export const ORDER_LAST = '9999';
+
+/** Overlay image sizes. MUST match render.php. */
+export const OVERLAY_IMAGE_SIZES = [ 'cover', 'contain', 'repeat' ];
 
 /** HTML elements the Container may render as. MUST match render.php. */
 export const TAGS = [

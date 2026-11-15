@@ -118,6 +118,30 @@ final class Render {
 	}
 
 	/**
+	 * A focal point as two percentages, or null for the centre or junk.
+	 *
+	 * Numbers only, clamped and rounded, so nothing from the stored object can
+	 * reach a style attribute but two percentages.
+	 *
+	 * @param mixed $point `{ x, y }` from the focal point picker, each 0 to 1.
+	 * @return string[]|null `array( 'x%', 'y%' )`, or null.
+	 */
+	public static function focal_point( $point ) {
+		if ( ! is_array( $point ) || ! isset( $point['x'], $point['y'] ) || ! is_numeric( $point['x'] ) || ! is_numeric( $point['y'] ) ) {
+			return null;
+		}
+
+		$x = max( 0, min( 100, round( (float) $point['x'] * 100, 2 ) ) );
+		$y = max( 0, min( 100, round( (float) $point['y'] * 100, 2 ) ) );
+
+		if ( 50.0 === (float) $x && 50.0 === (float) $y ) {
+			return null;
+		}
+
+		return array( $x . '%', $y . '%' );
+	}
+
+	/**
 	 * Escapes a URL, returning '' when it is not usable.
 	 *
 	 * The return value is the thing to branch on, not the input. esc_url()

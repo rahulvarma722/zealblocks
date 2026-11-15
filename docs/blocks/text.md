@@ -11,7 +11,7 @@ Text with a **visual style preset** chosen independently of its HTML tag.
 | **Text shadow** — colour, X, Y, blur | Border & Shadow | `style.zealblocks.textShadow{X,Y,Blur,Color}` | yes, per part |
 | **Text hover / Background hover** (colour or gradient) | Color | `style.zealblocks.textHover`, `backgroundHover` | yes |
 | **Hover transition** (ms) | Color | `style.zealblocks.hoverDuration` | yes |
-| **Position** — relative / absolute / fixed, four offsets | Dimensions | `style.zealblocks.position`, `positionTop/Right/Bottom/Left` | yes |
+| **Position** — relative / absolute / fixed, four offsets (shared: `src/shared/position/`, `Position::properties()`) | Dimensions | `style.zealblocks.position`, `positionTop/Right/Bottom/Left` | yes |
 | **Z-index** (−100 to 1000) | Dimensions | `style.zealblocks.zIndex` | yes |
 | **Overflow** | Dimensions | `style.zealblocks.overflow` | yes |
 | **Preview position in editor** | Dimensions | `positionPreview` | no |
