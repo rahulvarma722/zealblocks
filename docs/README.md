@@ -20,8 +20,9 @@ A Gutenberg block collection built on the WordPress 7.1 block API.
 
 ## The 60-second version
 
-Four blocks — `buttons`, `button`, `icon`, `text` — all of which return `null`
-from `save()` and render in PHP. Blocks register from `build/`, so
+Five blocks — `buttons`, `button`, `container`, `icon`, `text` — all rendered in
+PHP. The two containers save only their children (`<InnerBlocks.Content />`);
+the rest return `null` from `save()`. Blocks register from `build/`, so
 `npm install && npm run build` is required after a checkout or the plugin
 activates while registering nothing.
 

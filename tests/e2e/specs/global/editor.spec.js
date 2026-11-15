@@ -90,7 +90,7 @@ async function inspectorText( page ) {
 }
 
 test.describe( 'Editor', () => {
-	test( 'the inserter offers Buttons, Text and Icon; Button only inside Buttons', async ( {
+	test( 'the inserter offers Buttons, Container, Text and Icon; Button only inside Buttons', async ( {
 		admin,
 		editor,
 		page,
@@ -104,11 +104,17 @@ test.describe( 'Editor', () => {
 			const buttons = store.getBlocks()[ 0 ].clientId;
 
 			return {
-				atRoot: store
-					.getInserterItems()
-					.filter( ( item ) => 'zealblocks' === item.category )
-					.map( ( item ) => item.name )
-					.sort(),
+				// One name per block: the Container's variations share its name.
+				atRoot: [
+					...new Set(
+						store
+							.getInserterItems()
+							.filter(
+								( item ) => 'zealblocks' === item.category
+							)
+							.map( ( item ) => item.name )
+					),
+				].sort(),
 				buttonAtRoot: store.canInsertBlockType( 'zealblocks/button' ),
 				buttonInButtons: store.canInsertBlockType(
 					'zealblocks/button',
@@ -124,6 +130,7 @@ test.describe( 'Editor', () => {
 		expect( result ).toEqual( {
 			atRoot: [
 				'zealblocks/buttons',
+				'zealblocks/container',
 				'zealblocks/icon',
 				'zealblocks/text',
 			],

@@ -4,7 +4,7 @@ Text and background colours on hover, per device, with a transition. They
 match Spectra Free's Text Hover and Background Hover, including the background
 taking either a colour or a gradient.
 
-Text, Button (B-01, B-02), Icon (I-01, I-02) and Buttons (BS-02) use them.
+Text, Button (B-01, B-02), Icon (I-01, I-02), Buttons (BS-02) and Container use them.
 
 ## Where it lives
 
@@ -49,6 +49,7 @@ every block's.
 | Button (a link or button) | `array( ':hover', ':focus-visible' )` | keyboard users see what mouse users see. Not Spectra's `:focus`: a mouse click focuses a `<button>` and the hover colours would stick |
 | Icon | `array( ':hover', ':focus-visible' )` | a linked icon's wrapper is the `<a>` itself |
 | Buttons | `array( ':hover', ':has(:focus-visible)' )` | the focus lands on a child Button. Not Spectra's `:focus-within`, which a mouse click on a `<button>` child also triggers |
+| Container | `array( ':hover', ':has(:focus-visible)' )` | as Buttons: focus lands on the card's link or on a control inside it. Its shadow and lift use the same states in style.scss, but not in the editor, where children take focus to be typed into |
 
 A list becomes a selector list: `.x:hover,.x:focus{color:… !important}`, inside
 each band's media query too. States not in the allow-list are dropped, because

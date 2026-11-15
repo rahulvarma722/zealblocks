@@ -1,0 +1,115 @@
+/**
+ * Container — shared styles, front end and editor canvas.
+ *
+ * Core's layout support writes the layout itself: display, direction, gap,
+ * columns and the children's sizing, against a generated class. Only what
+ * layout does not cover belongs here.
+ */
+
+@use "../shared/animation/animation";
+@use "../shared/hover/hover";
+@use "../shared/z-index/z-index";
+
+$block: ".wp-block-zealblocks-container";
+
+#{$block} {
+	box-sizing: border-box;
+
+	// Hover shadow and lift, on hover and on keyboard focus inside the
+	// container. Not on focus in the editor: there the container's children
+	// take focus to be typed into, and a card that rose while its text was
+	// being edited would jump under the cursor.
+	&.has-shadow-hover:hover,
+	&.has-shadow-hover:not(.editor-styles-wrapper *):has(:focus-visible) {
+		box-shadow:
+			var(--zealblocks-container-shadow-hover-x, 0)
+			var(--zealblocks-container-shadow-hover-y, 4px)
+			var(--zealblocks-container-shadow-hover-blur, 8px)
+			var(--zealblocks-container-shadow-hover-spread, 0)
+			var(--zealblocks-container-shadow-hover-color, rgba(0, 0, 0, 0.2)) !important;
+	}
+
+	// `translate`, not `transform`, so the lift leaves the entrance
+	// animation's transform and any theme transform alone. Off for reduced
+	// motion.
+	&.has-hover-lift:hover,
+	&.has-hover-lift:not(.editor-styles-wrapper *):has(:focus-visible) {
+		translate: 0 calc(var(--zealblocks-container-lift, 4px) * -1);
+
+		@media (prefers-reduced-motion: reduce) {
+			translate: none;
+		}
+	}
+}
+
+/*
+ * The link (P-64): an empty <a> stretched over the container, under its
+ * content. Clicks pass through the content to it, except on the content's own
+ * controls, so a card can hold its own buttons. render.php explains why it is
+ * not a wrapping <a>.
+ *
+ * Zero specificity for `position`, so core's sticky position support, which
+ * also makes a containing block, still wins.
+ */
+:where(#{$block}.has-link) {
+	position: relative;
+}
+
+#{$block}.has-link {
+	// Keeps the link's z-index: -1 inside the container, above its background.
+	isolation: isolate;
+
+	> :not(#{$block}__link) {
+		pointer-events: none;
+	}
+
+	:is(a, button, input, select, textarea, label, summary, iframe, video, audio, [tabindex]:not([tabindex="-1"]), [role="button"]) {
+		pointer-events: auto;
+	}
+
+	// The link is the first child, so the first visible block loses the
+	// top margin core takes off a first child.
+	> #{$block}__link + * {
+		margin-block-start: 0;
+	}
+
+	// The focus ring goes on the container: the link sits under the content,
+	// which would cover its own outline.
+	&:has(> #{$block}__link:focus-visible) {
+		outline: 2px solid;
+		outline-offset: 2px;
+	}
+}
+
+// Two classes, to beat the max-width a constrained layout gives children.
+#{$block} > #{$block}__link {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	max-width: none;
+	border-radius: inherit;
+
+	@supports selector(:has(*)) {
+
+		&:focus-visible {
+			outline: none;
+		}
+	}
+}
+
+/*
+ * Hover transition, for every property the hover styling changes. The prefix
+ * MUST match render.php's. See src/shared/hover/_hover.scss.
+ */
+@include hover.transition(".wp-block-zealblocks-container", "--zealblocks-container-hover-", (color, background, border-color, box-shadow, translate));
+
+/*
+ * Entrance animation (S-05), scoped to this block. See
+ * src/shared/animation/_animation.scss.
+ */
+@include animation.front(".wp-block-zealblocks-container");
+
+/*
+ * z-index, at zero added specificity. See src/shared/z-index/_z-index.scss.
+ */
+@include z-index.base(".wp-block-zealblocks-container");

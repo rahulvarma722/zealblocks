@@ -30,7 +30,9 @@ use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Hover;
 use Zealblocks\Block\Hover_Label;
+use Zealblocks\Block\Reverse_Order;
 use Zealblocks\Block\Z_Index;
+use Zealblocks\Responsive_Styles;
 
 /**
  * @coversNothing
@@ -426,7 +428,7 @@ final class BlockContractTest extends TestCase {
 			$this->assertMatchesRegularExpression( '/<ZIndex(Control|Item)\b/', $editor, $slug . ' must render a z-index control' );
 		}
 
-		$this->assertSame( 4, $with_z_index, 'Text, Button, Icon and Buttons all emit a z-index' );
+		$this->assertSame( 5, $with_z_index, 'Text, Button, Icon, Buttons and Container all emit a z-index' );
 	}
 
 	/**
@@ -488,6 +490,46 @@ final class BlockContractTest extends TestCase {
 		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $buttons . 'constants.js' ) );
 		$this->assertStringContainsString( '".wp-block-zealblocks-buttons", "' . $prefix . '",', $flat( $buttons . 'style.scss' ) );
 		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-buttons", "' . $prefix . '")', (string) file_get_contents( $buttons . 'editor.scss' ) );
+
+		// The Container's prefix, in the same four places.
+		$prefix    = '--zealblocks-container-hover-';
+		$container = ZEALBLOCKS_PATH . 'src/container/';
+
+		$this->assertStringContainsString( "Hover::properties( '" . $prefix . "'", (string) file_get_contents( $container . 'render.php' ) );
+		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $container . 'constants.js' ) );
+		$this->assertStringContainsString( '".wp-block-zealblocks-container", "' . $prefix . '",', $flat( $container . 'style.scss' ) );
+		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-container", "' . $prefix . '")', (string) file_get_contents( $container . 'editor.scss' ) );
+	}
+
+	/**
+	 * The Container's reverse key, tag list and overflow keywords agree between
+	 * the server and the editor. A tag the editor offers but render.php does not
+	 * allow would be saved and then printed as a div; an overflow keyword the
+	 * server refuses would show in the canvas and nowhere else.
+	 *
+	 * @return void
+	 */
+	public function test_container_lists_match_between_php_and_js() {
+		$js     = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/container/constants.js' );
+		$render = (string) file_get_contents( ZEALBLOCKS_PATH . 'src/container/render.php' );
+		$json   = json_decode( (string) file_get_contents( ZEALBLOCKS_PATH . 'src/container/block.json' ), true );
+
+		$this->assertStringContainsString( "REVERSE_KEY = '" . Reverse_Order::KEY . "'", $js );
+
+		$this->assertSame( 1, preg_match( '/export const TAGS = \[([^\]]*)\]/', $js, $js_tags ) );
+		$this->assertSame( 1, preg_match( "/array\( 'div', [^)]*\)/", $render, $php_tags ) );
+
+		$js_list  = array_map( 'trim', explode( ',', str_replace( array( "'", "\n", "\t" ), '', trim( $js_tags[1] ) ) ) );
+		$js_list  = array_values( array_filter( $js_list ) );
+		$php_list = array();
+		preg_match_all( "/'([a-z]+)'/", $php_tags[0], $php_list );
+
+		$this->assertSame( $js_list, $php_list[1], 'TAGS in constants.js must match the allow-list in render.php' );
+		$this->assertSame( $js_list, $json['attributes']['tagName']['enum'], 'block.json must list the same tags' );
+
+		$this->assertSame( 1, preg_match( '/OVERFLOW_VALUES = \[([^\]]*)\]/', $js, $overflow ) );
+		preg_match_all( "/'([a-z]+)'/", $overflow[1], $overflow_list );
+		$this->assertSame( Responsive_Styles::KEYWORDS['overflow'], $overflow_list[1] );
 	}
 
 	/**

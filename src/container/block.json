@@ -1,0 +1,166 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "zealblocks/container",
+	"version": "0.0.3-beta",
+	"title": "Container",
+	"category": "zealblocks",
+	"icon": "layout",
+	"description": "Group blocks into a section, row, stack or grid, with hover effects, a whole-box link and per-device layout.",
+	"keywords": [
+		"section",
+		"group",
+		"row",
+		"stack",
+		"grid",
+		"columns",
+		"layout",
+		"card"
+	],
+	"textdomain": "zealblocks",
+	"attributes": {
+		"tagName": {
+			"type": "string",
+			"enum": [
+				"div",
+				"section",
+				"header",
+				"footer",
+				"main",
+				"article",
+				"aside",
+				"nav"
+			],
+			"default": "div"
+		},
+		"url": {
+			"type": "string",
+			"default": ""
+		},
+		"linkTarget": {
+			"type": "string",
+			"default": ""
+		},
+		"rel": {
+			"type": "string",
+			"default": ""
+		},
+		"linkLabel": {
+			"type": "string",
+			"default": ""
+		},
+		"animationType": {
+			"type": "string",
+			"default": ""
+		},
+		"animationDuration": {
+			"type": "number",
+			"default": 400
+		},
+		"animationDelay": {
+			"type": "number",
+			"default": 0
+		},
+		"animationEasing": {
+			"type": "string",
+			"enum": [
+				"ease",
+				"ease-in",
+				"ease-out",
+				"ease-in-out",
+				"linear"
+			],
+			"default": "ease"
+		},
+		"animationRepeat": {
+			"type": "boolean",
+			"default": false
+		},
+		"displayConditions": {
+			"type": "object",
+			"default": {}
+		}
+	},
+	"supports": {
+		"html": false,
+		"anchor": true,
+		"ariaLabel": true,
+		"align": [
+			"wide",
+			"full"
+		],
+		"layout": {
+			"default": {
+				"type": "constrained"
+			},
+			"allowSizingOnChildren": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true,
+			"__experimentalDefaultControls": {
+				"padding": true,
+				"blockGap": true
+			}
+		},
+		"color": {
+			"gradients": true,
+			"text": true,
+			"background": true,
+			"link": true,
+			"heading": true,
+			"button": true,
+			"__experimentalDefaultControls": {
+				"background": true,
+				"text": true
+			}
+		},
+		"background": {
+			"backgroundImage": true,
+			"backgroundSize": true,
+			"__experimentalDefaultControls": {
+				"backgroundImage": true
+			}
+		},
+		"dimensions": {
+			"minHeight": true,
+			"height": true,
+			"width": true
+		},
+		"position": {
+			"sticky": true
+		},
+		"shadow": true,
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": true,
+				"radius": true,
+				"style": true,
+				"width": true
+			}
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"textAlign": true,
+			"__experimentalFontFamily": true,
+			"__experimentalFontWeight": true,
+			"__experimentalFontStyle": true,
+			"__experimentalTextTransform": true,
+			"__experimentalTextDecoration": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalDefaultControls": {
+				"fontSize": true
+			}
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"editorStyle": "file:./index.css",
+	"render": "file:./render.php"
+}

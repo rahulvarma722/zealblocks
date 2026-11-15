@@ -8,7 +8,7 @@ Stable tag:        0.0.3-beta
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Text, Button, Icon and Buttons blocks built on WordPress 7.1: per-device styles, hover colours, entrance animation and display conditions.
+Text, Button, Icon, Buttons and Container blocks built on WordPress 7.1: per-device styles, hover colours, entrance animation and display conditions.
 
 == Description ==
 
@@ -21,6 +21,7 @@ reimplemented. What Zealblocks adds is the part core leaves out.
 
 * **Icon** — an SVG icon from the bundled icon library, with flip, free rotation, right-to-left mirroring, hover colours, an optional link and a proper decorative/meaningful accessibility choice.
 * **Text** — text as any of 41 HTML tags, with a visual style preset (Display, H1–H6, Lead, Body, Caption or Eyebrow) chosen independently of the tag, a drop cap, per-viewport column gap, text shadow and position, and hover colours.
+* **Container** — groups any blocks on core's flow, flex or grid layout, with column presets that stack on mobile, reverse order and max width per device, hover colours, shadow and lift, a choice of HTML element, and a link over the whole container that still lets the buttons inside it work.
 * **Buttons** — a flex container for one or more buttons, with block gap, padding, margin, background (with a hover colour or gradient), border, shadow and wide/full alignment.
 * **Button** — a button-style link with an optional icon. Per-viewport width, icon size and text–icon gap; hover colours for text, background, border, icon and shadow that also show on keyboard focus; margin and padding on every side; icon rotation; icon-only buttons; and a second icon that swaps in on hover.
 

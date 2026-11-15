@@ -1,9 +1,11 @@
 # Blocks
 
-Four blocks: a container, its only permitted child, an icon, and a text block.
+Five blocks: a general-purpose container, a buttons group and its only permitted
+child, an icon, and a text block.
 
 | block | file | what it is |
 |---|---|---|
+| [`zealblocks/container`](container.md) | `src/container/` | any blocks, on core's flow, flex or grid layout, with an optional link |
 | [`zealblocks/buttons`](button.md) | `src/buttons/` | flex container, accepts Button only |
 | [`zealblocks/button`](button.md) | `src/button/` | link or button with an optional icon |
 | [`zealblocks/icon`](icon.md) | `src/icon/` | a standalone SVG icon |
@@ -25,8 +27,8 @@ naming is core's private business.
 
 ## The save/render split — the trap worth knowing
 
-Every block here returns `null` from `save()` and renders in PHP through
-`render.php`. That keeps one source of truth for markup, but it has a sharp
+Every block here renders in PHP through `render.php`, and every block but the
+two containers returns `null` from `save()`; those save `<InnerBlocks.Content />`. That keeps one source of truth for markup, but it has a sharp
 edge:
 
 **A block returning `null` writes nothing to post content except its attributes.**

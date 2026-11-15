@@ -860,6 +860,7 @@ $visibility_sources = array(
 	'button'  => '<!-- wp:zealblocks/button {"text":"B","url":"https://ex.org","metadata":{"blockVisibility":%s},"style":{"zealblocks":{"textHover":"#0a0b02"}}} /-->',
 	'icon'    => '<!-- wp:zealblocks/icon {"icon":"heart","metadata":{"blockVisibility":%s},"style":{"zealblocks":{"textHover":"#0a0b03"}}} /-->',
 	'buttons' => '<!-- wp:zealblocks/buttons {"metadata":{"blockVisibility":%s}} --><!-- wp:zealblocks/button {"text":"In","url":"https://ex.org","style":{"zealblocks":{"backgroundHover":"#0a0b04"}}} /--><!-- /wp:zealblocks/buttons -->',
+	'container' => '<!-- wp:zealblocks/container {"metadata":{"blockVisibility":%s},"style":{"zealblocks":{"backgroundHover":"#0a0b05"}}} --><!-- wp:paragraph --><p>In</p><!-- /wp:paragraph --><!-- /wp:zealblocks/container -->',
 );
 
 foreach ( $visibility_sources as $visibility_slug => $visibility_source ) {
@@ -895,6 +896,9 @@ $z_sources = array(
 	},
 	'buttons' => static function ( $style ) {
 		return '<!-- wp:zealblocks/buttons ' . wp_json_encode( array( 'style' => $style ) ) . ' --><!-- wp:zealblocks/button {"text":"In","url":"https://ex.org"} /--><!-- /wp:zealblocks/buttons -->';
+	},
+	'container' => static function ( $style ) {
+		return '<!-- wp:zealblocks/container ' . wp_json_encode( array( 'style' => $style ) ) . ' --><!-- wp:paragraph --><p>In</p><!-- /wp:paragraph --><!-- /wp:zealblocks/container -->';
 	},
 );
 
@@ -1111,6 +1115,173 @@ if ( $probe_id && ! is_wp_error( $probe_id ) ) {
 }
 
 // ---------------------------------------------------------------------
+echo "\nContainer\n";
+// ---------------------------------------------------------------------
+$container_block = $registry->get_registered( 'zealblocks/container' );
+
+$check( 'zealblocks/container registered, with a render callback', $container_block && is_callable( $container_block->render_callback ) );
+
+$container = static function ( $attributes, $inner = '<!-- wp:paragraph --><p>Body</p><!-- /wp:paragraph -->' ) {
+	return do_blocks( '<!-- wp:zealblocks/container ' . wp_json_encode( $attributes ) . ' -->' . $inner . '<!-- /wp:zealblocks/container -->' );
+};
+
+$card_inner = '<!-- wp:heading --><h2 class="wp-block-heading">Pricing <em>plan</em></h2><!-- /wp:heading -->'
+	. '<!-- wp:paragraph --><p>Card body</p><!-- /wp:paragraph -->'
+	. '<!-- wp:zealblocks/buttons --><!-- wp:zealblocks/button {"text":"Buy","url":"https://ex.org/buy"} /--><!-- /wp:zealblocks/buttons -->';
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$card = $container(
+	array(
+		'tagName'    => 'article',
+		'url'        => 'https://ex.org/card',
+		'linkTarget' => '_blank',
+		'rel'        => 'nofollow',
+	),
+	$card_inner
+);
+
+/*
+ * Checked on the raw markup, not through a parser: an HTML parser repairs a
+ * nested link by closing the outer one, so it would never report one.
+ */
+$check( 'linked container: a tag from the allow-list', 0 === strpos( trim( $card ), '<article ' ) );
+$check( 'linked container: the link is empty, so nothing can be nested in it', 1 === preg_match( '#<a class="wp-block-zealblocks-container__link"[^>]*></a>#', $card ) );
+$check( 'linked container: exactly two links, the card\'s and the button\'s', 2 === substr_count( $card, '<a ' ) && false !== strpos( $card, 'href="https://ex.org/buy"' ) );
+$check( 'linked container: the link is the first child of the root', 1 === preg_match( '#^<article [^>]*class="[^"]*\bhas-link\b[^"]*"[^>]*><a class="wp-block-zealblocks-container__link" href="https://ex.org/card"#', trim( $card ) ) );
+$check( 'linked container: named by its first heading, as text', false !== strpos( $card, 'aria-label="Pricing plan"' ) );
+$check( 'linked container: the author\'s rel kept, the opener guard added', 1 === preg_match( '/__link"[^>]*target="_blank" rel="nofollow noreferrer noopener"/', $card ) );
+$check( 'linked container: core\'s layout classes on the root, not the link', 1 === preg_match( '#^<article [^>]*is-layout-constrained#', trim( $card ) ) && false === strpos( substr( $card, strpos( $card, '__link' ), 200 ), 'is-layout' ) );
+
+$labelled = $container(
+	array(
+		'url'       => 'https://ex.org',
+		'linkLabel' => 'See the <b>plans</b>',
+	),
+	$card_inner
+);
+$check( 'an author\'s link label wins over the heading, tags stripped', false !== strpos( $labelled, 'aria-label="See the plans"' ) );
+$check( 'with no heading, the start of the text names the link', false !== strpos( $container( array( 'url' => 'https://ex.org' ) ), 'aria-label="Body"' ) );
+
+$unsafe = $container(
+	array(
+		'tagName' => 'script',
+		'url'     => 'javascript:alert(1)',
+	)
+);
+$check( 'an unknown tag renders as a div', 0 === strpos( trim( $unsafe ), '<div ' ) && false === strpos( $unsafe, '<script' ) );
+$check( 'an unusable URL renders no link and no link class', false === strpos( $unsafe, '<a ' ) && false === strpos( $unsafe, 'has-link' ) );
+$check( 'an empty container still renders, as a spacer or a band of colour', false !== strpos( do_blocks( '<!-- wp:zealblocks/container --><!-- /wp:zealblocks/container -->' ), 'wp-block-zealblocks-container' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$hovered       = $container(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'backgroundHover'  => '#0c0d01',
+				'borderHover'      => '#0c0d02',
+				'shadowHoverY'     => '8px',
+				'shadowHoverColor' => 'rgba(0, 0, 0, 0.5)',
+				'hoverLift'        => '6px',
+			),
+			'@mobile'    => array( 'zealblocks' => array( 'hoverLift' => '0px' ) ),
+		),
+	)
+);
+$container_css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+
+$check( 'hover: background and border on hover and keyboard focus inside, important', 1 === preg_match( '/:hover,\.zealblocks-ctr-[0-9a-f]{8}:has\(:focus-visible\)\{background:#0c0d01 !important;border-color:#0c0d02 !important;\}/', $container_css ) );
+$check( 'hover: shadow parts and lift as custom properties, the colour as hex', false !== strpos( $container_css, '--zealblocks-container-shadow-hover-color:#00000080' ) && false !== strpos( $container_css, '--zealblocks-container-lift:6px' ) );
+$check( 'hover: a mobile lift of its own', 1 === preg_match( '/@media \(width <= 480px\)\{\.zealblocks-ctr-[0-9a-f]{8}\{--zealblocks-container-lift:0px;\}\}/', $container_css ) );
+$check( 'hover: transition, shadow and lift classes on the root', 1 === preg_match( '/class="[^"]*\bhas-hover has-shadow-hover has-hover-lift\b/', $hovered ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$reversed       = $container(
+	array(
+		'layout' => array( 'type' => 'flex' ),
+		'style'  => array(
+			'zealblocks' => array( 'reverse' => true ),
+			'@mobile'    => array(
+				'layout'     => array( 'orientation' => 'vertical' ),
+				'zealblocks' => array( 'reverse' => false ),
+			),
+		),
+	)
+);
+$reverse_css    = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$check( 'reverse: the class on the root, with core\'s flex layout', 1 === preg_match( '/class="[^"]*\bzealblocks-ctr-rev-[0-9a-f]{8}\b[^"]*is-layout-flex/', $reversed ) );
+$check( 'reverse: row-reverse at the base, and on tablet', 1 === preg_match( '/^\.zealblocks-ctr-rev-[0-9a-f]{8}\{flex-direction:row-reverse !important;\}/', $reverse_css ) && 1 === preg_match( '/480px < width <= 782px\)\{\.zealblocks-ctr-rev-[0-9a-f]{8}\{flex-direction:row-reverse !important;\}/', $reverse_css ) );
+$check( 'reverse: mobile follows its own vertical orientation, not reversed', 1 === preg_match( '/width <= 480px\)\{\.zealblocks-ctr-rev-[0-9a-f]{8}\{flex-direction:column !important;\}/', $reverse_css ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$grid_reversed = $container(
+	array(
+		'layout' => array( 'type' => 'grid' ),
+		'style'  => array( 'zealblocks' => array( 'reverse' => true ) ),
+	)
+);
+$check( 'reverse: nothing for a grid', false === strpos( $grid_reversed, 'zealblocks-ctr-rev-' ) && false === strpos( wp_style_engine_get_stylesheet_from_context( 'zealblocks' ), 'flex-direction' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$container(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'maxWidth'  => '480px',
+				'maxHeight' => '80vh',
+				'overflow'  => 'clip',
+			),
+			'@tablet'    => array( 'zealblocks' => array( 'maxWidth' => '90%' ) ),
+		),
+	)
+);
+$size_css = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$check( 'sizes: max width and height important, to beat the theme\'s content width', false !== strpos( $size_css, 'max-width:480px !important;' ) && false !== strpos( $size_css, 'max-height:80vh !important;' ) );
+$check( 'sizes: overflow is not important', false !== strpos( $size_css, 'overflow:clip;' ) );
+$check( 'sizes: a tablet max width of its own', 1 === preg_match( '/480px < width <= 782px\)\{\.zealblocks-ctr-[0-9a-f]{8}\{max-width:90% !important;\}/', $size_css ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$bad_sizes = $container(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'maxWidth' => '1px;}body{display:none',
+				'overflow' => 'scroll;color:red',
+				'reverse'  => 'true',
+			),
+		),
+	)
+);
+$check( 'sizes: injected values leave no CSS and no class', '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) && false === strpos( $bad_sizes, 'zealblocks-ctr-' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$grid_html = $container(
+	array(
+		'layout' => array(
+			'type'        => 'grid',
+			'columnCount' => 3,
+		),
+		'style'  => array( '@mobile' => array( 'layout' => array( 'columnCount' => 1 ) ) ),
+	),
+	'<!-- wp:zealblocks/container {"layout":{"type":"constrained"}} --><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --><!-- /wp:zealblocks/container -->'
+		. '<!-- wp:zealblocks/container {"layout":{"type":"constrained"},"style":{"layout":{"columnSpan":2},"@mobile":{"layout":{"columnSpan":1}}}} --><!-- wp:paragraph --><p>B</p><!-- /wp:paragraph --><!-- /wp:zealblocks/container -->'
+);
+$core_css  = wp_style_engine_get_stylesheet_from_context( 'block-supports' );
+$check( 'preset grid: core writes three columns, and one on mobile', false !== strpos( $core_css, 'repeat(3, minmax(0, 1fr))' ) && 1 === preg_match( '/width <= 480px\)\{[^}]*\{[^}]*repeat\(1, minmax\(0, 1fr\)\)/', $core_css ) );
+$check( 'preset grid: core spans the wide column, and not on mobile', false !== strpos( $core_css, 'grid-column:span 2' ) && 1 === preg_match( '/width <= 480px\)\{[^}]*\{grid-column:span 1/', $core_css ) && false !== strpos( $grid_html, '>B<' ) );
+
+/*
+ * A hidden container must stop its children before they render, as the
+ * Buttons group does: they would otherwise store CSS rules that reach the page.
+ */
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+wp_dequeue_script( Zealblocks\Block\Animation::handle() );
+$hidden_container = $container(
+	array( 'displayConditions' => array( 'hideWhenLoggedOut' => true ) ),
+	'<!-- wp:zealblocks/buttons --><!-- wp:zealblocks/button ' . wp_json_encode( array( 'text' => 'Inner', 'url' => 'https://ex.org', 'animationType' => 'fade', 'style' => array( 'zealblocks' => array( 'textHover' => '#0c0d09' ) ) ) ) . ' /--><!-- /wp:zealblocks/buttons -->'
+);
+$check( 'hidden container: no markup, no CSS from its children, no script', '' === trim( $hidden_container ) && '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) && ! wp_script_is( Zealblocks\Block\Animation::handle(), 'enqueued' ) );
+
+// ---------------------------------------------------------------------
 echo "\nEdge cases\n";
 // ---------------------------------------------------------------------
 $check(
@@ -1118,7 +1289,7 @@ $check(
 	'' === trim( do_blocks( '<!-- wp:zealblocks/button {"text":"  "} /-->' ) )
 );
 $check(
-	'empty container renders nothing at all',
+	'empty Buttons group renders nothing at all',
 	'' === trim( do_blocks( '<!-- wp:zealblocks/buttons --><!-- /wp:zealblocks/buttons -->' ) )
 );
 $check(
