@@ -87,3 +87,19 @@ Text's existing markup, and every rule using it is scoped to the block's own
 class, so a theme's `.has-hover` rule would have to target our block to
 collide. Renaming it would change Text's front-end classes, so that is left as
 a separate decision.
+
+## Background hover: a colour or a gradient in one key
+
+`backgroundHover` holds either, and the control is core's tabbed
+colour/gradient control. That control calls the handler of the tab used and
+then the other handler with no value: a colour pick is
+`onColorChange( colour )` then `onGradientChange()`. With both handlers writing
+one key, the second call cleared every pick, on every block; the tests set
+values directly and never saw it.
+
+`src/shared/fill/` handles it, for this and for the Container's overlay: a
+value always writes, no value clears only a stored value of the handler's own
+type, and both calls read the latest style through a ref, since they run before
+the block re-renders. `tests/js/fill.test.js` pins the logic; a Playwright test
+picks a colour, a gradient and Clear on a Button.
+

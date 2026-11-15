@@ -172,6 +172,49 @@ test.describe( 'Inspector controls, operated', () => {
 			.toBe( expected );
 	} );
 
+	test( 'a background hover colour, then a gradient, picked in the tabbed control, are kept', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await buttonPost( { admin, editor, page, posts }, 'Styles' );
+
+		// The tabbed colour/gradient control calls the other tab's handler
+		// with no value after every pick; that call used to clear the pick
+		// on every block (src/shared/fill).
+		const content = page.locator(
+			'.block-editor-panel-color-gradient-settings__dropdown-content'
+		);
+		const stored = async () =>
+			( await selectedAttributes( page ) ).style?.zealblocks
+				?.backgroundHover;
+
+		await page
+			.locator( '.block-editor-block-inspector' )
+			.getByRole( 'button', { name: 'Background hover', exact: true } )
+			.click();
+		await content
+			.locator( '.components-circular-option-picker__option:visible' )
+			.first()
+			.click();
+
+		const colour = await stored();
+
+		expect( colour ).toBeTruthy();
+		expect( colour ).not.toContain( 'gradient' );
+
+		await content.getByRole( 'tab', { name: 'Gradient' } ).click();
+		await content
+			.locator( '.components-circular-option-picker__option:visible' )
+			.first()
+			.click();
+		expect( await stored() ).toMatch( /gradient/ );
+
+		await content.getByRole( 'button', { name: 'Clear' } ).click();
+		expect( await stored() ).toBeUndefined();
+	} );
+
 	test( 'Show text, the aria label, rotation and the hover icon, set from Settings', async ( {
 		admin,
 		editor,

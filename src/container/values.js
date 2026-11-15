@@ -14,9 +14,6 @@ import {
 	OVERLAY_DEFAULT_OPACITY,
 } from './constants';
 
-/** A gradient, as opposed to a colour, in a stored overlay fill. */
-export const GRADIENT = /^(?:repeating-)?(?:linear|radial|conic)-gradient\(/;
-
 /**
  * Write the overlay fill, and seed the opacity the first time an overlay
  * appears: a full-strength black over a photo is never what an author meant,

@@ -23,6 +23,7 @@ import {
 	setStateValue,
 } from '../../button/responsive-width/style-value';
 import { withDevice } from '../device-label';
+import { useFillHandlers } from '../fill';
 import { HOVER_KEYS } from './constants';
 
 /**
@@ -64,12 +65,9 @@ export function HoverControls( {
 	const colorSettings = useMultipleOriginColorsAndGradients();
 
 	const textHover = getStateValue( style, stateKey, HOVER_KEYS.text );
-	const backgroundHover = getStateValue(
-		style,
-		stateKey,
-		HOVER_KEYS.background
-	);
-	const isGradient = !! backgroundHover?.includes( 'gradient' );
+	// Colour or gradient in one key: see src/shared/fill for why a plain
+	// setter lost every pick made in the tabbed control.
+	const fill = useFillHandlers( style, stateKey, setAttributes );
 	const duration = getStateValue( style, stateKey, HOVER_KEYS.duration );
 
 	const set = ( key, next ) =>
@@ -124,12 +122,7 @@ export function HoverControls( {
 							stateKey,
 							device
 						),
-						colorValue: isGradient ? undefined : backgroundHover,
-						gradientValue: isGradient ? backgroundHover : undefined,
-						onColorChange: ( next ) =>
-							set( HOVER_KEYS.background, next ),
-						onGradientChange: ( next ) =>
-							set( HOVER_KEYS.background, next ),
+						...fill( HOVER_KEYS.background ),
 						resetAllFilter: resetKey( HOVER_KEYS.background ),
 						enableAlpha: true,
 						clearable: true,

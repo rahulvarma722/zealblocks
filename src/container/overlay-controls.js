@@ -36,7 +36,8 @@ import {
 	OVERLAY_IMAGE_SIZES,
 	OVERLAY_KEYS,
 } from './constants';
-import { GRADIENT, fromPercent, setOverlayFill, toPercent } from './values';
+import { fromPercent, setOverlayFill, toPercent } from './values';
+import { useFillHandlers } from '../shared/fill';
 
 /**
  * @param {Object}   props
@@ -74,25 +75,14 @@ export function OverlayControls( {
 		( ...keys ) =>
 		( attrs ) => ( { style: clearKeys( attrs?.style, stateKey, keys ) } );
 
-	const fillRow = ( key, text ) => {
-		const current = value( key );
-		const isGradient = GRADIENT.test( current || '' );
-		const change = ( next ) =>
-			setAttributes( {
-				style: setOverlayFill(
-					style,
-					stateKey,
-					key,
-					next || undefined
-				),
-			} );
+	// Colour or gradient in one key, with the opacity seeded on the first
+	// overlay: see src/shared/fill for why a plain setter lost every pick.
+	const fill = useFillHandlers( style, stateKey, setAttributes );
 
+	const fillRow = ( key, text ) => {
 		return {
 			label: label( text ),
-			colorValue: isGradient ? undefined : current,
-			gradientValue: isGradient ? current : undefined,
-			onColorChange: change,
-			onGradientChange: change,
+			...fill( key, setOverlayFill ),
 			resetAllFilter: reset( key ),
 			enableAlpha: true,
 			clearable: true,
