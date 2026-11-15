@@ -56,6 +56,9 @@ import { VideoPanel } from './video-controls';
 import { DividerControls } from './divider-controls';
 import { ParentHoverControls } from './parent-hover-controls';
 import { Divider } from './dividers';
+import { WidthHandles } from './width-handles';
+import { MAX_COLUMNS, WidthBar } from './width-bar';
+import { rowState } from './widths';
 import { PRESETS, withPresetStyle } from './presets';
 import { containerIcon } from './icons';
 import { LANDMARK_TAGS, TAGS } from './constants';
@@ -198,6 +201,19 @@ export default function Edit( {
 				'zealblocks/container' === getBlockName( parentId )
 			);
 		},
+		[ clientId ]
+	);
+
+	// Column widths (CH-07): the handles show while the Row or one of its
+	// columns is selected.
+	const { childCount, hasSelectedChild } = useSelect(
+		( select ) => ( {
+			childCount: select( blockEditorStore ).getBlockCount( clientId ),
+			hasSelectedChild: select( blockEditorStore ).hasSelectedInnerBlock(
+				clientId,
+				false
+			),
+		} ),
 		[ clientId ]
 	);
 
@@ -372,6 +388,13 @@ export default function Edit( {
 			/>
 		) : null;
 	const { children: innerBlocks, ...wrapperProps } = innerBlocksProps;
+	const widthState = rowState( layout, style, stateKey );
+	const showHandles =
+		( isSelected || hasSelectedChild ) &&
+		widthState.row &&
+		widthState.oneLine &&
+		childCount >= 2 &&
+		childCount <= MAX_COLUMNS;
 
 	return (
 		<>
@@ -391,6 +414,7 @@ export default function Edit( {
 			<LiftControl { ...styleControlProps } />
 			<SizeControls { ...styleControlProps } />
 			<ReverseControl { ...styleControlProps } layout={ layout } />
+			<WidthBar { ...styleControlProps } attributes={ attributes } />
 			<OverlayControls
 				{ ...styleControlProps }
 				attributes={ attributes }
@@ -508,6 +532,12 @@ export default function Edit( {
 					<Divider config={ dividerTop } side="top" />
 					<Divider config={ dividerBottom } side="bottom" />
 					{ innerBlocks }
+					{ showHandles && (
+						<WidthHandles
+							clientId={ clientId }
+							stateKey={ stateKey }
+						/>
+					) }
 				</TagName>
 			) }
 		</>

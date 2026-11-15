@@ -28,6 +28,7 @@ content. A plain Container inserted empty offers seven column presets.
 | position and offsets for a nested Container, per device | `Position` (shared with Text) |
 | shape dividers, top and bottom: 18 shapes, colour, height and width per device, flip, invert, bring to front | `Shape_Divider` |
 | parent hover: a nested Container changes while its parent is hovered or focused | this block |
+| column widths in a Row: drag handles in the canvas, a width bar and presets in the sidebar, per device | this block, writing core's child layout |
 | animation, display conditions, z-index | shared modules |
 
 ## Attributes
@@ -244,6 +245,34 @@ opacity on hover, move up, text colour and background on hover, per device.
 - The canvas previews the hover values on the parent's `:hover` only, through
   preview classes (`has-ph-*`) and variables.
 
+## Column widths
+
+`src/container/widths.js` (the maths), `width-handles.js` (the canvas),
+`width-bar.js` (the sidebar). For a Row: a horizontal flex layout on one line,
+with two to six columns.
+
+- **Stored as core's own child layout:** `selfStretch: 'fixed'` (core's
+  "Max", a flex-basis the column may shrink from) and `flexSize` as a
+  percentage, on each child, per device. Nothing new reaches the front end;
+  core's layout support prints `flex-basis`, and core's Width control shows
+  the same value.
+- **Percentages add up to 100.** The gap comes off them through flex-shrink, in
+  proportion, so 50 + 50 with a gap is still two equal halves.
+- **Canvas handles** show while the Row or one of its columns is selected. The
+  edge follows the pointer across the Row's content box, snaps to common
+  fractions (hold Alt to stop it), and never leaves a column under 10%.
+- **The preview during a drag** sets flex-basis on the canvas elements
+  directly; letting go writes every width in one update, so a drag is one undo
+  step and the block list does not re-render per pixel.
+- **Each handle is a WAI-ARIA window splitter:** a focusable `separator` with
+  `aria-valuenow`; arrow keys move it 1%, Shift 5%.
+- **The sidebar bar**, in core's Layout panel: the same dividers, presets
+  (Equal; ⅓ + ⅔ and the like for two and three columns) and Reset, which lets
+  each column size to its content again.
+- **A Row that wraps** shows a notice with "Keep on one line" instead: a wider
+  column would wrap. Stacks and Grids get no widths; a Grid sizes columns with
+  spans.
+
 ## Max width and height
 
 Marked `!important`. The page sets a max width on every content child: Astra
@@ -277,6 +306,7 @@ one-column grid makes the browser add a column.
 | `divider-controls.js` | the dividers, in Background |
 | `parent-hover-controls.js` | parent hover, in Border & Shadow |
 | `values.js` | pure helpers for those controls |
+| `widths.js`, `width-handles.js`, `width-bar.js` | column widths: the maths, the canvas handles, the sidebar bar |
 | `presets.js`, `icons.js` | presets and the variation icons |
 | `style.scss` / `editor.scss` | layers, overlay, video, link, shadow, lift / presets, hover preview |
 
@@ -289,7 +319,8 @@ one-column grid makes the browser add a column.
   the opacity, blend and align-self types in
   `ResponsiveStylesTest`; `Render::focal_point()` in `BlockRenderTest`.
 - `tests/js/container.test.js`: canvas preview, presets, overlay, child
-  settings, dividers, parent hover and the control helpers.
+  settings, dividers, parent hover and the control helpers;
+  `tests/js/container-widths.test.js`: the column width maths.
 - `tests/integration/test-render.php`, "Container": markup, link, overlay and
   its image URL, video markup and script, child settings, dividers, parent
   hover rules, CSS, hidden.

@@ -969,3 +969,298 @@ test.describe( 'Container controls, operated', () => {
 		);
 	} );
 } );
+
+test.describe( 'Container column widths, operated', () => {
+	const column = ( text ) => ( {
+		name: 'zealblocks/container',
+		attributes: {
+			layout: { type: 'constrained' },
+			style: { color: { background: '#dde3ea' } },
+		},
+		innerBlocks: [
+			{ name: 'core/paragraph', attributes: { content: text } },
+		],
+	} );
+
+	const row = ( extra = {} ) => ( {
+		name: 'zealblocks/container',
+		attributes: {
+			anchor: 'row',
+			layout: { type: 'flex', flexWrap: 'nowrap' },
+			...extra,
+		},
+		innerBlocks: [ column( 'One' ), column( 'Two' ) ],
+	} );
+
+	/**
+	 * The stored width layout of each column of the first Row.
+	 *
+	 * @param {import('@playwright/test').Page} page Page.
+	 * @return {Promise<Array>} Each column's `style`.
+	 */
+	const columnStyles = ( page ) =>
+		page.evaluate( () =>
+			window.wp.data
+				.select( 'core/block-editor' )
+				.getBlocks()[ 0 ]
+				.innerBlocks.map( ( block ) => {
+					// The width only: the columns carry a colour too.
+					const { color, ...rest } = block.attributes.style ?? {};
+
+					return Object.keys( rest ).length ? rest : null;
+				} )
+		);
+
+	/**
+	 * The live columns' flex-basis and widths on the published page.
+	 *
+	 * @param {import('@playwright/test').Page} page Page.
+	 * @return {Promise<Array>} [ flex-basis, width ] per column.
+	 */
+	const liveColumns = ( page ) =>
+		page
+			.locator( '#row > .wp-block-zealblocks-container' )
+			.evaluateAll( ( elements ) =>
+				elements.map( ( element ) => [
+					window.getComputedStyle( element ).flexBasis,
+					Math.round( element.getBoundingClientRect().width ),
+				] )
+			);
+
+	test( 'dragging the canvas handle sizes both columns, as one undo step, and reaches the page', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await setUp(
+			{ admin, editor, page, posts },
+			[ row() ],
+			[ 0 ],
+			'Styles'
+		);
+
+		const handle = editor.canvas.getByRole( 'separator', {
+			name: 'Resize columns 1 and 2',
+		} );
+		const rowBox = await canvasRoot( editor ).boundingBox();
+		const box = await handle.boundingBox();
+
+		// To about a third of the Row: snaps to 33.33.
+		await page.mouse.move( box.x + box.width / 2, box.y + box.height / 2 );
+		await page.mouse.down();
+		await page.mouse.move( rowBox.x + rowBox.width / 3, box.y + 5, {
+			steps: 10,
+		} );
+		await page.mouse.up();
+
+		expect( await columnStyles( page ) ).toEqual( [
+			{ layout: { selfStretch: 'fixed', flexSize: '33.33%' } },
+			{ layout: { selfStretch: 'fixed', flexSize: '66.67%' } },
+		] );
+
+		// One drag, one undo step, for both columns.
+		await page.evaluate( () =>
+			window.wp.data.dispatch( 'core/editor' ).undo()
+		);
+		expect( await columnStyles( page ) ).toEqual( [ null, null ] );
+		await page.evaluate( () =>
+			window.wp.data.dispatch( 'core/editor' ).redo()
+		);
+
+		await page.goto( await publish( page ) );
+		const [ first, second ] = await liveColumns( page );
+
+		expect( [ first[ 0 ], second[ 0 ] ] ).toEqual( [ '33.33%', '66.67%' ] );
+		expect( Math.round( second[ 1 ] / first[ 1 ] ) ).toBe( 2 );
+	} );
+
+	test( 'the handle is a keyboard separator: arrows move it by 1%, Shift by 5%', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await setUp(
+			{ admin, editor, page, posts },
+			[ row() ],
+			[ 0 ],
+			'Styles'
+		);
+
+		await inspector( page )
+			.getByRole( 'button', { name: 'Equal' } )
+			.click();
+
+		const handle = editor.canvas.getByRole( 'separator', {
+			name: 'Resize columns 1 and 2',
+		} );
+
+		await expect( handle ).toHaveAttribute( 'aria-valuenow', '50' );
+		await handle.focus();
+		await page.keyboard.press( 'ArrowRight' );
+		await page.keyboard.press( 'Shift+ArrowRight' );
+
+		expect(
+			( await columnStyles( page ) ).map(
+				( style ) => style.layout.flexSize
+			)
+		).toEqual( [ '56%', '44%' ] );
+		await expect( handle ).toHaveAttribute( 'aria-valuenow', '56' );
+	} );
+
+	test( 'the sidebar bar: a preset, Reset, and a Tablet split that stays on Tablet', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await setUp(
+			{ admin, editor, page, posts },
+			[ row() ],
+			[ 0 ],
+			'Styles'
+		);
+
+		await inspector( page )
+			.getByRole( 'button', { name: '¼ + ¾' } )
+			.click();
+		expect(
+			( await columnStyles( page ) ).map(
+				( style ) => style.layout.flexSize
+			)
+		).toEqual( [ '25%', '75%' ] );
+
+		await viewMenu( page, /Responsive styles/, 'menuitemcheckbox' );
+
+		try {
+			await viewMenu( page, /^Tablet/, 'menuitemradio' );
+			await expect(
+				inspector( page ).getByText( 'Column widths (Tablet)' )
+			).toBeVisible();
+			await inspector( page )
+				.getByRole( 'button', { name: 'Equal' } )
+				.click();
+
+			const styles = await columnStyles( page );
+
+			expect( styles[ 0 ].layout.flexSize ).toBe( '25%' );
+			expect( styles[ 0 ][ '@tablet' ].layout.flexSize ).toBe( '50%' );
+			expect( styles[ 0 ][ '@mobile' ] ).toBeUndefined();
+		} finally {
+			await viewMenu( page, /^Desktop/, 'menuitemradio' );
+			await viewMenu( page, /Responsive styles/, 'menuitemcheckbox' );
+		}
+
+		await page.goto( await publish( page ) );
+		expect(
+			( await liveColumns( page ) ).map( ( [ basis ] ) => basis )
+		).toEqual( [ '25%', '75%' ] );
+		await page.setViewportSize( { width: 700, height: 900 } );
+		expect(
+			( await liveColumns( page ) ).map( ( [ basis ] ) => basis )
+		).toEqual( [ '50%', '50%' ] );
+	} );
+
+	test( 'dragging the sidebar bar divider follows the pointer', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await setUp(
+			{ admin, editor, page, posts },
+			[ row() ],
+			[ 0 ],
+			'Styles'
+		);
+
+		const divider = inspector( page ).getByRole( 'separator', {
+			name: 'Resize columns 1 and 2',
+		} );
+
+		await divider.scrollIntoViewIfNeeded();
+		const bar = await inspector( page )
+			.locator( '.zealblocks-width-bar' )
+			.boundingBox();
+		const box = await divider.boundingBox();
+
+		await page.mouse.move( box.x + box.width / 2, box.y + box.height / 2 );
+		await page.mouse.down();
+		await page.mouse.move( bar.x + bar.width * 0.74, box.y + 5, {
+			steps: 8,
+		} );
+		await page.mouse.up();
+
+		// 74% snaps to three quarters.
+		expect(
+			( await columnStyles( page ) ).map(
+				( style ) => style.layout.flexSize
+			)
+		).toEqual( [ '75%', '25%' ] );
+		await expect( divider ).toHaveAttribute( 'aria-valuenow', '75' );
+	} );
+
+	test( 'Reset gives the columns back to their content', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await setUp(
+			{ admin, editor, page, posts },
+			[ row() ],
+			[ 0 ],
+			'Styles'
+		);
+
+		await inspector( page )
+			.getByRole( 'button', { name: '⅓ + ⅔' } )
+			.click();
+		await inspector( page )
+			.getByRole( 'button', { name: 'Reset' } )
+			.click();
+		expect( await columnStyles( page ) ).toEqual( [ null, null ] );
+	} );
+
+	test( 'a wrapping Row offers to keep it on one line; a Stack or a Grid gets no widths', async ( {
+		admin,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await setUp(
+			{ admin, editor, page, posts },
+			[
+				row( { layout: { type: 'flex' } } ),
+				{
+					...row( {
+						layout: { type: 'flex', orientation: 'vertical' },
+					} ),
+				},
+				{ ...row( { layout: { type: 'grid' } } ) },
+			],
+			[ 0 ],
+			'Styles'
+		);
+
+		const handles = editor.canvas.getByRole( 'separator', {
+			name: /Resize columns/,
+		} );
+
+		await expect( handles ).toHaveCount( 0 );
+		await inspector( page )
+			.getByRole( 'button', { name: 'Keep on one line' } )
+			.click();
+		expect( ( await attributes( page ) ).layout.flexWrap ).toBe( 'nowrap' );
+		await expect( handles ).toHaveCount( 1 );
+
+		for ( const index of [ 1, 2 ] ) {
+			await selectPath( page, [ index ] );
+			await expect( handles ).toHaveCount( 0 );
+			await expect(
+				inspector( page ).getByText( 'Column widths' )
+			).toHaveCount( 0 );
+		}
+	} );
+} );

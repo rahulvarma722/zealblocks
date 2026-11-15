@@ -81,3 +81,68 @@ $block: ".wp-block-zealblocks-container";
 		translate: 0 calc(var(--zealblocks-container-ph-move) * -1);
 	}
 }
+
+/*
+ * Column width handles (CH-07): one per edge between a Row's columns, over
+ * the canvas, out of the layout. See src/container/width-handles.js.
+ */
+.wp-block-zealblocks-container__width-handles {
+	position: absolute;
+	inset: 0;
+	z-index: 30;
+	pointer-events: none;
+}
+
+.wp-block-zealblocks-container__width-handle {
+	position: absolute;
+	display: flex;
+	justify-content: center;
+	width: 16px;
+	margin-left: -8px;
+	cursor: col-resize;
+	pointer-events: auto;
+	touch-action: none;
+
+	&::before {
+		content: "";
+		width: 4px;
+		height: 100%;
+		background: var(--wp-admin-theme-color, #3858e9);
+		border-radius: 2px;
+		opacity: 0.35;
+		transition: opacity 0.1s;
+	}
+
+	&:hover::before,
+	&:focus-visible::before,
+	&.is-dragging::before {
+		opacity: 1;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+		outline-offset: 2px;
+	}
+}
+
+.wp-block-zealblocks-container__width-label {
+	position: absolute;
+	top: 50%;
+	padding: 2px 6px;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-size: 11px;
+	line-height: 1.4;
+	color: #fff;
+	white-space: nowrap;
+	background: #1e1e1e;
+	border-radius: 2px;
+	opacity: 0;
+	pointer-events: none;
+	translate: 0 -50%;
+
+	.wp-block-zealblocks-container__width-handle:hover &,
+	.wp-block-zealblocks-container__width-handle:focus-visible &,
+	.wp-block-zealblocks-container__width-handle.is-dragging & {
+		opacity: 1;
+	}
+}
