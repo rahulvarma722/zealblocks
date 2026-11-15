@@ -40,6 +40,16 @@ final class Editor_Provider implements \Zealblocks\Module {
 	const ICON_ATTRIBUTES = array( 'icon', 'hoverIcon' );
 
 	/**
+	 * Icons the List offers as one-click presets, preloaded with the post's
+	 * own so the preset buttons draw at once instead of fetching one by one.
+	 * MUST match ICON_PRESETS in src/list/constants.js; BlockContractTest
+	 * compares them.
+	 *
+	 * @var string[]
+	 */
+	const LIST_PRESETS = array( 'check', 'circle-check', 'arrow-right', 'chevron-right', 'star', 'circle', 'minus' );
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function register() {
@@ -54,7 +64,7 @@ final class Editor_Provider implements \Zealblocks\Module {
 	 * @return array
 	 */
 	public function add_icons( $data, $blocks ) {
-		$slugs = array();
+		$slugs = self::LIST_PRESETS;
 
 		foreach ( $blocks as $block ) {
 			foreach ( self::ICON_ATTRIBUTES as $attribute ) {
@@ -64,10 +74,6 @@ final class Editor_Provider implements \Zealblocks\Module {
 					$slugs[] = $slug;
 				}
 			}
-		}
-
-		if ( ! $slugs ) {
-			return $data;
 		}
 
 		// Deduplicate before resolving: the same icon used twenty times is one

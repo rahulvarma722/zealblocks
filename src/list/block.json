@@ -1,0 +1,136 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "zealblocks/list",
+	"version": "0.0.3-beta",
+	"title": "List",
+	"category": "zealblocks",
+	"icon": "editor-ul",
+	"description": "A bulleted, numbered or icon list. Each item can hold any block.",
+	"keywords": [
+		"list",
+		"bullet",
+		"icon list",
+		"numbered",
+		"checklist",
+		"ordered"
+	],
+	"textdomain": "zealblocks",
+	"attributes": {
+		"ordered": {
+			"type": "boolean",
+			"default": false
+		},
+		"type": {
+			"type": "string",
+			"enum": [
+				"decimal",
+				"decimal-leading-zero",
+				"lower-alpha",
+				"upper-alpha",
+				"lower-roman",
+				"upper-roman"
+			]
+		},
+		"start": {
+			"type": "number"
+		},
+		"reversed": {
+			"type": "boolean"
+		},
+		"icon": {
+			"type": "string",
+			"default": ""
+		},
+		"iconAlign": {
+			"type": "string",
+			"enum": [
+				"top",
+				"center"
+			],
+			"default": "top"
+		},
+		"animationType": {
+			"type": "string",
+			"default": ""
+		},
+		"animationDuration": {
+			"type": "number",
+			"default": 400
+		},
+		"animationDelay": {
+			"type": "number",
+			"default": 0
+		},
+		"animationEasing": {
+			"type": "string",
+			"enum": [
+				"ease",
+				"ease-in",
+				"ease-out",
+				"ease-in-out",
+				"linear"
+			],
+			"default": "ease"
+		},
+		"animationRepeat": {
+			"type": "boolean",
+			"default": false
+		},
+		"displayConditions": {
+			"type": "object",
+			"default": {}
+		}
+	},
+	"providesContext": {
+		"zealblocks/list/icon": "icon",
+		"zealblocks/list/ordered": "ordered"
+	},
+	"supports": {
+		"html": false,
+		"anchor": true,
+		"color": {
+			"gradients": true,
+			"link": true,
+			"text": true,
+			"background": true,
+			"__experimentalDefaultControls": {
+				"text": true
+			}
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"textAlign": true,
+			"__experimentalFontFamily": true,
+			"__experimentalFontWeight": true,
+			"__experimentalFontStyle": true,
+			"__experimentalTextTransform": true,
+			"__experimentalTextDecoration": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalDefaultControls": {
+				"fontSize": true
+			}
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": true,
+				"radius": true,
+				"style": true,
+				"width": true
+			}
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"editorStyle": "file:./index.css",
+	"render": "file:./render.php"
+}

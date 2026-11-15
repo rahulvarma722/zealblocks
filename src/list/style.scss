@@ -1,0 +1,114 @@
+/**
+ * List and List item — shared styles, front end and editor canvas. The item
+ * has no stylesheet of its own: it never appears without a list.
+ */
+
+@use "../shared/animation/animation";
+@use "../shared/z-index/z-index";
+
+$list: ".wp-block-zealblocks-list";
+$item: ".wp-block-zealblocks-list-item";
+
+#{$list} {
+	box-sizing: border-box;
+}
+
+// Space between items, per device; only once the author sets it, so a
+// theme's own list spacing stands until then. Then the list owns the items'
+// margins: a theme's `li` margin would collapse with the gap and win
+// whenever it is the larger (Astra's 10px against a 6px tablet gap).
+#{$list}.has-item-gap > #{$item} {
+	margin-block: 0;
+}
+
+#{$list}.has-item-gap > #{$item} + #{$item} {
+	margin-block-start: var(--zealblocks-list-gap, 0);
+}
+
+// Native bullets and numbers: their colour and size, per device.
+#{$list} > #{$item}::marker {
+	color: var(--zealblocks-list-marker-color);
+	font-size: var(--zealblocks-list-marker-size);
+}
+
+/*
+ * The blocks in an item sit close together, and the first lines up with the
+ * bullet or icon: no margin around them, a small gap between them. A list
+ * spaces its items; an item's own blocks belong together.
+ *
+ * `:not(#_)` adds an id's weight: themes style paragraphs in the editor
+ * with selectors like Astra's `.editor-styles-wrapper
+ * .block-editor-block-list__layout.is-root-container p` (three classes and
+ * an element), which would otherwise win there and not on the page. No
+ * `!important`, so a margin the author sets on a block still applies: core
+ * prints it inline.
+ */
+#{$item}__content:not(#_) {
+
+	> * {
+		margin-block: 0;
+	}
+
+	> * + * {
+		margin-block-start: 0.25em;
+	}
+}
+
+/*
+ * Icons replace the markers: each item becomes the icon and its blocks side
+ * by side. The icon is centred on the first line of text by default (`1lh`),
+ * or on the whole item.
+ */
+#{$list}.has-icon {
+	padding-inline-start: 0;
+	list-style: none;
+
+	> #{$item} {
+		display: flex;
+		gap: var(--zealblocks-list-icon-gap, 0.5em);
+		align-items: flex-start;
+	}
+
+	> #{$item} > #{$item}__content {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
+#{$item}__icon {
+	display: inline-flex;
+	flex: none;
+	width: var(--zealblocks-list-icon-size, 1em);
+	height: var(--zealblocks-list-icon-size, 1em);
+	margin-block-start: calc((1lh - var(--zealblocks-list-icon-size, 1em)) / 2);
+	color: var(--zealblocks-list-icon-color, currentcolor);
+}
+
+#{$item}__svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	fill: currentcolor;
+}
+
+#{$list}.has-icon.is-icon-centred {
+
+	> #{$item} {
+		align-items: center;
+	}
+
+	> #{$item} > #{$item}__icon {
+		margin-block-start: 0;
+	}
+}
+
+/*
+ * Entrance animation (S-05), scoped to this block. See
+ * src/shared/animation/_animation.scss.
+ */
+@include animation.front(".wp-block-zealblocks-list");
+
+/*
+ * z-index, at zero added specificity. See src/shared/z-index/_z-index.scss.
+ */
+@include z-index.base(".wp-block-zealblocks-list");

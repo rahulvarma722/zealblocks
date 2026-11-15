@@ -1,0 +1,57 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "zealblocks/list-item",
+	"version": "0.0.3-beta",
+	"title": "List item",
+	"category": "zealblocks",
+	"parent": [
+		"zealblocks/list"
+	],
+	"icon": "editor-ul",
+	"description": "One item of a list: its icon on the left, any blocks on the right.",
+	"textdomain": "zealblocks",
+	"attributes": {
+		"icon": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"usesContext": [
+		"zealblocks/list/icon",
+		"zealblocks/list/ordered"
+	],
+	"supports": {
+		"html": false,
+		"anchor": true,
+		"reusable": false,
+		"color": {
+			"gradients": true,
+			"link": true,
+			"text": true,
+			"background": true
+		},
+		"spacing": {
+			"padding": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontWeight": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": true,
+				"radius": true,
+				"style": true,
+				"width": true
+			}
+		}
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}
