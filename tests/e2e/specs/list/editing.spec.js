@@ -301,4 +301,129 @@ test.describe( 'List editing', () => {
 			editor.canvas.locator( 'ol.wp-block-zealblocks-list' )
 		).toHaveCount( 1 );
 	} );
+
+	test( "Arrow Up and Down move between items' text, never stopping on an icon (TC-LS-09)", async ( {
+		page,
+	} ) => {
+		await page.keyboard.type( 'One' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.type( 'Two' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.type( 'Three' );
+
+		const selected = () =>
+			page.evaluate( () => {
+				const store = window.wp.data.select( 'core/block-editor' );
+				const block = store.getSelectedBlock();
+
+				return `${ block.name }:${ block.attributes.content }`;
+			} );
+
+		await page.keyboard.press( 'ArrowUp' );
+		expect( await selected() ).toBe( 'zealblocks/text:Two' );
+		await page.keyboard.press( 'ArrowUp' );
+		expect( await selected() ).toBe( 'zealblocks/text:One' );
+		await page.keyboard.press( 'ArrowDown' );
+		await page.keyboard.press( 'ArrowDown' );
+		expect( await selected() ).toBe( 'zealblocks/text:Three' );
+	} );
+
+	test( 'one undo takes back an Enter, and only that (TC-LS-10)', async ( {
+		page,
+		pageUtils,
+	} ) => {
+		await page.keyboard.type( 'OneTwo' );
+		for ( let i = 0; i < 3; i++ ) {
+			await page.keyboard.press( 'ArrowLeft' );
+		}
+		await page.keyboard.press( 'Enter' );
+		expect( await tree( page ) ).toEqual( [
+			[ 'list', [ item( 'One' ), item( 'Two' ) ] ],
+		] );
+
+		await pageUtils.pressKeys( 'primary+z' );
+		expect( await tree( page ) ).toEqual( [
+			[ 'list', [ item( 'OneTwo' ) ] ],
+		] );
+
+		await pageUtils.pressKeys( 'primaryShift+z' );
+		expect( await tree( page ) ).toEqual( [
+			[ 'list', [ item( 'One' ), item( 'Two' ) ] ],
+		] );
+	} );
+
+	test( 'Duplicate on an item copies all of it, after it (TC-LS-11)', async ( {
+		page,
+	} ) => {
+		await page.keyboard.type( 'One' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.type( 'Two' );
+
+		await page.evaluate( () => {
+			const store = window.wp.data.select( 'core/block-editor' );
+
+			window.wp.data
+				.dispatch( 'core/block-editor' )
+				.selectBlock(
+					store.getBlocks()[ 0 ].innerBlocks[ 0 ].clientId
+				);
+		} );
+		await page.mouse.move( 10, 10 );
+		await page.mouse.move( 400, 300 );
+		await page
+			.getByRole( 'toolbar', { name: 'Block tools' } )
+			.getByRole( 'button', { name: 'Options' } )
+			.click();
+		await page.getByRole( 'menuitem', { name: /^Duplicate/ } ).click();
+
+		expect( await tree( page ) ).toEqual( [
+			[ 'list', [ item( 'One' ), item( 'One' ), item( 'Two' ) ] ],
+		] );
+	} );
+
+	test( 'saved and reloaded: the same list, and every block valid (TC-LS-12)', async ( {
+		editor,
+		page,
+	} ) => {
+		await page.keyboard.type( 'One' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.press( 'Tab' );
+		await page.keyboard.type( 'Nested' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.press( 'Shift+Tab' );
+		await page.keyboard.type( 'Two' );
+
+		const before = await tree( page );
+
+		await editor.saveDraft();
+		await page.reload();
+		await page.waitForFunction(
+			() =>
+				window.wp?.data?.select( 'core/block-editor' ).getBlocks()
+					.length
+		);
+
+		expect( await tree( page ) ).toEqual( before );
+		expect(
+			await page.evaluate( () => {
+				const invalid = [];
+				const walk = ( blocks ) =>
+					blocks.forEach( ( block ) => {
+						if ( ! block.isValid ) {
+							invalid.push( block.name );
+						}
+						walk( block.innerBlocks );
+					} );
+
+				walk(
+					window.wp.data.select( 'core/block-editor' ).getBlocks()
+				);
+
+				return invalid;
+			} )
+		).toEqual( [] );
+		await expect(
+			editor.canvas.locator( '.block-editor-warning' )
+		).toHaveCount( 0 );
+	} );
 } );

@@ -83,6 +83,9 @@ const FOCUS =
  * @param {string=}   props.help               Help text.
  * @param {boolean=}  props.flipForRTL         Whether the icon mirrors in RTL locales.
  * @param {Function=} props.onFlipForRTLChange Called with the new flip state.
+ * @param {boolean=}  props.clearable          Whether the icon can be removed. False
+ *                                             for a field that must keep one, as the
+ *                                             List's: no Remove button then.
  * @return {Element} The control.
  */
 export default function IconControl( {
@@ -92,6 +95,7 @@ export default function IconControl( {
 	help,
 	flipForRTL = false,
 	onFlipForRTLChange,
+	clearable = true,
 } ) {
 	/*
 	 * PHP inlines every icon the post already uses, so on editor load this is
@@ -181,7 +185,7 @@ export default function IconControl( {
 						</span>
 					</span>
 
-					{ !! value && (
+					{ !! value && clearable && (
 						<button
 							type="button"
 							onClick={ () => onChange( '' ) }
