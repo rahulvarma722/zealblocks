@@ -247,6 +247,35 @@ final class BlockRenderTest extends TestCase {
 	}
 
 	/**
+	 * An element and a part around the state: the element takes the state,
+	 * the part follows it. Without a valid state both still apply, and the
+	 * rule is not marked important.
+	 *
+	 * @return void
+	 */
+	public function test_responsive_element_and_part_around_the_state() {
+		$result = Block_Render::responsive(
+			array( 'zealblocks' => array( 'c' => '#fff' ) ),
+			'zealblocks',
+			array( 'c' => array( 'color', 'color', array( ':hover' ), ' > li', ' > p' ) ),
+			'zealblocks-'
+		);
+
+		$this->assertSame( '.' . $result['class'] . ' > li:hover > p', $result['rules'][0]['selector'] );
+		$this->assertTrue( $result['rules'][0]['important'] );
+
+		$plain = Block_Render::responsive(
+			array( 'zealblocks' => array( 'c' => '#fff' ) ),
+			'zealblocks',
+			array( 'c' => array( 'color', 'color', array( ':visited' ), ' > li', ' > p' ) ),
+			'zealblocks-'
+		);
+
+		$this->assertSame( '.' . $plain['class'] . ' > li > p', $plain['rules'][0]['selector'] );
+		$this->assertArrayNotHasKey( 'important', $plain['rules'][0] );
+	}
+
+	/**
 	 * A list holding nothing valid applies the value with no state, exactly
 	 * like a single unknown state does.
 	 *

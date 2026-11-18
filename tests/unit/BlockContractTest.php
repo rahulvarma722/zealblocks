@@ -500,6 +500,18 @@ final class BlockContractTest extends TestCase {
 		$this->assertStringContainsString( "HOVER_VAR_PREFIX = '" . $prefix . "'", (string) file_get_contents( $container . 'constants.js' ) );
 		$this->assertStringContainsString( '".wp-block-zealblocks-container", "' . $prefix . '",', $flat( $container . 'style.scss' ) );
 		$this->assertStringContainsString( 'hover.preview(".wp-block-zealblocks-container", "' . $prefix . '")', (string) file_get_contents( $container . 'editor.scss' ) );
+
+		// The List's prefix. Its hover colours its items, not itself, so its
+		// stylesheets write their own rules with the prefix's variables.
+		$prefix = '--zealblocks-list-hover-';
+		$list   = ZEALBLOCKS_PATH . 'src/list/';
+		$render = (string) preg_replace( '/\s+/', ' ', (string) file_get_contents( $list . 'render.php' ) );
+
+		$this->assertStringContainsString( "Hover::properties( '" . $prefix . "'", $render );
+		$this->assertStringContainsString( "HOVER_PREFIX = '" . $prefix . "'", (string) file_get_contents( $list . 'constants.js' ) );
+		$this->assertStringContainsString( 'var(' . $prefix . 'duration, 0.2s)', (string) file_get_contents( $list . 'style.scss' ) );
+		$this->assertStringContainsString( 'var(' . $prefix . 'color)', (string) file_get_contents( $list . 'editor.scss' ) );
+		$this->assertStringContainsString( 'var(' . $prefix . 'background)', (string) file_get_contents( $list . 'editor.scss' ) );
 	}
 
 	/**

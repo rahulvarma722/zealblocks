@@ -132,6 +132,25 @@ $body: ".wp-block-zealblocks-container";
 }
 
 /*
+ * Item hover colours (LS-07): the transition, on what changes. The colours
+ * themselves are per-instance rules from render.php, on each item (its
+ * background) and on the item's own content (its text colour: the blocks in
+ * its Container except a nested list). The shared hover.transition() mixin
+ * targets a block's own root, so the List writes its own, with the same
+ * duration variable and the same reduced-motion rule.
+ */
+#{$list}.has-hover > #{$item},
+#{$list}.has-hover > #{$item} > #{$body} > :not(#{$list}) {
+	transition-property: color, background;
+	transition-duration: var(--zealblocks-list-hover-duration, 0.2s);
+	transition-timing-function: ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition-duration: 0s;
+	}
+}
+
+/*
  * Entrance animation (S-05), scoped to this block. See
  * src/shared/animation/_animation.scss.
  */

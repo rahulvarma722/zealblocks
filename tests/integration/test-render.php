@@ -1534,6 +1534,27 @@ $check( 'an item whose icon is unknown keeps its text, with no icon', 1 === preg
 $check( 'a list with no items renders nothing', '' === trim( do_blocks( '<!-- wp:zealblocks/list --><!-- /wp:zealblocks/list -->' ) ) );
 
 WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
+$hover_list = $list(
+	array(
+		'style' => array(
+			'zealblocks' => array(
+				'textHover'       => '#b00020',
+				'backgroundHover' => '#fff4e5',
+				'hoverDuration'   => '300ms',
+			),
+			'@mobile'    => array( 'zealblocks' => array( 'textHover' => '#004d40' ) ),
+		),
+	),
+	$list_item( 'A' ) . $list_item( 'B' )
+);
+$hover_css  = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
+$hover_item = '/\.(zealblocks-list-[0-9a-f]{8}) > \.wp-block-zealblocks-list-item:hover > \.wp-block-zealblocks-container > :not\(\.wp-block-zealblocks-list\),\.\1 > \.wp-block-zealblocks-list-item:focus-within > \.wp-block-zealblocks-container > :not\(\.wp-block-zealblocks-list\)\{color:#b00020 !important;\}/';
+$check( 'item hover: text colour on the hovered item\'s own content, on hover and focus-within', 1 === preg_match( $hover_item, $hover_css ) );
+$check( 'item hover: background on the hovered item', 1 === preg_match( '/\.zealblocks-list-[0-9a-f]{8} > \.wp-block-zealblocks-list-item:hover,\.zealblocks-list-[0-9a-f]{8} > \.wp-block-zealblocks-list-item:focus-within\{background:#fff4e5 !important;\}/', $hover_css ) );
+$check( 'item hover: its own Mobile colour, the duration on the list, the has-hover class', 1 === preg_match( '/width <= 480px\)\{\.zealblocks-list-[0-9a-f]{8} > \.wp-block-zealblocks-list-item:hover > [^{]*\{color:#004d40 !important;\}/', $hover_css ) && 1 === preg_match( '/\.zealblocks-list-[0-9a-f]{8}\{--zealblocks-list-hover-duration:300ms;\}/', $hover_css ) && 1 === preg_match( '#^<ul [^>]*class="[^"]*\bhas-hover\b#', trim( $hover_list ) ) );
+$check( 'item hover: none set, no class and no rule', false === strpos( $icon_list, 'has-hover' ) && false === strpos( $list_css, ':hover' ) );
+
+WP_Style_Engine_CSS_Rules_Store::remove_all_stores();
 $check( 'a hidden list renders nothing and leaves no CSS', '' === trim( $list( array( 'displayConditions' => array( 'hideWhenLoggedOut' => true ), 'style' => array( 'zealblocks' => array( 'itemGap' => '9px' ) ) ), $list_item( 'A' ) ) ) && '' === wp_style_engine_get_stylesheet_from_context( 'zealblocks' ) );
 
 // ---------------------------------------------------------------------

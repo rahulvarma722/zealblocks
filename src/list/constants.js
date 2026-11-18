@@ -102,3 +102,9 @@ export const CSS_VARS = {
 };
 
 export const SIZE_UNITS = [ 'px', 'em', 'rem' ];
+
+/**
+ * The hover variable prefix. MUST match render.php's Hover::properties() call
+ * and the selectors in style.scss and editor.scss; BlockContractTest checks.
+ */
+export const HOVER_PREFIX = '--zealblocks-list-hover-';

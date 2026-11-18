@@ -20,6 +20,7 @@ defined( 'ABSPATH' ) || exit;
 // A file-level `use` is lexical: see button/render.php.
 use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
+use Zealblocks\Block\Hover;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Block\Z_Index;
 
@@ -49,19 +50,37 @@ $has_icon = ! $ordered;
  * Per device: the space between items, the icons' colour, size and gap, and
  * the colour and size of the numbers. Custom properties on the list, which
  * its items' Icon blocks inherit; an Icon block's own colour or width wins.
+ *
+ * And the items' hover colours (LS-07), through the shared Hover, on each
+ * ITEM rather than on the list: hovering one item colours that item. The
+ * text colour goes on the item's own content, the blocks in its Container
+ * except a nested list, so a nested list keeps its colours (its own hover
+ * settings apply to its items). The background goes on the item. Also on
+ * `:focus-within`, so a keyboard user on a link in the item sees what a
+ * mouse user sees. The icon keeps its colour.
  */
 $responsive = Block_Render::responsive(
 	isset( $attributes['style'] ) && is_array( $attributes['style'] ) ? $attributes['style'] : array(),
 	'zealblocks',
-	array(
-		'itemGap'     => '--zealblocks-list-gap',
-		'iconSize'    => '--zealblocks-list-icon-size',
-		'iconGap'     => '--zealblocks-list-icon-gap',
-		'iconColor'   => array( '--zealblocks-list-icon-color', 'color' ),
-		'markerColor' => array( '--zealblocks-list-marker-color', 'color' ),
-		'markerSize'  => '--zealblocks-list-marker-size',
-		// Stacking order, per device (S-07); see includes/block/class-z-index.php.
-		Z_Index::KEY  => Z_Index::PROPERTY,
+	array_merge(
+		array(
+			'itemGap'     => '--zealblocks-list-gap',
+			'iconSize'    => '--zealblocks-list-icon-size',
+			'iconGap'     => '--zealblocks-list-icon-gap',
+			'iconColor'   => array( '--zealblocks-list-icon-color', 'color' ),
+			'markerColor' => array( '--zealblocks-list-marker-color', 'color' ),
+			'markerSize'  => '--zealblocks-list-marker-size',
+			// Stacking order, per device (S-07); see includes/block/class-z-index.php.
+			Z_Index::KEY  => Z_Index::PROPERTY,
+		),
+		Hover::properties(
+			'--zealblocks-list-hover-',
+			array( ':hover', ':focus-within' ),
+			array(
+				'item' => ' > .wp-block-zealblocks-list-item',
+				'text' => ' > .wp-block-zealblocks-container > :not(.wp-block-zealblocks-list)',
+			)
+		)
 	),
 	'zealblocks-list-'
 );
@@ -81,6 +100,7 @@ $classes = array_filter(
 		$has_icon ? 'has-icon' : '',
 		$has_item_gap ? 'has-item-gap' : '',
 		$has_icon && 'center' === Block_Render::text( $attributes, 'iconAlign' ) ? 'is-icon-centred' : '',
+		...Hover::classes( $responsive['rules'] ),
 		...Z_Index::classes( $responsive['rules'] ),
 		...$animation['classes'],
 	)
