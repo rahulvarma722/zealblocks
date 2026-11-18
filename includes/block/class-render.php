@@ -284,23 +284,28 @@ final class Render {
 	 * selector comes back unchanged, so the value applies with no state rather
 	 * than to a selector nobody wrote.
 	 *
+	 * `$part` follows the state, for a value that belongs on something inside
+	 * the element in that state: the List's text hover colours an item's
+	 * content when the ITEM is hovered (`.x > li:hover > .content`).
+	 *
 	 * @param string          $base   Base selector.
 	 * @param string|string[] $states One state or a list.
+	 * @param string          $part   Selector after the state, or ''.
 	 * @return string
 	 */
-	private static function state_selector( $base, $states ) {
+	private static function state_selector( $base, $states, $part = '' ) {
 		$states = array_filter( (array) $states, 'is_string' );
 		$valid  = array_values( array_unique( array_intersect( $states, self::PSEUDO_STATES ) ) );
 
 		if ( ! $valid ) {
-			return $base;
+			return $base . $part;
 		}
 
 		return implode(
 			',',
 			array_map(
-				static function ( $state ) use ( $base ) {
-					return $base . $state;
+				static function ( $state ) use ( $base, $part ) {
+					return $base . $state . $part;
 				},
 				$valid
 			)
@@ -324,12 +329,17 @@ final class Render {
 	 * @param string $namespace_key   Namespace key inside each layer.
 	 * @param array  $properties  Map of style key => CSS property to emit, or
 	 *                            style key => array( CSS property, value type,
-	 *                            pseudo-states ) where the type is one
-	 *                            Responsive_Styles::is_safe_value() knows and the
-	 *                            optional pseudo-states are one of
+	 *                            pseudo-states, element, part ) where the type
+	 *                            is one Responsive_Styles::is_safe_value() knows,
+	 *                            the optional pseudo-states are one of
 	 *                            self::PSEUDO_STATES or a list of them, e.g.
-	 *                            array( ':hover', ':focus' ). A bare string
-	 *                            means a non-negative length.
+	 *                            array( ':hover', ':focus' ), and the optional
+	 *                            element and part are selectors written in the
+	 *                            caller's code, never stored values: the element
+	 *                            follows the scoping class and takes the state
+	 *                            (' > li'), the part follows the state
+	 *                            (' > .content'). A bare string means a
+	 *                            non-negative length.
 	 * @param string $class_prefix Prefix for the generated class name.
 	 * The rules are in the shape wp_style_engine_get_stylesheet_from_css_rules()
 	 * accepts; the caller hands them to the engine, which is what routes them
@@ -371,8 +381,10 @@ final class Render {
 			$target       = is_array( $target ) ? $target : array( $target );
 			$css_property = $target[0];
 			$type         = isset( $target[1] ) ? $target[1] : 'length';
-			$selector     = self::state_selector( '.' . $class, isset( $target[2] ) ? $target[2] : array() );
-			$is_state     = '.' . $class !== $selector;
+			$element      = '.' . $class . ( isset( $target[3] ) && is_string( $target[3] ) ? $target[3] : '' );
+			$part         = isset( $target[4] ) && is_string( $target[4] ) ? $target[4] : '';
+			$selector     = self::state_selector( $element, isset( $target[2] ) ? $target[2] : array(), $part );
+			$is_state     = $element . $part !== $selector;
 
 			$property_rules = Responsive_Styles::build_rules( $style, $selector, $namespace_key, $property_key, $css_property, $type );
 

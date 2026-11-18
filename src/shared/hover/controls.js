@@ -40,17 +40,20 @@ function toNumber( value ) {
 
 /**
  * @param {Object}   props
- * @param {string}   props.clientId      Block client ID.
- * @param {?Object}  props.style         The block's `style` attribute.
- * @param {Function} props.setAttributes Attribute setter.
- * @param {?string}  props.stateKey      Layer being edited, null for the base.
- * @param {string}   props.device        Core device name.
- * @param {string}   [props.textLabel]   Label for the text colour, e.g.
- *                                       "Icon hover" on a block whose text
- *                                       colour is its icon's.
- * @param {boolean}  [props.hasText]     False for a block with no text
- *                                       colour, such as Buttons: only the
- *                                       background hover row shows.
+ * @param {string}   props.clientId          Block client ID.
+ * @param {?Object}  props.style             The block's `style` attribute.
+ * @param {Function} props.setAttributes     Attribute setter.
+ * @param {?string}  props.stateKey          Layer being edited, null for the base.
+ * @param {string}   props.device            Core device name.
+ * @param {string}   [props.textLabel]       Label for the text colour, e.g.
+ *                                           "Icon hover" on a block whose text
+ *                                           colour is its icon's.
+ * @param {boolean}  [props.hasText]         False for a block with no text
+ *                                           colour, such as Buttons: only the
+ *                                           background hover row shows.
+ * @param {string}   [props.backgroundLabel] Label for the background, e.g.
+ *                                           "Item background hover" on the List,
+ *                                           whose hover colours its items.
  * @return {Element} The fill.
  */
 export function HoverControls( {
@@ -61,6 +64,7 @@ export function HoverControls( {
 	device,
 	textLabel = __( 'Text hover', 'zealblocks' ),
 	hasText = true,
+	backgroundLabel = __( 'Background hover', 'zealblocks' ),
 } ) {
 	const colorSettings = useMultipleOriginColorsAndGradients();
 
@@ -117,11 +121,7 @@ export function HoverControls( {
 						  ]
 						: [] ),
 					{
-						label: withDevice(
-							__( 'Background hover', 'zealblocks' ),
-							stateKey,
-							device
-						),
+						label: withDevice( backgroundLabel, stateKey, device ),
 						...fill( HOVER_KEYS.background ),
 						resetAllFilter: resetKey( HOVER_KEYS.background ),
 						enableAlpha: true,

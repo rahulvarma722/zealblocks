@@ -50,11 +50,43 @@ every block's.
 | Icon | `array( ':hover', ':focus-visible' )` | a linked icon's wrapper is the `<a>` itself |
 | Buttons | `array( ':hover', ':has(:focus-visible)' )` | the focus lands on a child Button. Not Spectra's `:focus-within`, which a mouse click on a `<button>` child also triggers |
 | Container | `array( ':hover', ':has(:focus-visible)' )` | as Buttons: focus lands on the card's link or on a control inside it. Its shadow and lift use the same states in style.scss, but not in the editor, where children take focus to be typed into |
+| List | `array( ':hover', ':focus-within' )`, on each item (targets, below) | hovering one item colours that item; a link in the item focused does the same. `:focus-within` is safe here: an item has no button a click would leave focused |
 
 A list becomes a selector list: `.x:hover,.x:focus{color:… !important}`, inside
 each band's media query too. States not in the allow-list are dropped, because
 the state is concatenated into a selector. With none left, the value applies
 with no state.
+
+### Targets: hover on a block's children
+
+By default the colours go on the block itself. A block whose hover belongs to
+its children passes a third argument, as the List does:
+
+```php
+Hover::properties(
+	'--zealblocks-list-hover-',
+	array( ':hover', ':focus-within' ),
+	array(
+		'item' => ' > .wp-block-zealblocks-list-item',                                   // takes the state
+		'text' => ' > .wp-block-zealblocks-container > :not(.wp-block-zealblocks-list)', // gets the text colour
+	)
+)
+// .x > .wp-block-zealblocks-list-item:hover > .wp-block-zealblocks-container > :not(.wp-block-zealblocks-list){color:…}
+// .x > .wp-block-zealblocks-list-item:hover{background:…}
+```
+
+`item` follows the scoping class and takes the state; `text` follows the state,
+so the text colour lands on a part of the hovered child (the List's: the
+item's own content, not its nested list, which keeps its colours). Both are
+selectors written in code, never stored values. `Block_Render::responsive()`
+reads them as the 4th and 5th items of a map entry. With no targets the
+selectors are exactly what they were before.
+
+Such a block cannot use the `transition()` and `preview()` mixins, which
+target the block's own root: it writes the same rules for its targets in its
+own stylesheets (the List's `style.scss` and `editor.scss`), with the same
+variables. `HoverControls` takes `backgroundLabel` as well as `textLabel`, for
+labels like "Item background hover".
 
 ## How it works
 

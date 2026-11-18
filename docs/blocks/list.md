@@ -72,9 +72,27 @@ The item has no attributes of its own beyond core supports.
 Per device in `style.zealblocks`, as custom properties on the list:
 `itemGap` (`--zealblocks-list-gap`, applied with a `has-item-gap` class that
 also takes over the items' margins), `iconSize`, `iconGap`, `iconColor`,
-`markerColor`, `markerSize` (numbers only). Z-index, animation and display
+`markerColor`, `markerSize` (numbers only). And the items' hover colours,
+`textHover`, `backgroundHover`, `hoverDuration` (below). Z-index, animation and display
 conditions are the shared modules. Context passes the list's icon and
 numbering to its items.
+
+## Item hover colours (LS-07)
+
+Styles › Color: **Item text hover**, **Item background hover** and **Hover
+transition**, per device, through the shared Hover (`docs/hover.md`, "Targets").
+
+- **Per item, not per list:** hovering one item colours that item. The text
+  colour goes on the item's own content (the blocks in its Container, except
+  a nested list); the background on the item (`<li>`).
+- **A nested list keeps its colours**, and its own hover settings apply to its
+  items. Hovering a nested item also hovers the item it is in, as with any
+  nested element, so that item's own text takes the colour too.
+- **The icon keeps its colour** (an icon hover is phase 2, LS-10).
+- **Keyboard:** also on `:focus-within`, so a link focused in an item colours
+  the item. The canvas previews `:hover` only.
+- Rules are `!important` (as all hover colours here), so they beat an item's
+  or a Text's own colour while hovered. Reduced motion: no transition.
 
 ## Typing (`src/list/keyboard.js`, `src/list/actions.js`)
 
@@ -162,7 +180,9 @@ Details that matter:
     icon kept through a list-wide change; item spacing and icon colour with a
     Tablet value; what the Container and the item accept; the accessibility
     tree on the page.
-  - `controls.spec.js`: every inspector control operated, then the stored
+  - `controls.spec.js` (also item hover: text and background, a Mobile
+    colour, keyboard focus, the nested list and icon unchanged, reduced
+    motion, the transition): every inspector control operated, then the stored
     value, the canvas and the page: all 7 presets, "Or any icon" (no Remove),
     all 6 numbering styles, icon position, icon size and gap with Mobile
     values, number colour and size, typography, background, padding, margin,

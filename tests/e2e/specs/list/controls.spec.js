@@ -2,7 +2,7 @@
  * The List's controls, operated the way an author does: click, type, pick.
  * Each test checks what is stored, what the canvas shows and what the
  * published page shows. The list, its items, and the Icon and Container
- * inside an item. TC-LS-40 to TC-LS-57.
+ * inside an item. TC-LS-40 to TC-LS-58.
  */
 
 const { test, expect, computed } = require( '../../utils' );
@@ -1124,5 +1124,152 @@ test.describe( 'List controls, operated', () => {
 		expect( gap ).toBe(
 			Math.round( parseFloat( await computed( body, 'font-size' ) ) )
 		);
+	} );
+
+	test( 'item hover colours: text and background, a Mobile colour, keyboard focus (TC-LS-58)', async ( {
+		admin,
+		browserName,
+		editor,
+		page,
+		posts,
+	} ) => {
+		await setUp(
+			{ admin, editor, page, posts },
+			[
+				list( { anchor: 'hovered' }, [
+					item( 'First', [ list( {}, [ item( 'Inside' ) ] ) ] ),
+					item( 'See <a href="https://example.org/">the link</a>' ),
+					item( 'Third' ),
+				] ),
+			],
+			[ 0 ],
+			'Styles'
+		);
+
+		const color = panel( page, 'Color' );
+
+		await pickSwatch( color, 'Item text hover', 1 );
+		await pickSwatch( color, 'Item background hover', 2 );
+		await showOptional( page, 'Color', 'Hover transition' );
+		await color
+			.getByRole( 'spinbutton', { name: 'Hover transition (ms)' } )
+			.fill( '300' );
+		await onDevice( page, /^Mobile/, async () => {
+			await pickSwatch( color, 'Item text hover (Mobile)', 3 );
+		} );
+
+		const { style } = await attributesAt( page, [ 0 ] );
+
+		expect( style.zealblocks.textHover ).toBeTruthy();
+		expect( style.zealblocks.backgroundHover ).toBeTruthy();
+		expect( style.zealblocks.hoverDuration ).toBe( '300ms' );
+		expect( style[ '@mobile' ].zealblocks.textHover ).toBeTruthy();
+		expect( style[ '@mobile' ].zealblocks.textHover ).not.toBe(
+			style.zealblocks.textHover
+		);
+
+		// The canvas: the hovered item takes the colours, the next does not.
+		const canvasItems = canvas( page ).locator(
+			'.wp-block-zealblocks-list:not(.wp-block-zealblocks-list .wp-block-zealblocks-list) > li'
+		);
+		const canvasText = canvasItems.nth( 2 ).locator( 'p' ).first();
+		const before = await canvasText.evaluate(
+			( el ) => el.ownerDocument.defaultView.getComputedStyle( el ).color
+		);
+
+		await canvasItems.nth( 2 ).hover();
+		await expect
+			.poll( () =>
+				canvasText.evaluate(
+					( el ) =>
+						el.ownerDocument.defaultView.getComputedStyle( el )
+							.color
+				)
+			)
+			.not.toBe( before );
+
+		const link = await publish( page );
+		const textHover = await resolveColor(
+			page,
+			style.zealblocks.textHover
+		);
+		const backgroundHover = await resolveColor(
+			page,
+			style.zealblocks.backgroundHover
+		);
+		const mobileHover = await resolveColor(
+			page,
+			style[ '@mobile' ].zealblocks.textHover
+		);
+
+		await page.emulateMedia( { reducedMotion: 'reduce' } );
+		await page.goto( link );
+		const items = page.locator( '#hovered > li' );
+		const first = items.nth( 0 );
+		const firstText = first.locator(
+			':scope > .wp-block-zealblocks-container > p'
+		);
+		const inside = first.locator( 'ul p' );
+		const third = items.nth( 2 );
+		const resting = await computed( third.locator( 'p' ), 'color' );
+		const insideResting = await computed( inside, 'color' );
+		const iconResting = await computed(
+			first.locator( ':scope > .wp-block-zealblocks-icon' ),
+			'color'
+		);
+
+		expect( resting ).not.toBe( textHover );
+		await firstText.hover();
+		expect( await computed( firstText, 'color' ) ).toBe( textHover );
+		expect( await computed( first, 'background-color' ) ).toBe(
+			backgroundHover
+		);
+		// Only the hovered item; its nested list and its icon keep theirs.
+		expect( await computed( third.locator( 'p' ), 'color' ) ).toBe(
+			resting
+		);
+		expect( await computed( inside, 'color' ) ).toBe( insideResting );
+		expect(
+			await computed(
+				first.locator( ':scope > .wp-block-zealblocks-icon' ),
+				'color'
+			)
+		).toBe( iconResting );
+		expect( await computed( first, 'transition-duration' ) ).toBe( '0s' );
+
+		// Keyboard: a link in the second item, focused, colours that item.
+		await page.mouse.move( 0, 0 );
+		const second = items.nth( 1 );
+
+		await second.evaluate( ( li ) => {
+			const marker = li.ownerDocument.createElement( 'span' );
+
+			marker.tabIndex = -1;
+			li.before( marker );
+			marker.focus();
+			marker.remove();
+		} );
+		await page.keyboard.press(
+			'webkit' === browserName ? 'Alt+Tab' : 'Tab'
+		);
+		await expect( second.getByRole( 'link' ) ).toBeFocused();
+		expect(
+			await computed(
+				second.locator( ':scope > .wp-block-zealblocks-container > p' ),
+				'color'
+			)
+		).toBe( textHover );
+
+		// Mobile: its own colour.
+		await page.setViewportSize( { width: 480, height: 900 } );
+		await page.mouse.move( 0, 0 );
+		await third.locator( 'p' ).hover();
+		expect( await computed( third.locator( 'p' ), 'color' ) ).toBe(
+			mobileHover
+		);
+
+		// Without reduced motion, the transition the author set.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		expect( await computed( first, 'transition-duration' ) ).toBe( '0.3s' );
 	} );
 } );

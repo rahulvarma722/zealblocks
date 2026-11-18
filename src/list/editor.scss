@@ -15,3 +15,23 @@
  * src/shared/display-conditions/_display-conditions.scss.
  */
 @include display-conditions.marker(".wp-block-zealblocks-list");
+
+/*
+ * Item hover colours in the canvas (LS-07). The page gets real per-band
+ * rules from render.php; the canvas gets the previewed device's colour as a
+ * custom property, with a class only when that device has one (see
+ * src/shared/hover/_hover.scss, preview()). On the same targets as the page:
+ * the item's content for the text, the item for the background. `:hover`
+ * only: an item being typed in has focus, and should not change colour.
+ */
+$list: ".wp-block-zealblocks-list";
+$item: ".wp-block-zealblocks-list-item";
+$body: ".wp-block-zealblocks-container";
+
+#{$list}.has-hover-color > #{$item}:hover > #{$body} > :not(#{$list}) {
+	color: var(--zealblocks-list-hover-color) !important;
+}
+
+#{$list}.has-hover-background > #{$item}:hover {
+	background: var(--zealblocks-list-hover-background) !important;
+}

@@ -59,13 +59,23 @@ final class Hover {
 	 *                                    is `{$var_prefix}duration`.
 	 * @param string|string[] $states     State or states the colours apply in;
 	 *                                    see Render::PSEUDO_STATES.
+	 * @param array           $targets    Where the colours go, for a block whose
+	 *                                    hover belongs to its children rather
+	 *                                    than itself: `item`, the element that
+	 *                                    takes the state (' > li'), and `text`,
+	 *                                    the part inside it the text colour goes
+	 *                                    on. Both are selectors in the caller's
+	 *                                    code. Empty: the block itself.
 	 * @return array<string, string[]>
 	 */
-	public static function properties( $var_prefix, $states = ':hover' ) {
+	public static function properties( $var_prefix, $states = ':hover', $targets = array() ) {
+		$item = isset( $targets['item'] ) ? (string) $targets['item'] : '';
+		$text = isset( $targets['text'] ) ? (string) $targets['text'] : '';
+
 		return array(
 			self::DURATION   => array( $var_prefix . 'duration', 'time' ),
-			self::TEXT       => array( 'color', 'color', $states ),
-			self::BACKGROUND => array( 'background', 'background', $states ),
+			self::TEXT       => array( 'color', 'color', $states, $item, $text ),
+			self::BACKGROUND => array( 'background', 'background', $states, $item ),
 		);
 	}
 

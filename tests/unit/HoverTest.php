@@ -36,11 +36,72 @@ final class HoverTest extends TestCase {
 		$this->assertSame(
 			array(
 				Hover::DURATION   => array( '--zb-test-hover-duration', 'time' ),
-				Hover::TEXT       => array( 'color', 'color', ':hover' ),
-				Hover::BACKGROUND => array( 'background', 'background', ':hover' ),
+				Hover::TEXT       => array( 'color', 'color', ':hover', '', '' ),
+				Hover::BACKGROUND => array( 'background', 'background', ':hover', '' ),
 			),
 			Hover::properties( '--zb-test-hover-' )
 		);
+	}
+
+	/**
+	 * With no targets the colours go on the block itself, exactly as before
+	 * targets existed: the same selectors, byte for byte.
+	 *
+	 * @return void
+	 */
+	public function test_no_targets_keeps_the_block_selectors() {
+		$style  = array(
+			'zealblocks' => array(
+				'textHover'       => '#f00',
+				'backgroundHover' => '#00f',
+			),
+		);
+		$result = $this->responsive( $style, array( ':hover', ':focus-within' ) );
+		$base   = '.' . $result['class'];
+
+		$this->assertSame( $base . ':hover,' . $base . ':focus-within', $result['rules'][0]['selector'] );
+		$this->assertSame( $base . ':hover,' . $base . ':focus-within', $result['rules'][1]['selector'] );
+	}
+
+	/**
+	 * Targets, as the List uses them: the state on each item, the text colour
+	 * on a part inside the item, the background on the item; the duration
+	 * stays a plain property on the block.
+	 *
+	 * @return void
+	 */
+	public function test_targets_put_the_state_on_the_item_and_the_text_on_a_part() {
+		$style  = array(
+			'zealblocks' => array(
+				'hoverDuration'   => '300ms',
+				'textHover'       => '#f00',
+				'backgroundHover' => '#00f',
+			),
+		);
+		$result = Render::responsive(
+			$style,
+			'zealblocks',
+			Hover::properties(
+				'--zb-test-hover-',
+				array( ':hover', ':focus-within' ),
+				array(
+					'item' => ' > .item',
+					'text' => ' > .body > :not(.list)',
+				)
+			),
+			'zb-test-'
+		);
+		$base   = '.' . $result['class'];
+
+		$this->assertSame( $base, $result['rules'][0]['selector'] );
+		$this->assertSame(
+			$base . ' > .item:hover > .body > :not(.list),' . $base . ' > .item:focus-within > .body > :not(.list)',
+			$result['rules'][1]['selector']
+		);
+		$this->assertSame( array( 'color' => '#f00' ), $result['rules'][1]['declarations'] );
+		$this->assertTrue( $result['rules'][1]['important'] );
+		$this->assertSame( $base . ' > .item:hover,' . $base . ' > .item:focus-within', $result['rules'][2]['selector'] );
+		$this->assertSame( array( Hover::CLASS_NAME ), Hover::classes( $result['rules'] ) );
 	}
 
 	/**

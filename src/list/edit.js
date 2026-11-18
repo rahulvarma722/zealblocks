@@ -20,6 +20,7 @@ import { useEffect, useMemo } from '@wordpress/element';
 import { useStyleState } from '../button/responsive-width/use-style-state';
 import { getStateValue } from '../button/responsive-width/style-value';
 import { ZIndexControl, getZIndexPreview } from '../shared/z-index';
+import { HoverControls, getHoverPreview } from '../shared/hover';
 import {
 	AnimationPanel,
 	useAnimationPreview,
@@ -30,7 +31,7 @@ import {
 	hasConditions as hasAnyCondition,
 } from '../shared/display-conditions';
 import { createItem, setListIcon, textOf } from './actions';
-import { ITEM, KEYS } from './constants';
+import { HOVER_PREFIX, ITEM, KEYS } from './constants';
 import { bulletsIcon, numbersIcon } from './icons';
 import { getListPreview } from './preview';
 import { ListSettings } from './settings';
@@ -64,6 +65,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	const extraProps = useMemo( () => {
 		const zIndex = getZIndexPreview( style, device );
+		const hover = getHoverPreview( style, device, HOVER_PREFIX );
 		const animation = getAnimationProps(
 			{
 				animationType,
@@ -77,6 +79,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		return {
 			style: {
 				...getListPreview( style, device ),
+				...hover.style,
 				...zIndex.style,
 				...animation.style,
 				listStyleType:
@@ -87,6 +90,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					hasIcon ? 'has-icon' : '',
 					hasItemGap ? 'has-item-gap' : '',
 					hasIcon && 'center' === iconAlign ? 'is-icon-centred' : '',
+					...hover.classes,
 					...zIndex.classes,
 					animation.className,
 					hasConditions ? 'has-display-conditions' : '',
@@ -198,6 +202,11 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				}
 			/>
 			<ListStyleControls { ...styleControlProps } hasIcon={ hasIcon } />
+			<HoverControls
+				{ ...styleControlProps }
+				textLabel={ __( 'Item text hover', 'zealblocks' ) }
+				backgroundLabel={ __( 'Item background hover', 'zealblocks' ) }
+			/>
 			<ZIndexControl { ...styleControlProps } />
 			<AnimationPanel
 				clientId={ clientId }
