@@ -1,100 +1,61 @@
 /**
- * List item — editor component: the `<li>`, its icon on the left and its
- * blocks on the right, as render.php prints them.
+ * List item — editor component: the `<li>`, holding an Icon block on the
+ * left and a Container block on the right, as render.php prints them.
  *
- * The item starts with a Text, ready to type in; Enter in that Text makes the
- * next item (src/list/keyboard.js). Other blocks go in through the "+" shown
- * while the item is being edited.
+ * Both are locked in place (src/list/constants.js), so the item always has
+ * its icon and its content. The icon is changed on the Icon block itself;
+ * the content goes in the Container, which starts with a Text. Enter in that
+ * Text makes the next item (src/list/keyboard.js).
  */
 
 import { __ } from '@wordpress/i18n';
 import {
 	BlockControls,
-	InnerBlocks,
-	InspectorControls,
 	useBlockProps,
 	useInnerBlocksProps,
 	store as blockEditorStore,
-	__experimentalColorGradientSettingsDropdown as ColorGradientSettingsDropdown,
-	__experimentalUseMultipleOriginColorsAndGradients as useMultipleOriginColorsAndGradients,
 } from '@wordpress/block-editor';
-import {
-	Button,
-	PanelBody,
-	ToggleControl,
-	ToolbarButton,
-	ToolbarGroup,
-} from '@wordpress/components';
+import { ToolbarButton, ToolbarGroup } from '@wordpress/components';
 import { useRegistry, useSelect } from '@wordpress/data';
 
-import IconControl, { useIcon, Icon } from '@/ui/icon-library';
-import { useStyleState } from '../button/responsive-width/use-style-state';
-import {
-	getStateValue,
-	setStateValue,
-} from '../button/responsive-width/style-value';
-import { clearKeys } from '../button/style-values';
-import { withDevice } from '../shared/device-label';
 import { indent, outdent } from '../list/actions';
-import {
-	ICON_NONE,
-	ITEM,
-	ITEM_BLOCKS,
-	ITEM_TEMPLATE,
-	KEYS,
-} from '../list/constants';
-import { getListPreview } from '../list/preview';
+import { BODY, ICON, ITEM, itemTemplate } from '../list/constants';
 import { indentIcon, outdentIcon } from '../list/icons';
 
-export default function Edit( {
-	attributes,
-	setAttributes,
-	clientId,
-	context,
-	isSelected,
-} ) {
-	const { icon: own, style } = attributes;
-	const ordered = !! context[ 'zealblocks/list/ordered' ];
-	const listIcon = context[ 'zealblocks/list/icon' ] || '';
-	const slug = ordered ? '' : own || listIcon;
-	const iconData = useIcon( slug && ICON_NONE !== slug ? slug : '' );
-	const registry = useRegistry();
-	const colorSettings = useMultipleOriginColorsAndGradients();
-	const { device, stateKey } = useStyleState();
+const ALLOWED = [ ICON, BODY ];
 
-	const { isEditing, canIndent, canOutdent } = useSelect(
+export default function Edit( { clientId, context } ) {
+	const registry = useRegistry();
+	const listIcon = context[ 'zealblocks/list/icon' ];
+
+	const { canIndent, canOutdent } = useSelect(
 		( select ) => {
-			const {
-				hasSelectedInnerBlock,
-				getBlockIndex,
-				getBlockRootClientId,
-				getBlockName,
-			} = select( blockEditorStore );
+			const { getBlockIndex, getBlockRootClientId, getBlockName } =
+				select( blockEditorStore );
 			const list = getBlockRootClientId( clientId );
+			const body = getBlockRootClientId( list );
 
 			return {
-				isEditing:
-					isSelected || hasSelectedInnerBlock( clientId, true ),
 				canIndent: getBlockIndex( clientId ) > 0,
 				canOutdent:
-					ITEM === getBlockName( getBlockRootClientId( list ) ),
+					BODY === getBlockName( body ) &&
+					ITEM === getBlockName( getBlockRootClientId( body ) ),
 			};
 		},
-		[ clientId, isSelected ]
+		[ clientId ]
 	);
 
-	const blockProps = useBlockProps( {
-		style: getListPreview( style, device, [ KEYS.iconColor ] ),
+	/*
+	 * The template only fills an EMPTY item: one added from the inserter or
+	 * List View. Items made by Enter, and the list's first, arrive complete
+	 * (src/list/actions.js, createItem()).
+	 */
+	const innerBlocksProps = useInnerBlocksProps( useBlockProps(), {
+		allowedBlocks: ALLOWED,
+		template: itemTemplate( listIcon ),
+		templateInsertUpdatesSelection: false,
+		renderAppender: false,
 	} );
-	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'wp-block-zealblocks-list-item__content' },
-		{
-			allowedBlocks: ITEM_BLOCKS,
-			template: ITEM_TEMPLATE,
-			templateInsertUpdatesSelection: true,
-			renderAppender: isEditing ? InnerBlocks.ButtonBlockAppender : false,
-		}
-	);
 
 	return (
 		<>
@@ -117,108 +78,7 @@ export default function Edit( {
 				</ToolbarGroup>
 			</BlockControls>
 
-			{ ! ordered && (
-				<InspectorControls>
-					<PanelBody title={ __( 'Item icon', 'zealblocks' ) }>
-						<ToggleControl
-							__nextHasNoMarginBottom
-							label={ __( 'Show an icon', 'zealblocks' ) }
-							checked={ ICON_NONE !== own }
-							onChange={ ( next ) =>
-								setAttributes( { icon: next ? '' : ICON_NONE } )
-							}
-						/>
-						{ ICON_NONE !== own && (
-							<>
-								<IconControl
-									label={ __(
-										'Icon for this item',
-										'zealblocks'
-									) }
-									help={ __(
-										'Leave empty to use the list’s icon.',
-										'zealblocks'
-									) }
-									value={ own }
-									onChange={ ( next ) =>
-										setAttributes( { icon: next || '' } )
-									}
-								/>
-								{ !! own && (
-									<Button
-										variant="link"
-										onClick={ () =>
-											setAttributes( { icon: '' } )
-										}
-									>
-										{ __(
-											'Use the list’s icon',
-											'zealblocks'
-										) }
-									</Button>
-								) }
-							</>
-						) }
-					</PanelBody>
-				</InspectorControls>
-			) }
-
-			{ !! slug && ICON_NONE !== slug && (
-				<InspectorControls
-					group="color"
-					resetAllFilter={ ( attrs ) => ( {
-						style: clearKeys( attrs?.style, stateKey, [
-							KEYS.iconColor,
-						] ),
-					} ) }
-				>
-					<ColorGradientSettingsDropdown
-						__experimentalIsRenderedInSidebar
-						panelId={ clientId }
-						{ ...colorSettings }
-						settings={ [
-							{
-								label: withDevice(
-									__( 'Icon', 'zealblocks' ),
-									stateKey,
-									device
-								),
-								colorValue: getStateValue(
-									style,
-									stateKey,
-									KEYS.iconColor
-								),
-								onColorChange: ( next ) =>
-									setAttributes( {
-										style: setStateValue(
-											style,
-											stateKey,
-											next || undefined,
-											KEYS.iconColor
-										),
-									} ),
-								enableAlpha: true,
-								clearable: true,
-							},
-						] }
-					/>
-				</InspectorControls>
-			) }
-
-			<li { ...blockProps }>
-				{ iconData && (
-					<span
-						className="wp-block-zealblocks-list-item__icon"
-						aria-hidden="true"
-					>
-						<Icon
-							icon={ iconData }
-							className="wp-block-zealblocks-list-item__svg"
-						/>
-					</span>
-				) }
-				<div { ...innerBlocksProps } />
-			</li>
+			<li { ...innerBlocksProps } />
 		</>
 	);
 }

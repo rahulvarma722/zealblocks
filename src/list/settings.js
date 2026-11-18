@@ -1,7 +1,11 @@
 /**
- * List — the Settings panel: bullets or numbers; for numbers their style,
- * start and direction, all native; for bullets the icon, picked from presets
- * or the library, and how it lines up with the text.
+ * List — the Settings panel: icons or numbers; for numbers their style,
+ * start and direction, all native; for icons the icon of every item, picked
+ * from presets or the library, and how it lines up with the text.
+ *
+ * The icon itself lives on each item's Icon block. Picking one here changes
+ * every item still showing the list's icon (actions.js, setListIcon()); an
+ * item whose Icon block the author changed keeps its own.
  */
 
 import { __, sprintf } from '@wordpress/i18n';
@@ -51,9 +55,10 @@ function Preset( { slug, isActive, onPick } ) {
  * @param {Object}   props
  * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Attribute setter.
+ * @param {Function} props.onIconChange  Sets the list's icon, and its items'.
  * @return {Element} The panel.
  */
-export function ListSettings( { attributes, setAttributes } ) {
+export function ListSettings( { attributes, setAttributes, onIconChange } ) {
 	const { ordered, type, start, reversed, icon, iconAlign } = attributes;
 
 	return (
@@ -68,7 +73,7 @@ export function ListSettings( { attributes, setAttributes } ) {
 						options={ [
 							{
 								value: 'unordered',
-								label: __( 'Bullets or icons', 'zealblocks' ),
+								label: __( 'Icons', 'zealblocks' ),
 							},
 							{
 								value: 'ordered',
@@ -143,67 +148,52 @@ export function ListSettings( { attributes, setAttributes } ) {
 									{ __( 'Icon', 'zealblocks' ) }
 								</p>
 								<Flex wrap gap={ 1 } justify="flex-start">
-									<Button
-										__next40pxDefaultSize
-										variant={
-											icon ? 'tertiary' : 'secondary'
-										}
-										isPressed={ ! icon }
-										onClick={ () =>
-											setAttributes( { icon: '' } )
-										}
-									>
-										{ __( 'Bullets', 'zealblocks' ) }
-									</Button>
 									{ ICON_PRESETS.map( ( slug ) => (
 										<Preset
 											key={ slug }
 											slug={ slug }
 											isActive={ slug === icon }
-											onPick={ ( next ) =>
-												setAttributes( { icon: next } )
-											}
+											onPick={ onIconChange }
 										/>
 									) ) }
 								</Flex>
 							</div>
 							<IconControl
 								label={ __( 'Or any icon', 'zealblocks' ) }
+								help={ __(
+									'Changes every item’s icon, except the ones you changed on the item’s Icon block.',
+									'zealblocks'
+								) }
 								value={ icon }
 								onChange={ ( next ) =>
-									setAttributes( { icon: next || '' } )
+									next && onIconChange( next )
 								}
 							/>
-							{ !! icon && (
-								<SelectControl
-									__next40pxDefaultSize
-									__nextHasNoMarginBottom
-									label={ __(
-										'Icon position',
-										'zealblocks'
-									) }
-									value={ iconAlign || 'top' }
-									options={ [
-										{
-											value: 'top',
-											label: __(
-												'With the first line',
-												'zealblocks'
-											),
-										},
-										{
-											value: 'center',
-											label: __(
-												'Centred on the item',
-												'zealblocks'
-											),
-										},
-									] }
-									onChange={ ( next ) =>
-										setAttributes( { iconAlign: next } )
-									}
-								/>
-							) }
+							<SelectControl
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+								label={ __( 'Icon position', 'zealblocks' ) }
+								value={ iconAlign || 'top' }
+								options={ [
+									{
+										value: 'top',
+										label: __(
+											'With the first line',
+											'zealblocks'
+										),
+									},
+									{
+										value: 'center',
+										label: __(
+											'Centred on the item',
+											'zealblocks'
+										),
+									},
+								] }
+								onChange={ ( next ) =>
+									setAttributes( { iconAlign: next } )
+								}
+							/>
 						</>
 					) }
 				</Flex>

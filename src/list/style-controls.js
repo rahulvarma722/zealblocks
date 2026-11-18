@@ -95,7 +95,7 @@ function LengthItem( {
  * @param {Function} props.setAttributes Attribute setter.
  * @param {?string}  props.stateKey      Layer being edited.
  * @param {string}   props.device        Core device name.
- * @param {boolean}  props.hasIcon       Whether the items show icons.
+ * @param {boolean}  props.hasIcon       Whether the items show icons (a <ul>).
  * @return {Element} The fills.
  */
 export function ListStyleControls( props ) {
@@ -123,7 +123,7 @@ export function ListStyleControls( props ) {
 							label: withDevice(
 								hasIcon
 									? __( 'Icon', 'zealblocks' )
-									: __( 'Bullets and numbers', 'zealblocks' ),
+									: __( 'Numbers', 'zealblocks' ),
 								stateKey,
 								device
 							),
@@ -191,7 +191,7 @@ export function ListStyleControls( props ) {
 					<LengthItem
 						{ ...props }
 						valueKey={ KEYS.markerSize }
-						text={ __( 'Bullet and number size', 'zealblocks' ) }
+						text={ __( 'Number size', 'zealblocks' ) }
 						placeholder="1em"
 					/>
 				) }

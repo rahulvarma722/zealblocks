@@ -4,8 +4,8 @@
  *
  * A real `<ul>` or `<ol>`, so the browser numbers it and assistive technology
  * hears a list. Numbering stays native: `type` as a list-style, `start` and
- * `reversed` as the attributes HTML gives them. With an icon the markers are
- * replaced by the items' icons (list-item/render.php) and the list says
+ * `reversed` as the attributes HTML gives them, and each item's Icon block is
+ * hidden. A `<ul>` shows the Icon blocks instead of markers and says
  * `role="list"`, which WebKit drops from a list with no markers.
  *
  * @package Zealblocks
@@ -22,7 +22,6 @@ use Zealblocks\Block\Animation;
 use Zealblocks\Block\Display_Conditions;
 use Zealblocks\Block\Render as Block_Render;
 use Zealblocks\Block\Z_Index;
-use Zealblocks\Icon_Handler\Library as Icon_Library;
 
 /*
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
@@ -43,14 +42,13 @@ if ( '' === trim( (string) $content ) ) {
 $ordered  = ! empty( $attributes['ordered'] );
 $list_tag = $ordered ? 'ol' : 'ul';
 
-// The list's icon, for unordered lists only: numbers stay numbers.
-$icon     = $ordered ? '' : Block_Render::text( $attributes, 'icon' );
-$has_icon = '' !== $icon && null !== Icon_Library::get( $icon );
+// The items' Icon blocks are the markers of a <ul>; numbers stay numbers.
+$has_icon = ! $ordered;
 
 /*
- * Per device: the space between items, the icon's colour, size and gap, and
- * the colour and size of native markers. Custom properties on the list, which
- * its items (and their icons) inherit; an item can override the colour.
+ * Per device: the space between items, the icons' colour, size and gap, and
+ * the colour and size of the numbers. Custom properties on the list, which
+ * its items' Icon blocks inherit; an Icon block's own colour or width wins.
  */
 $responsive = Block_Render::responsive(
 	isset( $attributes['style'] ) && is_array( $attributes['style'] ) ? $attributes['style'] : array(),

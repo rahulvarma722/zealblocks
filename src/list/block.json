@@ -6,7 +6,7 @@
 	"title": "List",
 	"category": "zealblocks",
 	"icon": "editor-ul",
-	"description": "A bulleted, numbered or icon list. Each item can hold any block.",
+	"description": "An icon or numbered list. Each item is an Icon block and a Container block that can hold any block.",
 	"keywords": [
 		"list",
 		"bullet",
@@ -40,7 +40,7 @@
 		},
 		"icon": {
 			"type": "string",
-			"default": ""
+			"default": "check"
 		},
 		"iconAlign": {
 			"type": "string",

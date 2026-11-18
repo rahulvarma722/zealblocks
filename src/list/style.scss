@@ -1,6 +1,10 @@
 /**
  * List and List item — shared styles, front end and editor canvas. The item
  * has no stylesheet of its own: it never appears without a list.
+ *
+ * An item is an Icon block and a Container block (src/list/constants.js).
+ * Everything here is scoped to those two as direct children of an item, so
+ * an Icon or a Container anywhere else is untouched.
  */
 
 @use "../shared/animation/animation";
@@ -8,6 +12,8 @@
 
 $list: ".wp-block-zealblocks-list";
 $item: ".wp-block-zealblocks-list-item";
+$icon: ".wp-block-zealblocks-icon";
+$body: ".wp-block-zealblocks-container";
 
 #{$list} {
 	box-sizing: border-box;
@@ -25,16 +31,18 @@ $item: ".wp-block-zealblocks-list-item";
 	margin-block-start: var(--zealblocks-list-gap, 0);
 }
 
-// Native bullets and numbers: their colour and size, per device.
+// Numbers: their colour and size, per device.
 #{$list} > #{$item}::marker {
 	color: var(--zealblocks-list-marker-color);
 	font-size: var(--zealblocks-list-marker-size);
 }
 
 /*
- * The blocks in an item sit close together, and the first lines up with the
- * bullet or icon: no margin around them, a small gap between them. A list
- * spaces its items; an item's own blocks belong together.
+ * The item's Container sits flush, and so do its blocks: no margin around
+ * the Container, none above its first block and none below any. The first
+ * line then meets the icon, and an item's blocks stay together. The space
+ * BETWEEN its blocks is the Container's own Block spacing (0.25em on a new
+ * item), so the author changes it on the Container.
  *
  * `:not(#_)` adds an id's weight: themes style paragraphs in the editor
  * with selectors like Astra's `.editor-styles-wrapper
@@ -43,21 +51,31 @@ $item: ".wp-block-zealblocks-list-item";
  * `!important`, so a margin the author sets on a block still applies: core
  * prints it inline.
  */
-#{$item}__content:not(#_) {
+#{$item} > #{$body}:not(#_) {
+	margin-block: 0;
 
 	> * {
-		margin-block: 0;
+		margin-block-end: 0;
 	}
 
-	> * + * {
-		margin-block-start: 0.25em;
+	> :first-child {
+		margin-block-start: 0;
 	}
 }
 
 /*
- * Icons replace the markers: each item becomes the icon and its blocks side
- * by side. The icon is centred on the first line of text by default (`1lh`),
- * or on the whole item.
+ * A nested list's last item adds no margin below the item it is nested in.
+ * In a plain list the two bottom margins collapse into one; here the outer
+ * item is a flex container, which stops them collapsing, so a theme's `li`
+ * margin (Astra's 10px) would count twice after every nested list.
+ */
+#{$item} > #{$body} > #{$list}:last-child > #{$item}:last-child {
+	margin-block-end: 0;
+}
+
+/*
+ * A <ul>: the Icon blocks replace the markers, each item the icon and its
+ * Container side by side.
  */
 #{$list}.has-icon {
 	padding-inline-start: 0;
@@ -66,40 +84,51 @@ $item: ".wp-block-zealblocks-list-item";
 	> #{$item} {
 		display: flex;
 		gap: var(--zealblocks-list-icon-gap, 0.5em);
-		align-items: flex-start;
+		align-items: baseline;
 	}
 
-	> #{$item} > #{$item}__content {
+	> #{$item} > #{$body} {
 		flex: 1 1 auto;
 		min-width: 0;
 	}
-}
 
-#{$item}__icon {
-	display: inline-flex;
-	flex: none;
-	width: var(--zealblocks-list-icon-size, 1em);
-	height: var(--zealblocks-list-icon-size, 1em);
-	margin-block-start: calc((1lh - var(--zealblocks-list-icon-size, 1em)) / 2);
-	color: var(--zealblocks-list-icon-color, currentcolor);
-}
-
-#{$item}__svg {
-	display: block;
-	width: 100%;
-	height: 100%;
-	fill: currentcolor;
-}
-
-#{$list}.has-icon.is-icon-centred {
-
-	> #{$item} {
+	/*
+	 * The icon, at the list's size and colour unless its own Icon block sets
+	 * a width or a colour: those are inline or preset classes, which win.
+	 *
+	 * Centred on the first line of text, whatever its line height. The icon
+	 * is centred in a line box of its own (`1lh`, with the line height the
+	 * Icon block otherwise zeroes), and that line's baseline, given by an
+	 * empty character, sits on the text's first baseline (the item aligns
+	 * baselines). A line box's middle is the same distance above its
+	 * baseline at any line height, so the icon meets the middle of the
+	 * text even where a theme gives paragraphs a line height of their own.
+	 * The character has empty alternative text: nothing is announced.
+	 */
+	> #{$item} > #{$icon} {
+		display: flex;
+		flex: none;
 		align-items: center;
-	}
+		box-sizing: border-box;
+		width: var(--zealblocks-list-icon-size, 1em);
+		min-height: 1lh;
+		margin-block: 0;
+		line-height: inherit;
+		color: var(--zealblocks-list-icon-color, currentcolor);
 
-	> #{$item} > #{$item}__icon {
-		margin-block-start: 0;
+		&::before {
+			content: "\200b" / "";
+		}
 	}
+}
+
+#{$list}.has-icon.is-icon-centred > #{$item} {
+	align-items: center;
+}
+
+// A numbered list: the numbers are the markers, the Icon blocks stay hidden.
+#{$list}:not(.has-icon) > #{$item} > #{$icon} {
+	display: none;
 }
 
 /*

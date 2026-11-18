@@ -1452,10 +1452,32 @@ echo "\nList\n";
 $check( 'zealblocks/list and zealblocks/list-item registered', $registry->is_registered( 'zealblocks/list' ) && $registry->is_registered( 'zealblocks/list-item' ) );
 $check( 'list item only inside a list', in_array( 'zealblocks/list', (array) $registry->get_registered( 'zealblocks/list-item' )->parent, true ) );
 
-$list_item = static function ( $text, $attributes = array(), $extra = '' ) {
-	return '<!-- wp:zealblocks/list-item ' . wp_json_encode( (object) $attributes ) . ' --><!-- wp:zealblocks/text ' . wp_json_encode( array( 'content' => $text ) ) . ' /-->' . $extra . '<!-- /wp:zealblocks/list-item -->';
+// An item as the editor saves it: an Icon block and a Container holding a Text.
+$list_item = static function ( $text, $icon = 'check', $extra = '' ) {
+	$locked = array(
+		'move'   => true,
+		'remove' => true,
+	);
+
+	return '<!-- wp:zealblocks/list-item -->'
+		. '<!-- wp:zealblocks/icon ' . wp_json_encode(
+			array(
+				'icon' => $icon,
+				'lock' => $locked,
+			)
+		) . ' /-->'
+		. '<!-- wp:zealblocks/container ' . wp_json_encode(
+			array(
+				'layout' => array( 'type' => 'default' ),
+				'style'  => array( 'spacing' => array( 'blockGap' => '0.25em' ) ),
+				'lock'   => $locked,
+			)
+		) . ' -->'
+		. '<!-- wp:zealblocks/text ' . wp_json_encode( array( 'content' => $text ) ) . ' /-->' . $extra
+		. '<!-- /wp:zealblocks/container -->'
+		. '<!-- /wp:zealblocks/list-item -->';
 };
-$list = static function ( $attributes, $items ) {
+$list      = static function ( $attributes, $items ) {
 	return do_blocks( '<!-- wp:zealblocks/list ' . wp_json_encode( (object) $attributes ) . ' -->' . $items . '<!-- /wp:zealblocks/list -->' );
 };
 
@@ -1472,17 +1494,16 @@ $icon_list = $list(
 		),
 	),
 	$list_item( 'One' )
-		. $list_item( 'Two', array( 'icon' => 'star' ) )
-		. $list_item( 'Three', array( 'icon' => 'none' ) )
-		. $list_item( 'Four', array(), '<!-- wp:zealblocks/list --><!-- wp:zealblocks/list-item --><!-- wp:zealblocks/text {"content":"Nested"} /--><!-- /wp:zealblocks/list-item --><!-- /wp:zealblocks/list -->' )
+		. $list_item( 'Two', 'star' )
+		. $list_item( 'Three', 'check', '<!-- wp:zealblocks/list -->' . $list_item( 'Nested' ) . '<!-- /wp:zealblocks/list -->' )
 );
 $list_css  = wp_style_engine_get_stylesheet_from_context( 'zealblocks' );
 $check( 'icon list: a <ul> with role="list", since its markers are replaced', 1 === preg_match( '#^<ul [^>]*class="[^"]*\bhas-icon\b[^"]*"[^>]*role="list"#', trim( $icon_list ) ) );
-$check( 'icon list: each item is <li> > icon span, aria-hidden, + content', 1 === preg_match( '#<li class="wp-block-zealblocks-list-item"><span class="wp-block-zealblocks-list-item__icon" aria-hidden="true"><svg [^>]*aria-hidden="true"[^>]*>.*?</svg></span><div class="wp-block-zealblocks-list-item__content"><p class="wp-block-zealblocks-text">One</p></div></li>#s', $icon_list ) );
-// One, Four: the list's check; Two: its own star (576 wide); Three: none;
-// the nested list: native bullets.
-$check( 'icon list: an item overrides the icon, or switches it off', 3 === substr_count( $icon_list, 'class="wp-block-zealblocks-list-item__icon"' ) && false !== strpos( $icon_list, 'viewBox="0 0 576 512"' ) && 1 === preg_match( '#<li class="wp-block-zealblocks-list-item"><div class="wp-block-zealblocks-list-item__content"><p class="wp-block-zealblocks-text">Three</p>#', $icon_list ) );
-$check( 'icon list: a nested list sits inside its item, never directly in the list', 1 === preg_match( '#<p class="wp-block-zealblocks-text">Four</p><ul class="wp-block-zealblocks-list"><li#', $icon_list ) && false === strpos( $icon_list, '</li><ul' ) );
+$check( 'icon list: each item is <li> > Icon block (decorative svg) + Container > Text', 1 === preg_match( '#<li class="wp-block-zealblocks-list-item"><div class="wp-block-zealblocks-icon[^"]*"[^>]*><svg [^>]*aria-hidden="true"[^>]*>.*?</svg></div><div class="[^"]*\bwp-block-zealblocks-container\b[^"]*"[^>]*><p class="wp-block-zealblocks-text">One</p></div></li>#s', $icon_list ) );
+$check( 'icon list: the Icon is not announced: no role, no label', false === strpos( $icon_list, 'role="img"' ) && false === strpos( $icon_list, 'aria-label' ) );
+$check( 'icon list: each item keeps its own icon (Two: the star, 576 wide)', 4 === substr_count( $icon_list, 'class="wp-block-zealblocks-icon' ) && 1 === substr_count( $icon_list, 'viewBox="0 0 576 512"' ) );
+$check( 'icon list: the Container is plain flow, its blocks 0.25em apart', 1 === preg_match( '#class="[^"]*\bwp-block-zealblocks-container\b[^"]*\bis-layout-flow\b#', $icon_list ) && false !== strpos( wp_style_engine_get_stylesheet_from_context( 'block-supports' ), 'margin-block-start:0.25em' ) );
+$check( 'icon list: a nested list sits in its item\'s Container, never directly in the list', 1 === preg_match( '#<p class="wp-block-zealblocks-text">Three</p><ul class="[^"]*\bwp-block-zealblocks-list\b[^"]*"[^>]*><li#', $icon_list ) && false === strpos( $icon_list, '</li><ul' ) );
 $check( 'icon list: icon colour and item spacing per device, and the spacing class', false !== strpos( $list_css, '--zealblocks-list-gap:12px;' ) && false !== strpos( $list_css, '--zealblocks-list-icon-color:#0d1001;' ) && 1 === preg_match( '/width <= 480px\)\{\.zealblocks-list-[0-9a-f]{8}\{--zealblocks-list-gap:6px;\}/', $list_css ) && false !== strpos( $icon_list, 'has-item-gap' ) );
 
 $ordered = $list(
@@ -1495,8 +1516,10 @@ $ordered = $list(
 	),
 	$list_item( 'Step' )
 );
+$list_stylesheet = (string) file_get_contents( ZEALBLOCKS_PATH . 'build/list/style-index.css' );
 $check( 'numbered list: a native <ol> with its style, start and direction', 1 === preg_match( '#^<ol style="list-style-type:upper-roman;?"[^>]*start="3" reversed="reversed"#', trim( $ordered ) ) );
-$check( 'numbered list: no icons and no role, the numbers are the markers', false === strpos( $ordered, '__icon' ) && false === strpos( $ordered, 'role=' ) && false === strpos( $ordered, 'has-icon' ) );
+$check( 'numbered list: no role and no has-icon, the numbers are the markers', false === strpos( $ordered, 'role=' ) && false === strpos( $ordered, 'has-icon' ) );
+$check( 'numbered list: the stylesheet hides the items\' Icon blocks', 1 === preg_match( '/\.wp-block-zealblocks-list:not\(\.has-icon\)>\.wp-block-zealblocks-list-item>\.wp-block-zealblocks-icon\{display:none\}/', $list_stylesheet ) );
 
 $hostile = $list(
 	array(
@@ -1507,7 +1530,7 @@ $hostile = $list(
 	$list_item( 'Step' )
 );
 $check( 'numbered list: an unknown style and a start that is not a number are dropped', false === strpos( $hostile, 'list-style-type' ) && false === strpos( $hostile, 'start=' ) && false === strpos( $hostile, 'color:red' ) );
-$check( 'an unknown icon leaves the native bullets', false === strpos( $list( array( 'icon' => 'no-such-icon' ), $list_item( 'A' ) ), 'has-icon' ) );
+$check( 'an item whose icon is unknown keeps its text, with no icon', 1 === preg_match( '#<li class="wp-block-zealblocks-list-item"><div class="[^"]*\bwp-block-zealblocks-container\b#', $list( array(), $list_item( 'A', 'no-such-icon' ) ) ) );
 $check( 'a list with no items renders nothing', '' === trim( do_blocks( '<!-- wp:zealblocks/list --><!-- /wp:zealblocks/list -->' ) ) );
 
 WP_Style_Engine_CSS_Rules_Store::remove_all_stores();

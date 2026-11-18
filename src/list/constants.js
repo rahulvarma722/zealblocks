@@ -1,29 +1,61 @@
 /**
- * List — names shared by the list, its items and the Text inside them.
+ * List — names shared by the list, its items and the blocks inside them.
+ *
+ * Every item is the same three blocks:
+ *
+ *     List item (<li>)
+ *       ├─ Icon        the marker, on the left
+ *       └─ Container   the content, on the right
+ *            └─ Text   ready to type in; any other block can follow it
+ *
+ * The Icon and the Container are locked in place, so an item always keeps
+ * both; what goes inside the Container is the author's.
  */
 
 import { __ } from '@wordpress/i18n';
 
 export const LIST = 'zealblocks/list';
 export const ITEM = 'zealblocks/list-item';
+export const ICON = 'zealblocks/icon';
+export const BODY = 'zealblocks/container';
 export const TEXT = 'zealblocks/text';
 
-/** What an item's content area accepts. */
-export const ITEM_BLOCKS = [
-	TEXT,
-	LIST,
-	'zealblocks/buttons',
-	'zealblocks/icon',
-	'zealblocks/container',
-	'core/image',
-	'core/paragraph',
-	'core/heading',
-];
+/** The icon of a new list. */
+export const DEFAULT_ICON = 'check';
 
-/** A new item: a Text, ready to type in. */
-export const ITEM_TEMPLATE = [
-	[ TEXT, { placeholder: __( 'List item', 'zealblocks' ) } ],
-];
+/** The Icon and the Container cannot be moved or removed from their item. */
+export const LOCKED = { move: true, remove: true };
+
+/**
+ * A new item's Container: plain flow, its blocks 0.25em apart. Its own Block
+ * spacing setting, so the author can change it on the Container.
+ */
+export const BODY_ATTRIBUTES = {
+	layout: { type: 'default' },
+	style: { spacing: { blockGap: '0.25em' } },
+};
+
+/** A new item's Text. */
+export const TEXT_ATTRIBUTES = {
+	placeholder: __( 'List item', 'zealblocks' ),
+};
+
+/**
+ * An item's inner blocks, as a block template.
+ *
+ * @param {string} icon The list's icon.
+ * @return {Array} The template.
+ */
+export function itemTemplate( icon ) {
+	return [
+		[ ICON, { icon: icon || DEFAULT_ICON, lock: LOCKED } ],
+		[
+			BODY,
+			{ ...BODY_ATTRIBUTES, lock: LOCKED },
+			[ [ TEXT, TEXT_ATTRIBUTES ] ],
+		],
+	];
+}
 
 /**
  * One-click icons. MUST match Editor_Provider::LIST_PRESETS, which preloads
@@ -38,9 +70,6 @@ export const ICON_PRESETS = [
 	'circle',
 	'minus',
 ];
-
-/** An item's icon value that switches its icon off. */
-export const ICON_NONE = 'none';
 
 /** MUST match render.php's allow-list and block.json's enum. */
 export const ORDERED_TYPES = [
