@@ -1,17 +1,20 @@
 # List — `zealblocks/list` and `zealblocks/list-item`
 
-A bulleted, icon or numbered list whose items can hold any block. Decided with
-Rahul on 2026-11-15; the reasoning, and a hands-on check of Spectra's list, are
-in the List audit (`temp-doc/block-audits/ZEALBLOCKS-LIST-AUDIT.md`, §3a and
-§7, outside the repo).
+An icon or numbered list. Each item is an **Icon block** on the left and a
+**Container block** on the right, and the Container starts with a Text, so the
+author types straight away and can add any other block below it. Decided with
+Rahul on 2026-11-15 and reworked to this structure on 2026-11-16; the
+reasoning, and a hands-on check of Spectra's list, are in the List audit
+(`temp-doc/block-audits/ZEALBLOCKS-LIST-AUDIT.md`, §3a and §7, outside the
+repo).
 
 ```
-Editor tree:  List › List Item › [ icon: a setting ] + Text (+ any blocks)
+Editor tree:  List › List Item › [ Icon ] + [ Container › Text (+ any blocks) ]
 
 <ul class="wp-block-zealblocks-list has-icon" role="list">
   <li class="wp-block-zealblocks-list-item">
-    <span class="wp-block-zealblocks-list-item__icon" aria-hidden="true"><svg>…</svg></span>
-    <div class="wp-block-zealblocks-list-item__content">
+    <div class="wp-block-zealblocks-icon"><svg aria-hidden="true">…</svg></div>
+    <div class="wp-block-zealblocks-container is-layout-flow …">
       <p class="wp-block-zealblocks-text">Fast setup</p>
       … any blocks the author added, including a nested list …
     </div>
@@ -21,21 +24,36 @@ Editor tree:  List › List Item › [ icon: a setting ] + Text (+ any blocks)
 
 ## Why this shape
 
-- **Spectra's layout, typed like core's List.** An icon on the left and a
-  content area on the right that takes any block, as in Spectra; but the
-  cursor is in the first item on insert, Enter makes the next item, Tab nests.
-  Spectra's list has no text field until "+" is used, Enter never makes an
-  item, and Tab does nothing (checked live).
-- **The item is the content container.** No Container block per item: an item
-  needs padding, background, border, spacing and an icon, not overlays and
-  video. A Container can still go inside an item for a card.
-- **The icon is a setting, printed as an element.** Chosen on the list,
-  overridable per item (`icon`, or `none` to switch it off); rendered by the
-  server from the icon library as `<span aria-hidden="true"><svg>`, so it can
-  be styled like a real element and is never announced. Spectra's bullets are
-  unnamed images in the accessibility tree.
+- **Spectra's structure, typed like core's List.** An Icon block and a
+  Container per item, as in Spectra, so the icon has every Icon block setting
+  (colour, background, border, padding, shadow, hover, rotation) and the
+  content takes any block. But the cursor is in the first item's Text on
+  insert, Enter makes the next item, Tab nests. Spectra's list has no text
+  field until "+" is used, Enter never makes an item, and Tab does nothing
+  (checked live).
+- **The Icon and the Container are locked in place** (`lock: { move, remove }`)
+  and the item accepts only those two, so every item keeps both. What goes
+  inside the Container is the author's.
+- **The icon is decorative.** The Icon block has no label, so its SVG is
+  `aria-hidden` and screen readers hear the list and its text. Spectra's
+  bullets are unnamed images in the accessibility tree.
 - **Numbers are native:** `<ol>` with `start`, `reversed` and a
-  `list-style-type`; no icons in a numbered list.
+  `list-style-type`. The Icon blocks stay in the content, hidden by the list's
+  stylesheet, so switching back to icons brings them back as they were.
+
+## The icon: list-wide and per item
+
+- **On the list** (Settings › List › Icon): seven presets or any library icon.
+  Picking one sets the list's `icon` and the icon of every item still showing
+  the list's previous icon (`setListIcon()` in `actions.js`), as one undo step.
+- **On one item:** select its Icon block and change it there ("Select an icon"
+  in its toolbar, or its Settings). A later list-wide change leaves that item's
+  icon alone.
+- **New items** made by Enter copy the current item's Icon and Container
+  settings. The list's first item, and an item added from the inserter, take
+  the list's icon.
+- Size, colour and gap are set on the list, per device, as custom properties;
+  an Icon block's own width or colour wins (inline style or a preset class).
 
 ## Attributes
 
@@ -44,54 +62,81 @@ Editor tree:  List › List Item › [ icon: a setting ] + Text (+ any blocks)
 | List | `ordered` | `<ol>` instead of `<ul>` |
 | List | `type` | `decimal`, `decimal-leading-zero`, `lower-alpha`, `upper-alpha`, `lower-roman`, `upper-roman` (allow-listed) |
 | List | `start`, `reversed` | Native; a start that is not a number is dropped |
-| List | `icon` | Library slug; empty = native bullets; an unknown slug = native bullets |
-| List | `iconAlign` | `top` (centred on the first line, `1lh`) or `center` (on the whole item) |
-| List item | `icon` | Overrides the list's icon; `none` switches it off |
+| List | `icon` | The list's icon (default `check`): what new items take, and what a list-wide change replaces |
+| List | `iconAlign` | `top` (on the first line) or `center` (on the whole item) |
+
+The item has no attributes of its own beyond core supports.
 
 Per device in `style.zealblocks`, as custom properties on the list:
 `itemGap` (`--zealblocks-list-gap`, applied with a `has-item-gap` class that
 also takes over the items' margins), `iconSize`, `iconGap`, `iconColor`,
-`markerColor`, `markerSize`; an item can override `iconColor`. Z-index,
-animation and display conditions are the shared modules. Context passes the
-list's icon and numbering to its items.
+`markerColor`, `markerSize` (numbers only). Z-index, animation and display
+conditions are the shared modules. Context passes the list's icon and
+numbering to its items.
 
 ## Typing (`src/list/keyboard.js`, `src/list/actions.js`)
 
 The Text block attaches a capture keydown listener when it is the first block
-of an item; it runs before RichText's own and marks the event handled.
+of an item's Container; it runs before RichText's own and marks the event
+handled.
 
-| Key | In an item's first Text |
+| Key | In an item's Text |
 |---|---|
-| Enter | The next item, splitting at the caret |
+| Enter | The next item, splitting at the caret; blocks below the Text stay |
 | Enter on an empty item | Nested: out one level. Last item: out of the list (a Text after it) |
 | Shift+Enter | A line break (RichText's own) |
-| Backspace at the start | Joins the item to the line above (into its last Text, through a nested list) |
-| Tab / Shift+Tab | Nest under the item above / out one level; also toolbar buttons |
+| Backspace at the start | Joins the item to the line above (into its last Text, through a nested list); the blocks below the Text move to the end of that item's Container |
+| Tab / Shift+Tab | Nest under the item above / out one level; also toolbar buttons on the item |
 
-Two details that matter:
+Details that matter:
 
 - **The caret is read from the page**, not the store: the store's selection is
   updated on `selectionchange`, an event after Home or End moved the caret.
 - **Indenting into a new nested list copies the item into it**: core refuses to
   move a block into a list that has not rendered yet (its allowed blocks are
   registered on render). The caret, or the block selection, moves to the copy.
+- **The first item is not a block template.** Core selects the first block a
+  template inserts, which would be the Icon; the list inserts its first item
+  itself and puts the caret in the Text, marked as not persistent so the
+  insertion is one undo step.
+- A nested list goes at the end of the item's Container, so the HTML is always
+  `li > div > ul`, never `ul > ul`.
 
-## Spacing
+## Layout and spacing
 
-Blocks inside an item sit close: no margin around them, 0.25em between them.
-The selector carries `:not(#_)` to beat theme editor styles like Astra's
-`.editor-styles-wrapper .block-editor-block-list__layout.is-root-container p`
-without `!important`, so a margin the author sets still applies.
+- A `<ul>` is a flex row per item: the Icon (`flex: none`, the list's icon
+  size) and the Container (`flex: 1`).
+- **The icon meets the middle of the first line at any line height.** It is
+  centred in a line box of its own (`min-height: 1lh`), and that box's
+  baseline, given by an empty `::before` character with empty alternative
+  text, is aligned to the text's first baseline (`align-items: baseline`). A
+  line box's middle is the same distance above its baseline at any line
+  height, so a theme that gives paragraphs their own line height (Astra:
+  26.4px against 29.7px on the `li`) does not move the icon. Measured: within
+  0.2px in the editor, exact on the page.
+- **The Container is plain flow** (`layout: default`) with Block spacing
+  0.25em, which the author can change on the Container. The list removes the
+  Container's own margin, the margin above its first block and below any, with
+  `:not(#_)` to beat theme editor styles like Astra's `.editor-styles-wrapper
+  .block-editor-block-list__layout.is-root-container p` without `!important`,
+  so a margin the author sets still applies.
+- **A nested list's last item adds no bottom margin.** In a plain list it would
+  collapse with its parent item's; a flex item stops that, so a theme's `li`
+  margin would count twice. With this, the line spacing matches a core List on
+  Astra within a pixel (26/37px against 27/36px).
+- Astra resets `.entry-content ul` margins (`margin: revert`), which outranks
+  core's Container gap: a nested list sits flush under its text, as a core
+  List's does there.
 
 ## Files
 
 | File | What |
 |---|---|
-| `src/list/render.php`, `src/list-item/render.php` | The `<ul>`/`<ol>` and each `<li>` |
-| `src/list/edit.js`, `settings.js`, `style-controls.js`, `preview.js` | The list in the editor |
-| `src/list-item/edit.js` | The item, its icon override and colour, indent/outdent buttons |
-| `src/list/actions.js`, `keyboard.js` | Typing |
-| `src/list/constants.js`, `icons.js` | Names, presets, toolbar icons |
+| `src/list/render.php`, `src/list-item/render.php` | The `<ul>`/`<ol>` and each `<li>` around its two blocks |
+| `src/list/edit.js`, `settings.js`, `style-controls.js`, `preview.js` | The list in the editor; its first item; the list-wide icon |
+| `src/list-item/edit.js` | The `<li>`, its two blocks, indent/outdent buttons |
+| `src/list/actions.js`, `keyboard.js` | Typing, `createItem()`, `setListIcon()` |
+| `src/list/constants.js`, `icons.js` | Block names, the item template, presets, toolbar icons |
 | `src/list/style.scss` | Both blocks' styles (an item never appears without a list) |
 | `includes/icon-handler/class-editor-provider.php` | Preloads the seven preset icons |
 
@@ -99,17 +144,23 @@ without `!important`, so a margin the author sets still applies.
 
 - `BlockContractTest`: presets PHP ↔ JS, numbering styles across JS, render
   and block.json, the context keys.
-- `tests/js/list.test.js`: the canvas preview.
-- `tests/integration/test-render.php`, "List": markup, icons and overrides,
-  nesting inside the item, per-device CSS, native numbering, hostile values,
-  empty and hidden lists.
-- `tests/e2e/specs/list/`: typing (Enter, split, Shift+Enter, Tab, Shift+Tab,
-  Backspace, leaving), toolbar, presets, numbering, per-item icons, a Tablet
-  value, the "+" in an item, and the accessibility tree on the page.
+- `tests/js/list.test.js`: the canvas preview; the item template (Icon and
+  Container locked, Container holding a Text, the default icon).
+- `tests/integration/test-render.php`, "List": the `li > Icon + Container >
+  Text` markup, a decorative icon, per-item icons, the Container's flow layout
+  and gap, nesting inside the Container, per-device CSS, native numbering with
+  hidden icons, hostile values, an unknown icon, empty and hidden lists.
+- `tests/e2e/specs/list/`: the item's structure and locks; typing (Enter,
+  split, Shift+Enter, Tab, Shift+Tab, Backspace, leaving); Enter copying the
+  item's icon and Backspace bringing blocks along; the toolbar; presets on
+  every item; one item's icon changed on its Icon block and kept through a
+  list-wide change; icon alignment on the page; numbering with hidden icons;
+  item spacing and icon colour with a Tablet value; what the Container and the
+  item accept; the accessibility tree on the page.
 
 ## Next (audit §7)
 
-Phase 2: icon style presets (circle, badge, outline, tint) with icon
-background, border, padding and hover; layout presets (icon on top, inline);
-dividers; transforms from and to core's List and Spectra's. Phase 3: number
-badges, whole-item link, custom SVG icons.
+Phase 2: icon style presets (circle, badge, outline, tint) applied to the
+items' Icon blocks; layout presets (icon on top, inline); dividers; transforms
+from and to core's List and Spectra's. Phase 3: number badges, whole-item link,
+custom SVG icons.

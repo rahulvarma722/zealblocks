@@ -9,14 +9,8 @@
 		"zealblocks/list"
 	],
 	"icon": "editor-ul",
-	"description": "One item of a list: its icon on the left, any blocks on the right.",
+	"description": "One item of a list: an Icon block on the left, a Container block with the content on the right.",
 	"textdomain": "zealblocks",
-	"attributes": {
-		"icon": {
-			"type": "string",
-			"default": ""
-		}
-	},
 	"usesContext": [
 		"zealblocks/list/icon",
 		"zealblocks/list/ordered"

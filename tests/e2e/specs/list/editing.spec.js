@@ -7,7 +7,7 @@
 const { test, expect } = require( '../../utils' );
 
 /**
- * The block tree as [ name, children or text ].
+ * The block tree as [ name, children or text ]; an Icon as its slug.
  *
  * @param {import('@playwright/test').Page} page Page.
  * @return {Promise<Array>} The tree.
@@ -15,21 +15,31 @@ const { test, expect } = require( '../../utils' );
 const tree = ( page ) =>
 	page.evaluate( () => {
 		const strip = ( list ) =>
-			list.map( ( block ) => [
-				block.name.replace( 'zealblocks/', '' ),
-				block.innerBlocks.length
-					? strip( block.innerBlocks )
-					: String( block.attributes.content ?? '' ),
-			] );
+			list.map( ( block ) => {
+				if ( 'zealblocks/icon' === block.name ) {
+					return [ 'icon', block.attributes.icon ];
+				}
+
+				return [
+					block.name.replace( 'zealblocks/', '' ),
+					block.innerBlocks.length
+						? strip( block.innerBlocks )
+						: String( block.attributes.content ?? '' ),
+				];
+			} );
 
 		return strip(
 			window.wp.data.select( 'core/block-editor' ).getBlocks()
 		);
 	} );
 
-const item = ( text, children = [] ) => [
+// An item: its Icon, and its Container holding the Text and anything after.
+const item = ( text, children = [], icon = 'check' ) => [
 	'list-item',
-	[ [ 'text', text ], ...children ],
+	[
+		[ 'icon', icon ],
+		[ 'container', [ [ 'text', text ], ...children ] ],
+	],
 ];
 
 test.describe( 'List editing', () => {
@@ -60,6 +70,38 @@ test.describe( 'List editing', () => {
 			.toBe( 'zealblocks/text' );
 	} );
 
+	test( 'a new item is an Icon and a Container holding a Text, both locked in place', async ( {
+		page,
+	} ) => {
+		const parts = await page.evaluate( () => {
+			const store = window.wp.data.select( 'core/block-editor' );
+			const [ icon, body ] =
+				store.getBlocks()[ 0 ].innerBlocks[ 0 ].innerBlocks;
+
+			return {
+				names: [ icon.name, body.name ],
+				canRemove: [
+					store.canRemoveBlock( icon.clientId ),
+					store.canRemoveBlock( body.clientId ),
+				],
+				canMove: [
+					store.canMoveBlock( icon.clientId ),
+					store.canMoveBlock( body.clientId ),
+				],
+				layout: body.attributes.layout,
+				blockGap: body.attributes.style?.spacing?.blockGap,
+			};
+		} );
+
+		expect( parts ).toEqual( {
+			names: [ 'zealblocks/icon', 'zealblocks/container' ],
+			canRemove: [ false, false ],
+			canMove: [ false, false ],
+			layout: { type: 'default' },
+			blockGap: '0.25em',
+		} );
+	} );
+
 	test( 'typing straight away; Enter makes the next item; Shift+Enter breaks the line', async ( {
 		page,
 	} ) => {
@@ -85,6 +127,69 @@ test.describe( 'List editing', () => {
 
 		expect( await tree( page ) ).toEqual( [
 			[ 'list', [ item( 'First' ), item( 'Second' ) ] ],
+		] );
+	} );
+
+	test( "the next item takes this item's icon, and Backspace brings the blocks below the text along", async ( {
+		page,
+	} ) => {
+		await page.keyboard.type( 'One' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.type( 'Two' );
+
+		// Item 2: its own icon, and a second Text below its first.
+		await page.evaluate( () => {
+			const store = window.wp.data.select( 'core/block-editor' );
+			const { updateBlockAttributes, insertBlock } =
+				window.wp.data.dispatch( 'core/block-editor' );
+			const [ icon, body ] =
+				store.getBlocks()[ 0 ].innerBlocks[ 1 ].innerBlocks;
+
+			updateBlockAttributes( icon.clientId, { icon: 'star' } );
+			insertBlock(
+				window.wp.blocks.createBlock( 'zealblocks/text', {
+					content: 'Detail',
+				} ),
+				1,
+				body.clientId,
+				false
+			);
+		} );
+		const second = page
+			.frameLocator( 'iframe[name="editor-canvas"]' )
+			.locator( '.wp-block-zealblocks-list > li' )
+			.nth( 1 )
+			.locator( 'p' )
+			.first();
+
+		await second.click();
+		await page.keyboard.press( 'End' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.type( 'Three' );
+
+		expect( await tree( page ) ).toEqual( [
+			[
+				'list',
+				[
+					item( 'One' ),
+					item( 'Two', [ [ 'text', 'Detail' ] ], 'star' ),
+					item( 'Three', [], 'star' ),
+				],
+			],
+		] );
+
+		await second.click();
+		await page.keyboard.press( 'Home' );
+		await page.keyboard.press( 'Backspace' );
+
+		expect( await tree( page ) ).toEqual( [
+			[
+				'list',
+				[
+					item( 'OneTwo', [ [ 'text', 'Detail' ] ] ),
+					item( 'Three', [], 'star' ),
+				],
+			],
 		] );
 	} );
 
