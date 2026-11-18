@@ -46,6 +46,8 @@ Editor tree:  List › List Item › [ Icon ] + [ Container › Text (+ any bloc
 - **On the list** (Settings › List › Icon): seven presets or any library icon.
   Picking one sets the list's `icon` and the icon of every item still showing
   the list's previous icon (`setListIcon()` in `actions.js`), as one undo step.
+  The field has no Remove button (`clearable={ false }` on the shared
+  `IconControl`): a list always has an icon.
 - **On one item:** select its Icon block and change it there ("Select an icon"
   in its toolbar, or its Settings). A later list-wide change leaves that item's
   icon alone.
@@ -150,13 +152,39 @@ Details that matter:
   Text` markup, a decorative icon, per-item icons, the Container's flow layout
   and gap, nesting inside the Container, per-device CSS, native numbering with
   hidden icons, hostile values, an unknown icon, empty and hidden lists.
-- `tests/e2e/specs/list/`: the item's structure and locks; typing (Enter,
-  split, Shift+Enter, Tab, Shift+Tab, Backspace, leaving); Enter copying the
-  item's icon and Backspace bringing blocks along; the toolbar; presets on
-  every item; one item's icon changed on its Icon block and kept through a
-  list-wide change; icon alignment on the page; numbering with hidden icons;
-  item spacing and icon colour with a Tablet value; what the Container and the
-  item accept; the accessibility tree on the page.
+- `tests/e2e/specs/list/` (test cases TC-LS-xx in `temp-doc/ZEALBLOCKS-TEST-PLAN.md` §9a):
+  - `editing.spec.js`: the item's structure and locks; Enter, split,
+    Shift+Enter, Tab, Shift+Tab, Backspace, leaving; Enter copying the item's
+    icon and Backspace bringing blocks along; toolbar; Arrow Up/Down between
+    items; one undo per Enter; Duplicate; save and reload with every block
+    valid.
+  - `settings-and-page.spec.js`: presets on every item; numbering; one item's
+    icon kept through a list-wide change; item spacing and icon colour with a
+    Tablet value; what the Container and the item accept; the accessibility
+    tree on the page.
+  - `controls.spec.js`: every inspector control operated, then the stored
+    value, the canvas and the page: all 7 presets, "Or any icon" (no Remove),
+    all 6 numbering styles, icon position, icon size and gap with Mobile
+    values, number colour and size, typography, background, padding, margin,
+    border, radius, link colour, text alignment, z-index per device, extra
+    class, animation, display conditions; an item's own styles; one Icon
+    block's width and colour over the list's; an icon badge; an item
+    Container's Block spacing and its "+".
+  - `front-end.spec.js`: per-device values at 480/481/782/783; wrapping
+    beside the icon; 360px, three levels, no overflow; right to left; spacing
+    against a core List on Astra and Twenty Twenty-Five (previewed); keyboard;
+    axe-core with no violations on both themes.
+
+## Known theme interactions
+
+- **Headings inside an item on Astra** keep Astra's `margin-top: 1.5em`
+  (`.entry-content :where(h1…h6)`), which has the same weight as core's
+  Container gap and comes later, so it wins over the Container's Block
+  spacing. The same happens in any Container or core Group on Astra.
+  Paragraphs and Text follow the Block spacing.
+- **Twenty Twenty-Five** spaces core's List items by 0.5rem with custom CSS
+  for `core/list` only; this List keeps its own rhythm there (one line per
+  item) until "Space between items" is set.
 
 ## Next (audit §7)
 

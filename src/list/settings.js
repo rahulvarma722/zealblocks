@@ -165,6 +165,8 @@ export function ListSettings( { attributes, setAttributes, onIconChange } ) {
 									'zealblocks'
 								) }
 								value={ icon }
+								// A list always has an icon: no Remove.
+								clearable={ false }
 								onChange={ ( next ) =>
 									next && onIconChange( next )
 								}
