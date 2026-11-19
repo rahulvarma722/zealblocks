@@ -170,7 +170,7 @@ Details that matter:
   Text` markup, a decorative icon, per-item icons, the Container's flow layout
   and gap, nesting inside the Container, per-device CSS, native numbering with
   hidden icons, hostile values, an unknown icon, empty and hidden lists.
-- `tests/e2e/specs/list/` (test cases TC-LS-xx in `temp-doc/ZEALBLOCKS-TEST-PLAN.md` §9a):
+- `tests/e2e/specs/list/` (test cases TC-LS-xx in `temp-doc/testing/ZEALBLOCKS-TEST-PLAN.md` §9a):
   - `editing.spec.js`: the item's structure and locks; Enter, split,
     Shift+Enter, Tab, Shift+Tab, Backspace, leaving; Enter copying the item's
     icon and Backspace bringing blocks along; toolbar; Arrow Up/Down between
